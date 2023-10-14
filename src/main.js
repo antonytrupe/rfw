@@ -20,3 +20,4 @@ const serverEngine = new ServerEngine(io, gameEngine, { debug: {}, updateRate: 3
 
 // start the game
 serverEngine.start();
+console.log('main game started')

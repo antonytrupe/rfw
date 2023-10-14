@@ -1,60 +1,46 @@
 "use strict";
 
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
-
+exports["default"] = void 0;
 var _lanceGg = require("lance-gg");
-
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _get() { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get.bind(); } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(arguments.length < 3 ? target : receiver); } return desc.value; }; } return _get.apply(this, arguments); }
 function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 var PADDING = 20;
 var WIDTH = 400;
 var HEIGHT = 400;
 var PADDLE_WIDTH = 10;
-var PADDLE_HEIGHT = 50; // A paddle has a health attribute
+var PADDLE_HEIGHT = 50;
 
-var Paddle =
-/*#__PURE__*/
-function (_DynamicObject) {
+// A paddle has a health attribute
+var Paddle = /*#__PURE__*/function (_DynamicObject) {
   _inherits(Paddle, _DynamicObject);
-
+  var _super = _createSuper(Paddle);
   function Paddle(gameEngine, options, props) {
     var _this;
-
     _classCallCheck(this, Paddle);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(Paddle).call(this, gameEngine, options, props));
+    _this = _super.call(this, gameEngine, options, props);
     _this.health = 0;
     return _this;
   }
-
   _createClass(Paddle, [{
     key: "syncTo",
     value: function syncTo(other) {
       _get(_getPrototypeOf(Paddle.prototype), "syncTo", this).call(this, other);
-
       this.health = other.health;
     }
   }], [{
@@ -67,29 +53,18 @@ function (_DynamicObject) {
       }, _get(_getPrototypeOf(Paddle), "netScheme", this));
     }
   }]);
-
   return Paddle;
 }(_lanceGg.DynamicObject); // a game object to represent the ball
-
-
-var Ball =
-/*#__PURE__*/
-function (_DynamicObject2) {
+var Ball = /*#__PURE__*/function (_DynamicObject2) {
   _inherits(Ball, _DynamicObject2);
-
+  var _super2 = _createSuper(Ball);
   function Ball(gameEngine, options, props) {
     _classCallCheck(this, Ball);
+    return _super2.call(this, gameEngine, options, props);
+  }
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(Ball).call(this, gameEngine, options, props));
-  } // avoid gradual synchronization of velocity
-
-
+  // avoid gradual synchronization of velocity
   _createClass(Ball, [{
-    key: "syncTo",
-    value: function syncTo(other) {
-      _get(_getPrototypeOf(Ball.prototype), "syncTo", this).call(this, other);
-    }
-  }, {
     key: "bending",
     get: function get() {
       return {
@@ -98,44 +73,39 @@ function (_DynamicObject2) {
         }
       };
     }
+  }, {
+    key: "syncTo",
+    value: function syncTo(other) {
+      _get(_getPrototypeOf(Ball.prototype), "syncTo", this).call(this, other);
+    }
   }]);
-
   return Ball;
 }(_lanceGg.DynamicObject);
-
-var Game =
-/*#__PURE__*/
-function (_GameEngine) {
+var Game = exports["default"] = /*#__PURE__*/function (_GameEngine) {
   _inherits(Game, _GameEngine);
-
+  var _super3 = _createSuper(Game);
   function Game(options) {
     var _this2;
-
     _classCallCheck(this, Game);
-
-    console.log('Game constructor');
-    _this2 = _possibleConstructorReturn(this, _getPrototypeOf(Game).call(this, options));
+    console.log('Game constructorrrr');
+    _this2 = _super3.call(this, options);
     _this2.physicsEngine = new _lanceGg.SimplePhysicsEngine({
       gameEngine: _assertThisInitialized(_this2)
-    }); // common code
+    });
 
-    _this2.on('postStep', _this2.gameLogic.bind(_assertThisInitialized(_this2))); // server-only code
+    // common code
+    _this2.on('postStep', _this2.gameLogic.bind(_assertThisInitialized(_this2)));
 
-
+    // server-only code
     _this2.on('server__init', _this2.serverSideInit.bind(_assertThisInitialized(_this2)));
-
     _this2.on('server__playerJoined', _this2.serverSidePlayerJoined.bind(_assertThisInitialized(_this2)));
+    _this2.on('server__playerDisconnected', _this2.serverSidePlayerDisconnected.bind(_assertThisInitialized(_this2)));
 
-    _this2.on('server__playerDisconnected', _this2.serverSidePlayerDisconnected.bind(_assertThisInitialized(_this2))); // client-only code
-
-
+    // client-only code
     _this2.on('client__rendererReady', _this2.clientSideInit.bind(_assertThisInitialized(_this2)));
-
     _this2.on('client__draw', _this2.clientSideDraw.bind(_assertThisInitialized(_this2)));
-
     return _this2;
   }
-
   _createClass(Game, [{
     key: "registerClasses",
     value: function registerClasses(serializer) {
@@ -151,8 +121,9 @@ function (_GameEngine) {
       var ball = this.world.queryObject({
         instanceType: Ball
       });
-      if (!ball || paddles.length !== 2) return; // CHECK LEFT EDGE:
+      if (!ball || paddles.length !== 2) return;
 
+      // CHECK LEFT EDGE:
       if (ball.position.x <= PADDING + PADDLE_WIDTH && ball.position.y >= paddles[0].y && ball.position.y <= paddles[0].position.y + PADDLE_HEIGHT && ball.velocity.x < 0) {
         // ball moving left hit player 1 paddle
         ball.velocity.x *= -1;
@@ -163,9 +134,9 @@ function (_GameEngine) {
         ball.position.x = 0;
         console.log("player 2 scored");
         paddles[0].health--;
-      } // CHECK RIGHT EDGE:
+      }
 
-
+      // CHECK RIGHT EDGE:
       if (ball.position.x >= WIDTH - PADDING - PADDLE_WIDTH && ball.position.y >= paddles[1].position.y && ball.position.y <= paddles[1].position.y + PADDLE_HEIGHT && ball.velocity.x > 0) {
         // ball moving right hits player 2 paddle
         ball.velocity.x *= -1;
@@ -176,9 +147,9 @@ function (_GameEngine) {
         ball.position.x = WIDTH - 1;
         console.log("player 1 scored");
         paddles[1].health--;
-      } // ball hits top or bottom edge
+      }
 
-
+      // ball hits top or bottom edge
       if (ball.position.y <= 0) {
         ball.position.y = 1;
         ball.velocity.y *= -1;
@@ -190,13 +161,12 @@ function (_GameEngine) {
   }, {
     key: "processInput",
     value: function processInput(inputData, playerId) {
-      _get(_getPrototypeOf(Game.prototype), "processInput", this).call(this, inputData, playerId); // get the player paddle tied to the player socket
+      _get(_getPrototypeOf(Game.prototype), "processInput", this).call(this, inputData, playerId);
 
-
+      // get the player paddle tied to the player socket
       var playerPaddle = this.world.queryObject({
         playerId: playerId
       });
-
       if (playerPaddle) {
         if (inputData.input === 'up') {
           playerPaddle.position.y -= 5;
@@ -204,10 +174,11 @@ function (_GameEngine) {
           playerPaddle.position.y += 5;
         }
       }
-    } //
+    }
+
+    //
     // SERVER ONLY CODE
     //
-
   }, {
     key: "serverSideInit",
     value: function serverSideInit() {
@@ -224,8 +195,9 @@ function (_GameEngine) {
         position: new _lanceGg.TwoVector(WIDTH / 2, HEIGHT / 2),
         velocity: new _lanceGg.TwoVector(2, 2)
       }));
-    } // attach newly connected player to next available paddle
+    }
 
+    // attach newly connected player to next available paddle
   }, {
     key: "serverSidePlayerJoined",
     value: function serverSidePlayerJoined(ev) {
@@ -233,7 +205,6 @@ function (_GameEngine) {
       var paddles = this.world.queryObjects({
         instanceType: Paddle
       });
-
       if (paddles[0].playerId === 0) {
         paddles[0].playerId = ev.playerId;
       } else if (paddles[1].playerId === 0) {
@@ -246,16 +217,16 @@ function (_GameEngine) {
       var paddles = this.world.queryObjects({
         instanceType: Paddle
       });
-
       if (paddles[0].playerId === ev.playerId) {
         paddles[0].playerId = 0;
       } else if (paddles[1].playerId === ev.playerId) {
         paddles[1].playerId = 0;
       }
-    } //
+    }
+
+    //
     // CLIENT ONLY CODE
     //
-
   }, {
     key: "clientSideInit",
     value: function clientSideInit() {
@@ -276,7 +247,6 @@ function (_GameEngine) {
         el.style.left = obj.position.x + 'px';
         el.style.background = "#ff".concat(health.toString(16), "f").concat(health.toString(16), "f");
       }
-
       var paddles = this.world.queryObjects({
         instanceType: Paddle
       });
@@ -289,9 +259,6 @@ function (_GameEngine) {
       updateEl(document.querySelector('.paddle2'), paddles[1]);
     }
   }]);
-
   return Game;
 }(_lanceGg.GameEngine);
-
-exports.default = Game;
 //# sourceMappingURL=Game.js.map
