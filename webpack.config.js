@@ -7,18 +7,23 @@ module.exports = {
     output: {
         path: path.join(__dirname, 'dist'),
         filename: 'bundle.js'
+        //clean:true
+    },
+    optimization: {
+        minimize: false
     },
     devtool: 'source-map',
+    //plugins: [ new HtmlWebpackPlugin() ],
     module: {
-        
-        loaders: [
+
+        rules: [
             {
                 test: /\.css$/,
-                loader: 'style!css'
+                use: 'style!css'
             },
             {
                 test: /\.scss$/,
-                loaders: ['style-loader', 'raw-loader', 'sass-loader']
+                use: ['style-loader', 'raw-loader', 'sass-loader']
             },
             {
                 test: /\.js$/,
@@ -27,10 +32,8 @@ module.exports = {
                     path.resolve(__dirname, 'node_modules/lance-gg/'),
                     fs.realpathSync('./node_modules/lance-gg/')
                 ],
-                loader: 'babel-loader',
-                query: {
-                    presets: ['@babel/preset-env'].map(require.resolve)
-                }
+                use: 'babel-loader',
+
             }
         ]
     }

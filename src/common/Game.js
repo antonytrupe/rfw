@@ -44,11 +44,11 @@ export default class Game extends GameEngine {
         if (playerCharacter) {
             if (inputData.input === 'up') {
                 playerCharacter.position.y -= 5;
-            } else if (inputData.input === 'down') {
+            }
+            else if (inputData.input === 'down') {
                 playerCharacter.position.y += 5;
             }
             else if (inputData.input === 'left') {
-                console.log('left')
                 playerCharacter.position.x -= 5;
             }
             else if (inputData.input === 'right') {
@@ -64,7 +64,7 @@ export default class Game extends GameEngine {
         // create the paddles and the ball
         this.addObjectToWorld(new Character(this, null, { playerID: 0, position: new TwoVector(PADDING, 0) }));
         this.addObjectToWorld(new Character(this, null, { playerID: 0, position: new TwoVector(WIDTH - PADDING, 0) }));
-        
+
     }
 
     // attach newly connected player to next available paddle
@@ -108,7 +108,7 @@ export default class Game extends GameEngine {
         }
 
         let characters = this.world.queryObjects({ instanceType: Character });
-        if ( characters.length !== 2) return;
+        if (characters.length !== 2) return;
         updateEl(document.querySelector('.paddle1'), characters[0]);
         updateEl(document.querySelector('.paddle2'), characters[1]);
     }

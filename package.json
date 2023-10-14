@@ -1,8 +1,8 @@
 {
-  "name": "lance-pong",
-  "version": "4.0.0",
+  "name": "rfw",
+  "version": "0.0.0",
   "engines": {
-    "node": ">=11.0.0"
+    "node": ">=18.0.0"
   },
   "description": "An HTML5 multiplayer pong game based on Lance",
   "main": "src/main.js",
@@ -13,15 +13,17 @@
     "lance-gg": "^4.0.9",
     "query-string": "^7.1.3",
     "socket.io": "^2.5.0",
-    "webpack": "^3.12.0"
+    "stream-http": "^3.2.0",
+    "webpack": "^4.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.0",
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
-    "eslint": "8.51.0",
+    "eslint": "^8.51.0",
     "eslint-config-google": "^0.14.0",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "webpack-cli": "^4.10.0"
   },
   "scripts": {
     "start": "node dist-server/main.js",
