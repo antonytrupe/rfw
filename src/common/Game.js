@@ -32,16 +32,10 @@ export default class Game extends GameEngine {
     }
 
     gameLogic() {
-        //console.log('Game.gameLogic')
-
         let characters = this.world.queryObjects({ instanceType: Character });
-
-
-
     }
 
     processInput(inputData, playerId) {
-        console.log('Game.processInput hot reloadddd')
 
         super.processInput(inputData, playerId);
 
@@ -51,8 +45,6 @@ export default class Game extends GameEngine {
             if (inputData.input === 'up') {
                 playerCharacter.position.y -= 5;
             } else if (inputData.input === 'down') {
-                console.log('down')
-
                 playerCharacter.position.y += 5;
             }
             else if (inputData.input === 'left') {

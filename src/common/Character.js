@@ -1,4 +1,4 @@
-import { BaseTypes, DynamicObject } from 'lance-gg';
+import { BaseTypes, DynamicObject, PhysicalObject2D } from 'lance-gg';
 
 export default class Character extends DynamicObject {
 

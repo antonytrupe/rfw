@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 module.exports = {
+    //watch:true,
     entry: './src/client/clientEntryPoint.js',
     output: {
         path: path.join(__dirname, 'dist'),
@@ -9,8 +10,12 @@ module.exports = {
     },
     devtool: 'source-map',
     module: {
+        
         loaders: [
-            { test: /\.css$/, loader: 'style!css' },
+            {
+                test: /\.css$/,
+                loader: 'style!css'
+            },
             {
                 test: /\.scss$/,
                 loaders: ['style-loader', 'raw-loader', 'sass-loader']
