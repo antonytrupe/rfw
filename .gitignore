@@ -1,5 +1,5 @@
 ../boilerplate/.gitignore
 node_modules
 server.trace
-dist/*
-dist-server/*
+dist/
+dist-server/
