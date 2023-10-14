@@ -13869,7 +13869,7 @@ function (_GameEngine) {
 
     _classCallCheck(this, Game);
 
-    console.log('constructor');
+    console.log('Game constructor');
     _this2 = _possibleConstructorReturn(this, _getPrototypeOf(Game).call(this, options));
     _this2.physicsEngine = new __WEBPACK_IMPORTED_MODULE_0_lance_gg__["SimplePhysicsEngine"]({
       gameEngine: _assertThisInitialized(_this2)

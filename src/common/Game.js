@@ -46,7 +46,7 @@ class Ball extends DynamicObject {
 export default class Game extends GameEngine {
 
     constructor(options) {
-        console.log('constructor')
+        console.log('Game constructor')
         super(options);
         this.physicsEngine = new SimplePhysicsEngine({ gameEngine: this });
 
