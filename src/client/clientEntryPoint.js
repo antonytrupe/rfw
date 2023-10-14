@@ -21,4 +21,4 @@ let options = Object.assign(defaults, qsOptions);
 const gameEngine = new Game(options);
 const clientEngine = new ClientEngine(gameEngine, options, Renderer);
 
-document.addEventListener('DOMContentLoaded', function(e) { clientEngine.start(); });
+document.addEventListener('DOMContentLoaded', function (e) { clientEngine.start(); });
