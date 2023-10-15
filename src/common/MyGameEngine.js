@@ -7,10 +7,11 @@ const HEIGHT = 400;
 const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 50;
 
-export default class Game extends GameEngine {
+export default class MyGameEngine extends GameEngine {
 
     constructor(options) {
         console.log('Game.constructor')
+        console.log('options',options)
         super(options);
         this.physicsEngine = new SimplePhysicsEngine({ gameEngine: this });
 
@@ -36,8 +37,9 @@ export default class Game extends GameEngine {
     }
 
     processInput(inputData, playerId) {
-
         super.processInput(inputData, playerId);
+
+        console.log(inputData)
 
         // get the player paddle tied to the player socket
         let playerCharacter = this.world.queryObject({ playerId });
@@ -91,14 +93,17 @@ export default class Game extends GameEngine {
     // CLIENT ONLY CODE
     //
     clientSideInit() {
+        
         this.controls = new KeyboardControls(this.renderer.clientEngine);
         this.controls.bindKey('up', 'up', { repeat: true });
         this.controls.bindKey('down', 'down', { repeat: true });
         this.controls.bindKey('left', 'left', { repeat: true });
         this.controls.bindKey('right', 'right', { repeat: true });
+        this.controls.
     }
 
     clientSideDraw() {
+        //console.log('MyGameEngine.clientSideDraw')
 
         function updateEl(el, obj) {
             let health = obj.health > 0 ? obj.health : 15;
