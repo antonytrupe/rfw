@@ -1,9 +1,11 @@
 INFO
+how to run
 npm build
 npm run start-dev
 
 
 TODO
+switch to canvas
 get hot loading working
 get the html page out of dist
 chat
@@ -16,7 +18,6 @@ combat
 distance scale ui
 tweak movement speed
 zooming
-
 
 
 DONE
