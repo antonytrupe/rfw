@@ -5,9 +5,9 @@ import Utils from '../common/Utils';
 
 export default class MyClientEngine extends ClientEngine {
 
-    constructor(gameEngine, options,renderer) {
+    constructor(gameEngine, options, renderer) {
         console.log('MyClientEngine.constructor')
-        console.log('options',options)
+        console.log('options', options)
         super(gameEngine, options, renderer);
     }
 
@@ -17,47 +17,36 @@ export default class MyClientEngine extends ClientEngine {
 
         // handle gui for game condition
         this.gameEngine.on('pc.killed', (obj) => {
-           
-            
+
+
         });
 
         this.gameEngine.once('client__rendererReady', () => {
-            // click event for "try again" button
-            document.querySelector('#tryAgain').addEventListener('click', () => {
-                if (Utils.isTouchDevice()){
-                    this.renderer.enableFullScreen();
-                }
-                this.socket.emit('requestRestart');
-            });
+            console.log('MyClientEngine client__rendererReady handler')
 
-            document.querySelector('#joinGame').addEventListener('click', (clickEvent) => {
-                if (Utils.isTouchDevice()){
-                    this.renderer.enableFullScreen();
-                }
-                clickEvent.currentTarget.disabled = true;
-                this.socket.emit('requestRestart');
-            });
-
+            /*
             document.querySelector('#reconnect').addEventListener('click', () => {
                 window.location.reload();
             });
-
+            */
             //  Game input
-            if (Utils.isTouchDevice()){
+            if (Utils.isTouchDevice()) {
                 this.controls = new MobileControls(this);
                 this.controls.on('fire', () => {
                     this.sendInput('space');
                 });
             } else {
+                console.log('binding keys')
                 this.controls = new KeyboardControls(this);
                 this.controls.bindKey('left', 'left', { repeat: true });
                 this.controls.bindKey('right', 'right', { repeat: true });
-                this.controls.bindKey('up', 'up', { repeat: true } );
+                this.controls.bindKey('up', 'up', { repeat: true });
+                this.controls.bindKey('down', 'down', { repeat: true });
                 this.controls.bindKey('space', 'space');
             }
 
         });
-        
+
         this.gameEngine.on('fireMissile', () => { this.sounds.fireMissile.play(); });
         this.gameEngine.on('missileHit', () => {
             // don't play explosion sound if the player is not in game
@@ -66,12 +55,14 @@ export default class MyClientEngine extends ClientEngine {
             }
         });
 
-        
+
     }
 
     // extend ClientEngine connect to add own events
     connect() {
+        console.log('MyClientEngine connect')
         return super.connect().then(() => {
+            console.log('connected')
             this.socket.on('scoreUpdate', (e) => {
                 this.renderer.updateScore(e);
             });

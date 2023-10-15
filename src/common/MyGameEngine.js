@@ -25,7 +25,7 @@ export default class MyGameEngine extends GameEngine {
 
         // client-only code
         this.on('client__rendererReady', this.clientSideInit.bind(this));
-        this.on('client__draw', this.clientSideDraw.bind(this));
+        //this.on('client__draw', this.clientSideDraw.bind(this));
     }
 
     registerClasses(serializer) {
@@ -94,27 +94,12 @@ export default class MyGameEngine extends GameEngine {
     //
     clientSideInit() {
         
-        this.controls = new KeyboardControls(this.renderer.clientEngine);
-        this.controls.bindKey('up', 'up', { repeat: true });
-        this.controls.bindKey('down', 'down', { repeat: true });
-        this.controls.bindKey('left', 'left', { repeat: true });
-        this.controls.bindKey('right', 'right', { repeat: true });
-        this.controls.
+      
     }
 
     clientSideDraw() {
         //console.log('MyGameEngine.clientSideDraw')
 
-        function updateEl(el, obj) {
-            let health = obj.health > 0 ? obj.health : 15;
-            el.style.top = obj.position.y + 10 + 'px';
-            el.style.left = obj.position.x + 'px';
-            el.style.background = `#ff${health.toString(16)}f${health.toString(16)}f`;
-        }
-
-        let characters = this.world.queryObjects({ instanceType: Character });
-        if (characters.length !== 2) return;
-        updateEl(document.querySelector('.paddle1'), characters[0]);
-        updateEl(document.querySelector('.paddle2'), characters[1]);
+       
     }
 }

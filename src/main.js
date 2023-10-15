@@ -2,7 +2,7 @@ import path from 'path';
 import express from 'express';
 import socketIO from 'socket.io';
 import { Lib, ServerEngine } from 'lance-gg';
-import Game from './common/Game';
+import MyGameEngine from './common/MyGameEngine';
 
 const PORT = process.env.PORT || 3000;
 const INDEX = path.join(__dirname, '../dist/index.html');
@@ -15,7 +15,7 @@ let requestHandler = server.listen(PORT, () => console.log(`Listening on ${ PORT
 const io = socketIO(requestHandler);
 
 // Game Instances
-const gameEngine = new Game({ traceLevel: Lib.Trace.TRACE_ALL });
+const gameEngine = new MyGameEngine({ traceLevel: Lib.Trace.TRACE_ALL });
 const serverEngine = new ServerEngine(io, gameEngine, { debug: {}, updateRate: 3 });
 
 // start the game
