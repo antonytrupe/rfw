@@ -1,52 +1,33 @@
 {
-  "name": "rfw",
-  "version": "0.0.0",
-  "engines": {
-    "node": ">=18.0.0"
+  "name": "rrfw",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "description": "An HTML5 multiplayer pong game based on Lance",
-  "main": "src/main.js",
   "dependencies": {
-    "@babel/node": "^7.22.19",
-    "babel-loader": "^8.3.0",
     "express": "^4.18.2",
     "lance-gg": "^4.0.9",
-    "pixi-particles": "^2.0.0",
-    "pixi.js": "^4.8.9",
-    "query-string": "^7.1.3",
-    "socket.io": "^2.5.0",
-    "stream-http": "^3.2.0",
-    "webpack": "^4.0.0"
+    "next": "13.5.4",
+    "node-json-db": "^2.2.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.23.0",
-    "@babel/core": "^7.23.2",
-    "@babel/preset-env": "^7.23.2",
-    "eslint": "^8.51.0",
-    "eslint-config-google": "^0.14.0",
-    "nodemon": "^3.0.1",
-    "webpack-cli": "^4.10.0"
-  },
-  "scripts": {
-    "start": "node dist-server/main.js",
-    "start-debug": "node --inspect-brk dist-server/main.js",
-    "start-dev": "nodemon dist-server/main.js",
-    "postinstall": "webpack && babel src --source-maps --out-dir dist-server",
-    "build": "webpack && babel src --source-maps --out-dir dist-server",
-    "stats": "webpack --env production --profile --json > stats.json",
-    "dev": "webpack --watch"
-  },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
-  "keywords": [
-    "game",
-    "lance",
-    "lance-gg",
-    "multiplayer",
-    "websockets"
-  ],
-  "author": "Jane Doe",
-  "license": "Apache-2.0"
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/socket.io": "^3.0.2",
+    "autoprefixer": "^10",
+    "eslint": "^8",
+    "eslint-config-next": "13.5.4",
+    "postcss": "^8",
+    "tailwindcss": "^3",
+    "typescript": "^5"
+  }
 }
