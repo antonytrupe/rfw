@@ -1,4 +1,6 @@
 "use client"
+import styles from './CommandInput.module.scss'
+
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { useEffect, useState } from 'react';
 import io, { Socket } from 'Socket.IO-client';
@@ -39,7 +41,7 @@ export default function CommandInput({ msg }: { msg: string }) {
   }
 
   return (
-    <input
+    <input className={styles.commandInput}
       placeholder="Type something"
       value={input}
       onChange={onChangeHandler}

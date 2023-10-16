@@ -1,0 +1,11 @@
+.commandInput {
+    border: thin black solid;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    color: gray;
+}
+
+.commandInput:focus {
+    color: black;
+}
