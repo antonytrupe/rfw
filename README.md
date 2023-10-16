@@ -6,10 +6,7 @@ npm run start-dev
 
 TODO
 switch to canvas
-get hot loading working
-get the html page out of dist
 chat
-persistance layer
 reconnect after disconnect
 click on a character to take control
 randomly spawn new characters
@@ -21,6 +18,9 @@ zooming
 
 
 DONE
+persistance layer
+get hot loading working
+get the html page out of dist
 set up git repo
 get dev mode working
 rip out pong
