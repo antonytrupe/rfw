@@ -1,7 +1,7 @@
 import { Server, ServerOptions } from 'Socket.IO'
 import { JsonDB, Config } from 'node-json-db';
-import { SocketResponse } from './SocketResponse'; 
-export const PC_LOCATION = 'pc.location' 
+import { SocketResponse } from './SocketResponse';
+import { CONNECT, DISCONNECT, PC_LOCATION } from '@/CONSTANTS';
 
 // The first argument is the database filename. If no extension, '.json' is assumed and automatically added.
 // The second argument is used to tell the DB to save after each push
@@ -21,8 +21,11 @@ const SocketHandler = (req: any, res: SocketResponse) => {
     const io = new Server(res.socket.server)
     //@ts-ignore
     res.socket.server.io = io
-    io.on('connection', socket => {
+    io.on(CONNECT, socket => {
       console.log('world socket.id', socket.id)
+      socket.on(DISCONNECT, (reason) => {
+        // ...
+      });
 
       socket.on(PC_LOCATION, async msg => {
         console.log('pc_location', msg)

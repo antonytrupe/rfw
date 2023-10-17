@@ -31,6 +31,8 @@ export default async function Index() {
       //draw()
     }
 
+    return {x,y}
+
   }
 
   /*

@@ -1,10 +1,9 @@
 import { Server, Socket } from 'Socket.IO'
 import { JsonDB, Config } from 'node-json-db';
 import { SocketResponse } from './SocketResponse';
+import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/CONSTANTS';
  
-export const MESSAGE_CLIENT_SEND="message.client.send"
-export const MESSAGE_SERVER_BROADCAST="message.server.broadcast"
-
+ 
 
 // The first argument is the database filename. If no extension, '.json' is assumed and automatically added.
 // The second argument is used to tell the DB to save after each push
