@@ -29,7 +29,9 @@ export default function CommandInput({ msg }: { msg: string }) {
     socket = io()
 /**/
     socket.on('connect', () => {
-      console.log('connected')
+      console.log('chat connected')
+      console.log('chat socket.id', socket.id)
+
     })
 
     socket.on(MESSAGE_SERVER_BROADCAST, (msg: any) => {
