@@ -52,7 +52,7 @@ export default function Canvas({ inputHandler, }: { inputHandler?: any, }) {
     ctx.canvas.height = window.innerHeight;
     ctx.fillStyle = '#000000'
     ctx.beginPath()
-    ctx.arc(55, 66, 20, 0, 2 * Math.PI)
+    ctx.arc(55, 66, 10, 0, 2 * Math.PI)
     ctx.fill()
   }
 

@@ -23,15 +23,16 @@ export default function CommandInput({ msg }: { msg: string }) {
 
   //client
   const socketInitializer = async () => {
-    
-    await fetch('/api/chat');
-    
-    socket = io()
-/**/
-    socket.on('connect', () => {
-      console.log('chat connected')
-      console.log('chat socket.id', socket.id)
 
+    await fetch('/api/chat');
+
+    socket = io()
+    /**/
+    socket.on('connect', () => {
+      if (socket.id) {
+        console.log('chat connected')
+        console.log('chat socket.id', socket.id)
+      }
     })
 
     socket.on(MESSAGE_SERVER_BROADCAST, (msg: any) => {
@@ -39,7 +40,7 @@ export default function CommandInput({ msg }: { msg: string }) {
 
       setInput(msg)
     })
-    
+
   }
 
   //client
