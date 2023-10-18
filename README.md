@@ -3,6 +3,7 @@ how to run
 npm build
 npm run start-dev
 
+testing cd
 
 TODO
 switch to canvas
