@@ -1,19 +1,15 @@
 "use client"
 import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/CONSTANTS';
 import styles from './CommandInput.module.scss'
-
-//import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { useEffect, useState } from 'react';
 import io, { Socket } from 'Socket.IO-client';
 let socket: any;
-
-
-
 
 export default function CommandInput({ msg }: { msg: string }) {
 
   //client
   const [input, setInput] = useState(msg)
+  const [socketid, setSocketid] = useState(msg)
 
   //client
   useEffect(() => {
@@ -28,6 +24,7 @@ export default function CommandInput({ msg }: { msg: string }) {
     socket = io()
     /**/
     socket.on('connect', () => {
+      setSocketid(socket.id)
       if (socket.id) {
         //console.log('chat connected')
         //console.log('chat socket.id', socket.id)
@@ -49,11 +46,12 @@ export default function CommandInput({ msg }: { msg: string }) {
     //console.log('socket.emit input-change', e.target.value)
   }
 
-  return (
+  return (<>
+    <div>socket:{socketid}</div>
     <input className={styles.commandInput}
       placeholder="Type something"
       value={input}
-      onChange={onChangeHandler}
-    />
+      onChange={onChangeHandler} />
+  </>
   )
 }

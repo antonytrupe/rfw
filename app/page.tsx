@@ -10,31 +10,8 @@ export default async function Index() {
 
   let x = 55, y = 66
 
-  const inputHandler = async (code: string) => {
-    "use server"
-
-    console.log('document keydown even handler', code);
-    if (code == 'KeyD') {
-      x += 1
-      //draw()
-    }
-    else if (code == 'KeyA') {
-      x -= 1
-      //draw()
-    }
-    else if (code == 'KeyS') {
-      y += 1
-      //draw()
-    }
-    else if (code == 'KeyW') {
-      y -= 1
-      //draw()
-    }
-
-    return {x,y}
-
-  }
-
+   
+     
   /*
 
  <Canvas inputHandler={async () => {
@@ -45,8 +22,10 @@ export default async function Index() {
 
   return (
     <>
-      <Canvas inputHandler={inputHandler} />
-      <CommandInput msg={data} />
+      <Canvas   />
+      {
+      //<CommandInput msg={data} />
+      }
     </>
   )
 }
