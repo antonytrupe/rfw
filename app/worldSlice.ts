@@ -1,7 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-export interface Player { id: string, location: { x: number, y: number } }
+export interface Player {
+    id: string,
+    location: {
+        x: number,
+        y: number
+    },
+    vector: {
+        velocity: number,
+        angle: number
+    }
+}
 
 export interface WorldState {
     currentPlayer: Player | undefined,
@@ -57,7 +67,7 @@ export const worldSlice = createSlice({
                 console.log('moving the player')
                 //find the player and warp them
                 state.players = state.players.map(player => {
-                     return player.id == action.payload.id ?
+                    return player.id == action.payload.id ?
                         { ...player, x: action.payload.location.x, y: action.payload.location.y } : player
                 })
             }
