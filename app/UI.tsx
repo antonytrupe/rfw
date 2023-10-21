@@ -55,7 +55,7 @@ export default function UI() {
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
-      <canvas ref={canvasRef} className={styles.canvas} tabIndex={1} onClick={onClick} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <canvas ref={canvasRef} className={`${styles.canvas} canvas`} width="800px" height="800px" tabIndex={1} onClick={onClick} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
     </>
   )
 }
