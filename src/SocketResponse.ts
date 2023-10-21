@@ -1,4 +1,4 @@
-import { Server, ServerOptions } from 'Socket.IO';
+import { Server, ServerOptions } from 'socket.io';
 import { NextResponse } from 'next/server';
 
 interface SocketOptions extends Partial<ServerOptions> {

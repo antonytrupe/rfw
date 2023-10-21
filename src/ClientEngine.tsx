@@ -77,7 +77,8 @@ export default class ClientEngine {
         //horizontal line
         ctx.moveTo(xOffset, yOffset)
         ctx.lineTo(xOffset + (ticks / tickSize) * 300, yOffset)
-        ctx.font = 18 * this.ratio + "px Arial";
+        ctx.font = 18 * this.ratio + "px Arial"
+        ctx.fillStyle = '#000000';
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
             ctx.moveTo(xOffset + i * (ticks / tickSize) * 5, yOffset)
