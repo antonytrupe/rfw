@@ -82,15 +82,15 @@ export default class GameEngine {
             //calculate the new angle
             let newAngle = character.angle
             if (character.turnDirection != 0) {
-                newAngle = character.angle + character.turnDirection * dt / this.turnMultiplier
+                newAngle = character.angle - character.turnDirection * dt / this.turnMultiplier
             }
 
             let newX: number = character.x
             let newY: number = character.y
             if (character.speed != 0) {
                 //calculate new position
-                newX = character.x + character.speed * Math.cos(character.angle) * dt / this.speedMultiplier
-                newY = character.y - character.speed * Math.sin(character.angle) * dt / this.speedMultiplier
+                newX = character.x + character.speed * Math.sin(character.angle) * dt / this.speedMultiplier
+                newY = character.y - character.speed * Math.cos(character.angle) * dt / this.speedMultiplier
                 //console.log('newX', newX)
             }
 

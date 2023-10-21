@@ -57,7 +57,8 @@ export default class ClientEngine {
         ctx.moveTo(xOffset, yOffset)
         ctx.lineTo(xOffset + ticks * 30 * this.PIXELS_TO_FOOT, yOffset)
         ctx.font = 18 * this.ratio + "px Arial";
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = '#000000'
+        ctx.strokeStyle = '#000000';
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
             ctx.moveTo(xOffset + i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset)
@@ -73,22 +74,27 @@ export default class ClientEngine {
     drawHourScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
+        ctx.save()
+        ctx.translate(xOffset, yOffset)
+
         const ticks = 60
         const tickSize = 1
         ctx.beginPath()
         //horizontal line
-        ctx.moveTo(xOffset, yOffset)
-        ctx.lineTo(xOffset + (ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, yOffset)
+        ctx.moveTo(0, 0)
+        ctx.lineTo(+ (ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, 0)
         ctx.font = 18 * this.ratio + "px Arial"
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = '#000000'
+        ctx.strokeStyle = '#000000';
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
-            ctx.moveTo(xOffset + i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset)
-            ctx.lineTo(xOffset + i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset + 40 * this.ratio)
-            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset + 50 * this.ratio)
-            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset + 70 * this.ratio)
+            ctx.moveTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0)
+            ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0 + 40 * this.ratio)
+            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0 + 50 * this.ratio)
+            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0 + 70 * this.ratio)
         })
         ctx.stroke()
+        ctx.restore()
     }
 
 
@@ -126,13 +132,28 @@ export default class ClientEngine {
         //draw all the characters
         this.gameEngine.gameWorld.characters.forEach((character: Character) => {
 
+            ctx.save()
+            ctx.translate(character.x * this.PIXELS_TO_FOOT, character.y * this.PIXELS_TO_FOOT)
+            ctx.rotate(character.angle)
+
             ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
                 return selectedCharacter.id == character.id
             }) ? '#009900' : '#000000'
 
             ctx.beginPath()
-            ctx.arc(character.x * this.PIXELS_TO_FOOT, character.y * this.PIXELS_TO_FOOT, character.size * this.PIXELS_TO_FOOT / 2, 0, 2 * Math.PI)
+            ctx.arc(0, 0, character.size * this.PIXELS_TO_FOOT / 2, 0, 2 * Math.PI)
             ctx.fill()
+
+            //draw an arrow
+            ctx.beginPath()
+            ctx.strokeStyle = '#FFFFFF'
+
+            ctx.moveTo(0, - (character.size) + 1)
+            ctx.lineTo(0, (character.size) - 1)
+
+            ctx.stroke()
+
+            ctx.restore()
         })
     }
 
@@ -147,7 +168,7 @@ export default class ClientEngine {
         const characters = this.gameEngine.gameWorld.findCharacters(
             {
                 x: (e.clientX - rect.left) * this.ratio / this.PIXELS_TO_FOOT,
-                y: (e.clientY - rect.top) * this.ratio /this.PIXELS_TO_FOOT
+                y: (e.clientY - rect.top) * this.ratio / this.PIXELS_TO_FOOT
             })
         this.selectedCharacters = characters
         // console.log(this.selectedCharacters)

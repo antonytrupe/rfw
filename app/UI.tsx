@@ -8,19 +8,19 @@ import EventEmitter, { getEventListeners } from 'events';
 export default function UI() {
   //@ts-ignore
   const canvasRef: MutableRefObject<HTMLCanvasElement> = useRef(null)
+
   const getCanvas: () => HTMLCanvasElement = () => {
     return canvasRef.current
   }
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
+  const [connected, setConnected] = useState(false)
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
     let gameEngine = new GameEngine(eventEmitter)
     setClientEngine(new ClientEngine(eventEmitter, gameEngine, getCanvas))
   }, [])
-
-  const [connected, setConnected] = useState(false)
 
   const connect = async () => {
     clientEngine?.connect()
@@ -57,6 +57,7 @@ export default function UI() {
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
+      <span>ids:{clientEngine?.selectedCharacters[0]?.id}</span>
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
         style={{ width: "800px", height: "800px" }}
