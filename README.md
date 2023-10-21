@@ -4,12 +4,11 @@ npm build
 npm run start-dev
 
 ## TODO
+deploy to somewhere public
 zoom centered on mouse
 rightclick move the screen
 show selected character stats
 change selected character stats
-create docker image
-deploy to docker container
 chat
 reconnect after disconnect
 randomly spawn new characters
@@ -19,6 +18,8 @@ combat
 clean up draw resetting
 
 ## DONE
+create docker image
+deploy to docker container
 zooming
 click on a character to take control
 distance scale ui
