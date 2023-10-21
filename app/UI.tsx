@@ -34,6 +34,9 @@ export default function UI() {
   const onKeyDown = (e: any) => {
     clientEngine?.keyDownHandler(e)
   }
+  const onKeyUp = (e: any) => {
+    clientEngine?.keyUpHandler(e)
+  }
 
   const disconnect = async () => {
     clientEngine?.disconnect()
@@ -52,7 +55,7 @@ export default function UI() {
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
-      <canvas ref={canvasRef} className={styles.canvas} tabIndex={1} onClick={onClick} onKeyDown={onKeyDown} />
+      <canvas ref={canvasRef} className={styles.canvas} tabIndex={1} onClick={onClick} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
     </>
   )
 }

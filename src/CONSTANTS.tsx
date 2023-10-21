@@ -22,6 +22,8 @@ export const PC_CURRENT = 'world.character.current'
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'
 export const TURN_RIGHT = 'world.character.turn.right'
+export const TURN_STOP = 'world.character.turn.stop'
 export const DECELERATE = 'world.character.decelerate'
 export const ACCELERATE = 'world.pc.accelerate'
+export const STOP_ACCELERATE = 'world.pc.stop_accelerate'
 

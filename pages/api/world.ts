@@ -1,8 +1,8 @@
-import { Server } from 'Socket.IO'
+import { Server } from 'socket.io'
 import { JsonDB, Config } from 'node-json-db';
 import { SocketResponse } from '../../src/SocketResponse';
 import { CONNECTION, CREATE_CHARACTER, DISCONNECT, PC_CURRENT, PC_DISCONNECT, CHARACTER_LOCATION } from '@/CONSTANTS';
-import { Character } from '../../app/worldSlice';
+import Character from "../../app/Character";
 import { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import ServerEngine from '@/ServerEngine';
@@ -44,7 +44,8 @@ export default function (req: NextRequest, res: SocketResponse) {
         let x = Math.random() * 700 + 100
         let y = Math.random() * 700 + 100
         const id = uuidv4()
-        let p: Character = { id: id, size: 5, location: { x: x, y: y }, vector: { angle: 0, velocity: 0 } }
+        let p = new Character({ id: id, size: 5, x: x, y: y, angle: Math.PI / 2, speed: 0, acceleration: 0, maxSpeed: 30 })
+
         //console.log(p)
         //save the new pc
         db.push('/pc/' + id, p)
@@ -62,20 +63,20 @@ export default function (req: NextRequest, res: SocketResponse) {
         socket.broadcast.emit(PC_DISCONNECT, socket.id)
       });
 
-      socket.on(CHARACTER_LOCATION, async (msg: { playerId: string, direction: { x: number, y: number } }) => {
+      socket.on(CHARACTER_LOCATION, async (msg: Character) => {
         console.log(CHARACTER_LOCATION, msg)
         //console.log(socket.id)
         //get the player
         let p: Character
         try {
-          p = await db.getData('/pc/' + msg.playerId)
+          p = await db.getData('/pc/' + msg.id)
           console.log(1, p)
-          p.location.x += msg.direction.x
-          p.location.y += msg.direction.y
+          p.x += msg.x
+          p.y += msg.y
           console.log(2, p)
 
           //save the player
-          db.push('/pc/' + msg.playerId, p);
+          db.push('/pc/' + msg.id, p);
           //broadcast the player
           socket.broadcast.emit(CHARACTER_LOCATION, p)
         }
