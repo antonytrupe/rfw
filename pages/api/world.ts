@@ -14,8 +14,12 @@ uuidv4();
 // The third argument is to ask JsonDB to save the database in an human readable format. (default false)
 // The last argument is the separator. By default it's slash (/)
 const db = new JsonDB(new Config("world", true, true, '/'));
-db.load()
-
+try {
+  db.load()
+}
+catch (e) {
+  console.log('failed to load')
+}
 const serverEngine = new ServerEngine()
 
 //console.log('world.tsx')
@@ -48,7 +52,13 @@ export default function (req: NextRequest, res: SocketResponse) {
 
         //console.log(p)
         //save the new pc
-        db.push('/pc/' + id, p)
+        try {
+          db.push('/pc/' + id, p)
+        }
+        catch (e) {
+          console.log('failed to create character')
+        }
+
         //tell everyone about the new character
         socket.broadcast.emit(CHARACTER_LOCATION, p)
         socket.emit(CHARACTER_LOCATION, p)
@@ -58,9 +68,9 @@ export default function (req: NextRequest, res: SocketResponse) {
         // ...
         console.log(DISCONNECT, socket.id)
         //remove the character from the database
-        db.delete('/pc/' + socket.id)
+        //db.delete('/pc/' + socket.id)
         //broadcast the removal
-        socket.broadcast.emit(PC_DISCONNECT, socket.id)
+        //socket.broadcast.emit(PC_DISCONNECT, socket.id)
       });
 
       socket.on(CHARACTER_LOCATION, async (msg: Character) => {
@@ -94,7 +104,7 @@ export default function (req: NextRequest, res: SocketResponse) {
           socket.emit(CHARACTER_LOCATION, player)
 
         })
-      })
+      }).catch(err => { console.log('empty database') })
     })
   }
   res.end()

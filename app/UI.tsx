@@ -47,7 +47,6 @@ export default function UI() {
   }
 
   const createCharacter = () => {
-    console.log('UI createCharacter')
     clientEngine?.createCharacter()
   }
 
