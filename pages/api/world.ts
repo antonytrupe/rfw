@@ -41,8 +41,8 @@ export default function (req: NextRequest, res: SocketResponse) {
 
       socket.on(CREATE_CHARACTER, () => {
         //console.log('world', 'CREATE_CHARACTER')
-        let x = Math.random() * 700 + 100
-        let y = Math.random() * 700 + 100
+        let x = Math.random() * 360 + 20
+        let y = Math.random() * 360 + 20
         const id = uuidv4()
         let p = new Character({ id: id, size: 5, x: x, y: y, angle: Math.PI / 2, speed: 0, acceleration: 0, maxSpeed: 30 })
 

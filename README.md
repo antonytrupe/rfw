@@ -4,7 +4,7 @@ npm build
 npm run start-dev
 
 ## TODO
-deploy to somewhere public
+stay centered on selected characters
 zoom centered on mouse
 rightclick move the screen
 show selected character stats
@@ -18,6 +18,8 @@ combat
 clean up draw resetting
 
 ## DONE
+change default zoom
+deploy to somewhere public
 create docker image
 deploy to docker container
 zooming

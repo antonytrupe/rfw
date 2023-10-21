@@ -13,7 +13,7 @@ export default class GameEngine {
     gameWorld: GameWorld = new GameWorld()
 
     constructor(eventEmitter: EventEmitter) {
-        console.log('GameEngine.constructor')
+        //console.log('GameEngine.constructor')
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
@@ -128,7 +128,7 @@ export default class GameEngine {
     }
 
     start() {
-        console.log('GameEngine.start')
+        //console.log('GameEngine.start')
         setTimeout(this.step.bind(this));
         if (typeof window === 'object' && typeof window.requestAnimationFrame === 'function') {
             //   window.requestAnimationFrame(this.nextTickChecker.bind(this));

@@ -55,18 +55,20 @@ export default class ClientEngine {
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(xOffset, yOffset)
-        ctx.lineTo(xOffset + ticks * 30, yOffset)
+        ctx.lineTo(xOffset + ticks * 30 * this.PIXELS_TO_FOOT, yOffset)
         ctx.font = 18 * this.ratio + "px Arial";
+        ctx.fillStyle = '#000000';
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
-            ctx.moveTo(xOffset + i * (ticks / tickSize) * 3, yOffset)
-            ctx.lineTo(xOffset + i * (ticks / tickSize) * 3, yOffset + 10 * this.ratio)
-            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3, yOffset + 20 * this.ratio)
-            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3, yOffset + 40 * this.ratio)
+            ctx.moveTo(xOffset + i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset)
+            ctx.lineTo(xOffset + i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset + 10 * this.ratio)
+            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset + 20 * this.ratio)
+            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset + 40 * this.ratio)
         })
 
         ctx.stroke()
     }
+    PIXELS_TO_FOOT = 2
 
     drawHourScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
@@ -76,34 +78,20 @@ export default class ClientEngine {
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(xOffset, yOffset)
-        ctx.lineTo(xOffset + (ticks / tickSize) * 300, yOffset)
+        ctx.lineTo(xOffset + (ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, yOffset)
         ctx.font = 18 * this.ratio + "px Arial"
         ctx.fillStyle = '#000000';
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
-            ctx.moveTo(xOffset + i * (ticks / tickSize) * 5, yOffset)
-            ctx.lineTo(xOffset + i * (ticks / tickSize) * 5, yOffset + 40 * this.ratio)
-            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5, yOffset + 50 * this.ratio)
-            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5, yOffset + 70 * this.ratio)
+            ctx.moveTo(xOffset + i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset)
+            ctx.lineTo(xOffset + i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset + 40 * this.ratio)
+            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset + 50 * this.ratio)
+            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, yOffset + 70 * this.ratio)
         })
         ctx.stroke()
     }
 
-    drawInit() {
-        if (!this.getCanvas) { return }
-        const canvas: HTMLCanvasElement | null = this.getCanvas()
-        if (!canvas) { return }
-        //@ts-ignore
-        const ctx: CanvasRenderingContext2D = canvas.getContext('2d')
 
-        const width: number = Number.parseInt(canvas.style.width.replace('px', ''))
-        const height: number = Number.parseInt(canvas.style.height.replace('px', ''))
-        //console.log(width)
-        canvas.width = Math.floor(width / 2 * this.ratio)
-        canvas.height = Math.floor(height / 2 * this.ratio)
-        ctx.scale(this.ratio, this.ratio);
-
-    }
 
     draw() {
         if (!this.getCanvas) { return }
@@ -128,11 +116,11 @@ export default class ClientEngine {
 
 
         //draw the scale
-        if (this.ratio <= 1) {
+        if (this.ratio <= 3) {
             this.drawMinuteScale(ctx)
         }
 
-        if (this.ratio > 1) {
+        if (this.ratio > 3) {
             this.drawHourScale(ctx)
         }
         //draw all the characters
@@ -143,7 +131,7 @@ export default class ClientEngine {
             }) ? '#009900' : '#000000'
 
             ctx.beginPath()
-            ctx.arc(character.x, character.y, character.size / 2, 0, 2 * Math.PI)
+            ctx.arc(character.x * this.PIXELS_TO_FOOT, character.y * this.PIXELS_TO_FOOT, character.size * this.PIXELS_TO_FOOT / 2, 0, 2 * Math.PI)
             ctx.fill()
         })
     }
@@ -158,8 +146,8 @@ export default class ClientEngine {
         const rect = this.getCanvas().getBoundingClientRect()
         const characters = this.gameEngine.gameWorld.findCharacters(
             {
-                x: (e.clientX - rect.left) * this.ratio,
-                y: (e.clientY - rect.top) * this.ratio
+                x: (e.clientX - rect.left) * this.ratio / this.PIXELS_TO_FOOT,
+                y: (e.clientY - rect.top) * this.ratio /this.PIXELS_TO_FOOT
             })
         this.selectedCharacters = characters
         // console.log(this.selectedCharacters)
@@ -167,7 +155,7 @@ export default class ClientEngine {
 
     wheelHandler(e: WheelEvent) {
         this.ratio = Math.min(Math.max(.1, this.ratio + e.deltaY / 1000), 12)
-        console.log(this.ratio)
+        //console.log(this.ratio)
     }
 
     keyDownHandler(e: KeyboardEvent) {
