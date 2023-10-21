@@ -1,12 +1,16 @@
 "use client"
 import EventEmitter from "events";
 import { Socket, io } from "socket.io-client";
-import { ACCELERATE, CONNECT, CREATE_CHARACTER, DECELERATE, DISCONNECT, PC_CURRENT, PC_DISCONNECT, PC_JOIN, CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP } from "./CONSTANTS";
+import {
+    ACCELERATE, CONNECT, CREATE_CHARACTER, DECELERATE, DISCONNECT, PC_CURRENT, PC_DISCONNECT, PC_JOIN,
+    CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP
+} from "./CONSTANTS";
 import GameEngine from "./GameEngine";
 import Character from "../app/Character";
 
 export default class ClientEngine {
     selectedCharacters: Character[] = [];
+    ratio: number = 1
     stop() {
         this.stopped = true;
     }
@@ -40,40 +44,63 @@ export default class ClientEngine {
             window.requestAnimationFrame(renderLoop.bind(this))
         }
         this.gameEngine.start()
+        //this.drawInit()
         window.requestAnimationFrame(renderLoop.bind(this))
     }
-    drawScale(ctx: CanvasRenderingContext2D) {
+    drawMinuteScale(ctx: CanvasRenderingContext2D) {
+        const xOffset = 10
+        const yOffset = 10
+        const ticks = 10
+        const tickSize = 1
         ctx.beginPath()
         //horizontal line
-        ctx.moveTo(10, 10)
-        ctx.lineTo(310, 10)
-        //0 tick
-        ctx.moveTo(10, 5)
-        ctx.lineTo(10, 15)
-        //30 tick
-        ctx.moveTo(40, 5)
-        ctx.lineTo(40, 15)
-        //60 tick
-        ctx.moveTo(70, 5)
-        ctx.lineTo(70, 15)
-        //90 tick
-        ctx.moveTo(100, 5)
-        ctx.lineTo(100, 15)
-
-
-        //90 tick
-        ctx.moveTo(310, 5)
-        ctx.lineTo(310, 15)
+        ctx.moveTo(xOffset, yOffset)
+        ctx.lineTo(xOffset + ticks * 30, yOffset)
+        ctx.font = 18 * this.ratio + "px Arial";
+        //tick marks
+        [0, 1, 3, 5, 10].forEach((i) => {
+            ctx.moveTo(xOffset + i * (ticks / tickSize) * 3, yOffset)
+            ctx.lineTo(xOffset + i * (ticks / tickSize) * 3, yOffset + 10 * this.ratio)
+            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3, yOffset + 20 * this.ratio)
+            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3, yOffset + 40 * this.ratio)
+        })
 
         ctx.stroke()
-        ctx.font = "12px Arial";
-        ctx.strokeText('30ft', 30, 25)
-        ctx.strokeText('6s', 30, 40)
-        ctx.strokeText('60ft', 60, 25)
-        ctx.strokeText('90ft', 90, 25)
+    }
 
-        ctx.strokeText('600ft', 300, 25)
-        ctx.strokeText('60s', 300, 40)
+    drawHourScale(ctx: CanvasRenderingContext2D) {
+        const xOffset = 10
+        const yOffset = 10
+        const ticks = 60
+        const tickSize = 1
+        ctx.beginPath()
+        //horizontal line
+        ctx.moveTo(xOffset, yOffset)
+        ctx.lineTo(xOffset + (ticks / tickSize) * 300, yOffset)
+        ctx.font = 18 * this.ratio + "px Arial";
+        //tick marks
+        [0, 1, 3, 5, 10].forEach((i) => {
+            ctx.moveTo(xOffset + i * (ticks / tickSize) * 5, yOffset)
+            ctx.lineTo(xOffset + i * (ticks / tickSize) * 5, yOffset + 40 * this.ratio)
+            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5, yOffset + 50 * this.ratio)
+            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5, yOffset + 70 * this.ratio)
+        })
+        ctx.stroke()
+    }
+
+    drawInit() {
+        if (!this.getCanvas) { return }
+        const canvas: HTMLCanvasElement | null = this.getCanvas()
+        if (!canvas) { return }
+        //@ts-ignore
+        const ctx: CanvasRenderingContext2D = canvas.getContext('2d')
+
+        const width: number = Number.parseInt(canvas.style.width.replace('px', ''))
+        const height: number = Number.parseInt(canvas.style.height.replace('px', ''))
+        //console.log(width)
+        canvas.width = Math.floor(width / 2 * this.ratio)
+        canvas.height = Math.floor(height / 2 * this.ratio)
+        ctx.scale(this.ratio, this.ratio);
 
     }
 
@@ -83,23 +110,11 @@ export default class ClientEngine {
         if (!canvas) { return }
         //@ts-ignore
         const ctx: CanvasRenderingContext2D = canvas.getContext('2d')
-        //const ratio = window.devicePixelRatio=4
-        //console.log(canvas)
-
-        //todo should this be inside the save/restore block?
-
-        const width: any = canvas.style.width
-        const height: any = canvas.style.height
-        //console.log(canvas.style.width)
-        //canvas.width = Math.floor(width * ratio)
-        //canvas.height = Math.floor(height * ratio)
-        //ctx.scale(ratio, ratio);
 
         {
             // Store the current transformation matrix
             ctx.save()
 
-            //this.drawInit( )
             // Use the identity matrix while clearing the canvas
             ctx.setTransform(1, 0, 0, 1, 0, 0)
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -108,16 +123,26 @@ export default class ClientEngine {
             ctx.restore()
         }
 
-        //draw the scale
-        this.drawScale(ctx)
+        ctx.setTransform(1 / this.ratio, 0, 0, 1 / this.ratio, 0, 0)
 
+
+        //draw the scale
+        if (this.ratio <= 1) {
+            this.drawMinuteScale(ctx)
+        }
+
+        if (this.ratio > 1) {
+            this.drawHourScale(ctx)
+        }
         //draw all the characters
         this.gameEngine.gameWorld.characters.forEach((character: Character) => {
 
-            ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => { return selectedCharacter.id == character.id }) ? '#009900' : '#000000'
+            ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
+                return selectedCharacter.id == character.id
+            }) ? '#009900' : '#000000'
 
             ctx.beginPath()
-            ctx.arc(character.x, character.y, character.size/2, 0, 2 * Math.PI)
+            ctx.arc(character.x, character.y, character.size / 2, 0, 2 * Math.PI)
             ctx.fill()
         })
     }
@@ -130,9 +155,18 @@ export default class ClientEngine {
 
     clickHandler(e: MouseEvent) {
         const rect = this.getCanvas().getBoundingClientRect()
-        const characters = this.gameEngine.gameWorld.findCharacters({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+        const characters = this.gameEngine.gameWorld.findCharacters(
+            {
+                x: (e.clientX - rect.left) * this.ratio,
+                y: (e.clientY - rect.top) * this.ratio
+            })
         this.selectedCharacters = characters
         // console.log(this.selectedCharacters)
+    }
+
+    wheelHandler(e: WheelEvent) {
+        this.ratio = Math.min(Math.max(.1, this.ratio + e.deltaY / 1000), 12)
+        console.log(this.ratio)
     }
 
     keyDownHandler(e: KeyboardEvent) {

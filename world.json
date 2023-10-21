@@ -19,6 +19,83 @@
             "speed": 0,
             "acceleration": 0,
             "maxSpeed": 30
+        },
+        "06f68d63-96d9-4944-9f03-404f7ec1426c": {
+            "acceleration": 0,
+            "id": "06f68d63-96d9-4944-9f03-404f7ec1426c",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 244.99798805478025,
+            "y": 480.2211036844169,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
+        },
+        "d6ac8489-4d89-4a44-9264-e65726012b27": {
+            "acceleration": 0,
+            "id": "d6ac8489-4d89-4a44-9264-e65726012b27",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 484.9940584701426,
+            "y": 197.87933809205396,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
+        },
+        "7c024c22-fe89-416a-96d3-d5fb767a1ae0": {
+            "acceleration": 0,
+            "id": "7c024c22-fe89-416a-96d3-d5fb767a1ae0",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 102.05926664380824,
+            "y": 443.46466763577234,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
+        },
+        "554f4b03-e21b-4759-8b23-a542e6242f55": {
+            "acceleration": 0,
+            "id": "554f4b03-e21b-4759-8b23-a542e6242f55",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 454.51136728985983,
+            "y": 745.2843862795711,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
+        },
+        "173a626a-9cd6-4886-ab37-ec53818789cb": {
+            "acceleration": 0,
+            "id": "173a626a-9cd6-4886-ab37-ec53818789cb",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 247.45567580583077,
+            "y": 604.9553490766509,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
+        },
+        "b080013a-ff9d-4d1a-9e94-a296fa48b40a": {
+            "acceleration": 0,
+            "id": "b080013a-ff9d-4d1a-9e94-a296fa48b40a",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 300.7862015206087,
+            "y": 349.6530492661607,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
+        },
+        "b8e1e893-409a-44c1-97ae-ab90e42233f7": {
+            "acceleration": 0,
+            "id": "b8e1e893-409a-44c1-97ae-ab90e42233f7",
+            "size": 5,
+            "maxSpeed": 30,
+            "x": 630.9301935240394,
+            "y": 100.94933736664072,
+            "speed": 0,
+            "turnDirection": 0,
+            "angle": 1.5707963267948966
         }
     }
 }

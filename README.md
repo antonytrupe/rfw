@@ -4,7 +4,8 @@ npm build
 npm run start-dev
 
 ## TODO
-zooming
+zoom centered on mouse
+rightclick move the screen
 show selected character stats
 change selected character stats
 create docker image
@@ -18,6 +19,7 @@ combat
 clean up draw resetting
 
 ## DONE
+zooming
 click on a character to take control
 distance scale ui
 tweak movement speed
