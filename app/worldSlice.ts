@@ -1,8 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
-
-export interface Player {
+export interface Character {
     id: string,
+    size:5,
     location: {
         x: number,
         y: number
@@ -12,10 +10,10 @@ export interface Player {
         angle: number
     }
 }
-
+/*
 export interface WorldState {
-    currentPlayer: Player | undefined,
-    players: Player[]
+    currentPlayer: Character | undefined,
+    players: Character[]
 }
 
 const initialState: WorldState = {
@@ -27,16 +25,16 @@ export const worldSlice = createSlice({
     name: 'world',
     initialState,
     reducers: {
-        addPlayer: (state, action: PayloadAction<Player>) => {
+        addPlayer: (state, action: PayloadAction<Character>) => {
             state.players = [...state.players, action.payload]
         },
-        addCurrentPlayer: (state, action: PayloadAction<Player>) => {
+        addCurrentPlayer: (state, action: PayloadAction<Character>) => {
             console.log(action.payload)
             state.players = [...state.players, action.payload]
             state.currentPlayer = { ...action.payload }
         },
 
-        setCurrentPlayer: (state, action: PayloadAction<Player>) => {
+        setCurrentPlayer: (state, action: PayloadAction<Character>) => {
             console.log(action.payload)
             //make sure this player is in the list of players
             if (!state.players.some((it) => {
@@ -55,7 +53,7 @@ export const worldSlice = createSlice({
             })
         },
 
-        warpPlayer: (state, action: PayloadAction<Player>) => {
+        warpPlayer: (state, action: PayloadAction<Character>) => {
             //make sure this player is in the list of players
             if (!state.players.some((it) => {
                 return it.id == action.payload.id
@@ -79,7 +77,7 @@ export const worldSlice = createSlice({
             })
         },
 
-        setPlayers: ((state, action: PayloadAction<Player[]>) => {
+        setPlayers: ((state, action: PayloadAction<Character[]>) => {
             state.players = [...action.payload]
         }),
 
@@ -95,3 +93,4 @@ export const { addPlayer, movePlayer, removePlayer, addCurrentPlayer, moveCurren
 
 export default worldSlice.reducer
 
+*/

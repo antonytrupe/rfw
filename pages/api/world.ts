@@ -1,17 +1,25 @@
 import { Server } from 'Socket.IO'
 import { JsonDB, Config } from 'node-json-db';
 import { SocketResponse } from '../../src/SocketResponse';
-import { CONNECTION,CREATE_CHARACTER, DISCONNECT, PC_CURRENT, PC_DISCONNECT, CHARACTER_LOCATION } from '@/CONSTANTS';
-import { Player as Character } from '../../app/worldSlice';
+import { CONNECTION, CREATE_CHARACTER, DISCONNECT, PC_CURRENT, PC_DISCONNECT, CHARACTER_LOCATION } from '@/CONSTANTS';
+import { Character } from '../../app/worldSlice';
 import { NextRequest } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
+import ServerEngine from '@/ServerEngine';
+uuidv4();
 
 // The first argument is the database filename. If no extension, '.json' is assumed and automatically added.
 // The second argument is used to tell the DB to save after each push
 // If you put false, you'll have to call the save() method.
 // The third argument is to ask JsonDB to save the database in an human readable format. (default false)
 // The last argument is the separator. By default it's slash (/)
-var db = new JsonDB(new Config("world", true, true, '/'));
+const db = new JsonDB(new Config("world", true, true, '/'));
 db.load()
+
+const serverEngine = new ServerEngine()
+
+//console.log('world.tsx')
+
 //db.save()
 //console.log('opened/created db')
 
@@ -28,23 +36,21 @@ export default function (req: NextRequest, res: SocketResponse) {
     const io = new Server(res.socket.server)
     //@ts-ignore
     res.socket.server.io = io
-
-
     res.socket.server.io.on(CONNECTION, socket => {
       console.log(CONNECTION, socket.id)
 
       socket.on(CREATE_CHARACTER, () => {
-        console.log('world',CREATE_CHARACTER)
-        let x = Math.random() * 400
-        let y = Math.random() * 400
-        let p: Character = { id: socket.id, location: { x: x, y: y }, vector: { angle: 0, velocity: 0 } }
-        console.log(p)
+        //console.log('world', 'CREATE_CHARACTER')
+        let x = Math.random() * 700 + 100
+        let y = Math.random() * 700 + 100
+        const id = uuidv4()
+        let p: Character = { id: id, size: 5, location: { x: x, y: y }, vector: { angle: 0, velocity: 0 } }
+        //console.log(p)
         //save the new pc
-        db.push('/pc/' + socket.id, p)
+        db.push('/pc/' + id, p)
         //tell everyone about the new character
-        socket.broadcast.emit(PC_CURRENT, p)
-        socket.emit(PC_CURRENT, p)
-
+        socket.broadcast.emit(CHARACTER_LOCATION, p)
+        socket.emit(CHARACTER_LOCATION, p)
       })
 
       socket.on(DISCONNECT, (reason) => {
