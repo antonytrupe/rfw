@@ -4,6 +4,9 @@ import { MutableRefObject, useEffect, useRef, useState, } from 'react'
 import ClientEngine from '../src/ClientEngine';
 import GameEngine from '../src/GameEngine';
 import EventEmitter, { getEventListeners } from 'events';
+import GameWorld from '@/GameWorld';
+import { CLIENT_UPDATE, WORLD_UPDATE } from '@/CONSTANTS';
+import Character from './Character';
 
 export default function UI() {
   //@ts-ignore
@@ -15,9 +18,22 @@ export default function UI() {
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
+  const [world, setWorldState] = useState<GameWorld>()
+  const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
+
+  useEffect(() => {
+    console.log('rerender')
+
+  })
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
+    eventEmitter.on(WORLD_UPDATE, (world: GameWorld) => {
+      setWorldState(world);
+    })
+    eventEmitter.on(CLIENT_UPDATE, (selectedCharacter: Character[]) => {
+      setSelectedCharacters(selectedCharacter);
+    })
     let gameEngine = new GameEngine(eventEmitter)
     setClientEngine(new ClientEngine(eventEmitter, gameEngine, getCanvas))
   }, [])
@@ -52,12 +68,12 @@ export default function UI() {
 
   return (
     <>
-      <div className={styles.hud}>
+      <div className={`${styles.hud} ${styles.flexColumn} `}>
         {!connected && (<button onClick={connect}>connect</button>)}
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
-      <span>ids:{clientEngine?.selectedCharacters[0]?.id}</span>
+
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
         style={{ width: "800px", height: "800px" }}
@@ -68,6 +84,20 @@ export default function UI() {
         onClick={onClick}
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp} />
+      <div>
+        {selectedCharacters.map((character: Character) => {
+          return (<div key={character.id}>
+            <div> id:{character.id}</div>
+            <div> size:{character.size}</div>
+            <div> speed:{character.speed}</div>
+            <div> maxSpeed:{character.maxSpeed}</div>
+            <div> x:{character.x}</div>
+            <div> y:{character.y}</div>
+          </div>)
+
+        })}
+
+      </div>
     </>
   )
 }

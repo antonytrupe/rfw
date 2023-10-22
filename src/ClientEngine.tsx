@@ -3,7 +3,7 @@ import EventEmitter from "events";
 import { Socket, io } from "socket.io-client";
 import {
     ACCELERATE, CONNECT, CREATE_CHARACTER, DECELERATE, DISCONNECT, PC_CURRENT, PC_DISCONNECT, PC_JOIN,
-    CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP
+    CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP, CLIENT_UPDATE
 } from "./CONSTANTS";
 import GameEngine from "./GameEngine";
 import Character from "../app/Character";
@@ -171,8 +171,8 @@ export default class ClientEngine {
                 y: (e.clientY - rect.top) * this.ratio / this.PIXELS_TO_FOOT
             })
         this.selectedCharacters = characters
-        // console.log(this.selectedCharacters)
-    }
+        this.emit(CLIENT_UPDATE, this.selectedCharacters)
+     }
 
     wheelHandler(e: WheelEvent) {
         this.ratio = Math.min(Math.max(.1, this.ratio + e.deltaY / 1000), 12)
@@ -187,28 +187,28 @@ export default class ClientEngine {
             //console.log('emit', TURN_RIGHT)
             if (this.selectedCharacters) {
                 this.emit(TURN_RIGHT, this.selectedCharacters)
-                //this.socket?.emit(TURN_RIGHT,this.selectedCharacters)
+                this.socket?.emit(TURN_RIGHT,this.selectedCharacters)
             }
         }
         else if (code == 'KeyA') {
             //console.log('emit', TURN_LEFT)
             if (this.selectedCharacters) {
                 this.emit(TURN_LEFT, this.selectedCharacters)
-                //this.socket?.emit(TURN_LEFT,this.selectedCharacters)
+                this.socket?.emit(TURN_LEFT,this.selectedCharacters)
             }
         }
         else if (code == 'KeyS') {
             //console.log('emit', DECELERATE)
             if (this.selectedCharacters) {
                 this.emit(DECELERATE, this.selectedCharacters)
-                //this.socket?.emit(DECELERATE,this.selectedCharacters
+                this.socket?.emit(DECELERATE,this.selectedCharacters)
             }
         }
         else if (code == 'KeyW') {
             //console.log('ClientEngine emit', 'ACCELERATE')
             if (this.selectedCharacters) {
                 this.emit(ACCELERATE, this.selectedCharacters)
-                //this.socket?.emit(ACCELERATE,this.selectedCharacters)
+                this.socket?.emit(ACCELERATE,this.selectedCharacters)
             }
         }
     }
@@ -221,28 +221,28 @@ export default class ClientEngine {
             //console.log('emit', TURN_STOP)
             if (this.selectedCharacters) {
                 this.emit(TURN_STOP, this.selectedCharacters)
-                //this.socket?.emit(TURN_STOP,this.selectedCharacters)
+                this.socket?.emit(TURN_STOP,this.selectedCharacters)
             }
         }
         else if (code == 'KeyA') {
             // console.log('emit', TURN_STOP)
             if (this.selectedCharacters) {
                 this.emit(TURN_STOP, this.selectedCharacters)
-                //this.socket?.emit(TURN_STOP,this.selectedCharacters)
+                this.socket?.emit(TURN_STOP,this.selectedCharacters)
             }
         }
         else if (code == 'KeyS') {
             //console.log('emit', 'STOP_ACCELERATE')
             if (this.selectedCharacters) {
                 this.emit(STOP_ACCELERATE, this.selectedCharacters)
-                //this.socket?.emit(DECELERATE,this.selectedCharacters
+                this.socket?.emit(DECELERATE,this.selectedCharacters)
             }
         }
         else if (code == 'KeyW') {
             // console.log('ClientEngine emit', 'STOP_ACCELERATE')
             if (this.selectedCharacters) {
                 this.emit(STOP_ACCELERATE, this.selectedCharacters)
-                //this.socket?.emit(ACCELERATE,this.selectedCharacters)
+                this.socket?.emit(ACCELERATE,this.selectedCharacters)
             }
         }
     }

@@ -1,11 +1,12 @@
 import { Server } from 'socket.io'
 import { JsonDB, Config } from 'node-json-db';
 import { SocketResponse } from '../../src/SocketResponse';
-import { CONNECTION, CREATE_CHARACTER, DISCONNECT, PC_CURRENT, PC_DISCONNECT, CHARACTER_LOCATION } from '@/CONSTANTS';
+import { CONNECTION, CREATE_CHARACTER, DISCONNECT, PC_CURRENT, PC_DISCONNECT, CHARACTER_LOCATION, TURN_STOP, STOP_ACCELERATE, ACCELERATE, DECELERATE, TURN_LEFT, TURN_RIGHT } from '@/CONSTANTS';
 import Character from "../../app/Character";
 import { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import ServerEngine from '@/ServerEngine';
+import GameEngine from '@/GameEngine';
 uuidv4();
 
 // The first argument is the database filename. If no extension, '.json' is assumed and automatically added.
@@ -62,6 +63,30 @@ export default function (req: NextRequest, res: SocketResponse) {
         //tell everyone about the new character
         socket.broadcast.emit(CHARACTER_LOCATION, p)
         socket.emit(CHARACTER_LOCATION, p)
+      })
+
+      socket.on(TURN_STOP, async (characters: Character[]) => {
+        //TODO
+      })
+
+      socket.on(STOP_ACCELERATE, async (characters: Character[]) => {
+        //TODO 
+      })
+
+      socket.on(ACCELERATE, async (characters: Character[]) => {
+        //TODO
+      })
+
+      socket.on(DECELERATE, async (characters: Character[]) => {
+        //TODO
+      })
+
+      socket.on(TURN_LEFT, async (characters: Character[]) => {
+        //TODO
+      })
+
+      socket.on(TURN_RIGHT, async (characters: Character[]) => {
+        //TODO
       })
 
       socket.on(DISCONNECT, (reason) => {

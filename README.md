@@ -4,10 +4,11 @@ npm build
 npm run start-dev
 
 ## TODO
+collision
+double run with shift
 stay centered on selected characters
 zoom centered on mouse
 rightclick move the screen
-show selected character stats
 change selected character stats
 chat
 reconnect after disconnect
@@ -15,9 +16,11 @@ randomly spawn new characters
 randomly move characters
 character health ui
 combat
+leveling up system
 clean up draw resetting
 
 ## DONE
+show selected character stats
 change default zoom
 deploy to somewhere public
 create docker image

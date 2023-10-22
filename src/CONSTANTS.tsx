@@ -18,6 +18,8 @@ export const PC_JOIN = 'world.character.join'
 export const CREATE_CHARACTER = 'world.character.create'
 //tell the client which character it is controlling
 export const PC_CURRENT = 'world.character.current'
+export const WORLD_UPDATE = 'world.update'
+export const CLIENT_UPDATE = 'client.selected_characters.update'
 
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'
