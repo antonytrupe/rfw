@@ -49,7 +49,7 @@ export default function (req: NextRequest, res: SocketResponse) {
         let x = Math.random() * 360 + 20
         let y = Math.random() * 360 + 20
         const id = uuidv4()
-        let p = new Character({ id: id, size: 5, x: x, y: y, angle: Math.PI / 2, speed: 0, acceleration: 0, maxSpeed: 30 })
+        let p = new Character({ id: id, size: 5, x: x, y: y })
 
         //console.log(p)
         //save the new pc

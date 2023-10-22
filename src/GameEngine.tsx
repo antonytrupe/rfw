@@ -1,7 +1,7 @@
 "use client"
 import EventEmitter from "events";
 import Character from "../app/Character";
-import { TURN_RIGHT, TURN_LEFT, DECELERATE, ACCELERATE, CHARACTER_LOCATION as CHARACTER_LOCATION, STOP_ACCELERATE, TURN_STOP } from "./CONSTANTS";
+import { TURN_RIGHT, TURN_LEFT, DECELERATE, ACCELERATE, CHARACTER_LOCATION as CHARACTER_LOCATION, STOP_ACCELERATE, TURN_STOP, DECELERATE_DOUBLE, ACCELERATE_DOUBLE, STOP_DOUBLE_ACCELERATE } from "./CONSTANTS";
 import GameWorld from "./GameWorld";
 
 export default class GameEngine {
@@ -13,48 +13,55 @@ export default class GameEngine {
     gameWorld: GameWorld = new GameWorld()
 
     constructor(eventEmitter: EventEmitter) {
-        //console.log('GameEngine.constructor')
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
 
         this.on(TURN_RIGHT, (characters: Character[]) => {
-            //console.log('GameEngine on', 'TURN_RIGHT')
             characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, turnDirection: -1 })
+                this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
             })
         })
         this.on(TURN_LEFT, (characters: Character[]) => {
-            //console.log('GameEngine on', 'TURN_LEFT')
             characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, turnDirection: 1 })
+                this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
             })
         })
         this.on(TURN_STOP, (characters: Character[]) => {
-            //console.log('GameEngine on', 'TURN_STOP')
             characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, turnDirection: 0 })
+                this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
+            })
+        })
+        this.on(DECELERATE_DOUBLE, (characters: Character[]) => {
+            characters.forEach((character) => {
+                this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
+            })
+        })
+        this.on(ACCELERATE_DOUBLE, (characters: Character[]) => {
+            characters.forEach((character: Character) => {
+                this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
             })
         })
         this.on(DECELERATE, (characters: Character[]) => {
-            //console.log('GameEngine on', 'DECELERATE')
-            //TODO
             characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, acceleration: -1 })
+                this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
             })
         })
         this.on(ACCELERATE, (characters: Character[]) => {
-            //console.log('GameEngine on', 'ACCELERATE')
-            //TODO
             characters.forEach((character: Character) => {
-                this.gameWorld.updateCharacter({ id: character.id, acceleration: 1 })
+                this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
             })
         })
         this.on(STOP_ACCELERATE, (characters: Character[]) => {
             //console.log('GameEngine on', 'STOP_ACCELERATE')
-            //TODO
             characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, acceleration: 0 })
+                this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
+            })
+        })
+        this.on(STOP_DOUBLE_ACCELERATE, (characters: Character[]) => {
+            //console.log('GameEngine on', 'STOP_ACCELERATE')
+            characters.forEach((character) => {
+                this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
             })
         })
 
@@ -67,7 +74,9 @@ export default class GameEngine {
     lastTimestamp: DOMHighResTimeStamp | undefined
     //lower number means faster, higher means slower
     accelerationMultiplier: number = 20
-    turnMultiplier: number = 300
+    turnMultiplier: number = 420
+    //1px/ft
+    //5ft/s*1000ms/s
     speedMultiplier: number = 5000
     step() {
         //console.log('GameEngine.step')
@@ -75,56 +84,43 @@ export default class GameEngine {
         this.lastTimestamp = this.lastTimestamp || now
         const dt = now - this.lastTimestamp
         this.lastTimestamp = now
-        //console.log(dt)
 
         this.gameWorld.characters = this.gameWorld.characters.map((character: Character): Character => {
 
             //calculate the new angle
-            let newAngle = character.angle
-            if (character.turnDirection != 0) {
-                newAngle = character.angle - character.turnDirection * dt / this.turnMultiplier
+            let newAngle = character.direction
+            if (character.directionAcceleration != 0) {
+                newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier
             }
 
             let newX: number = character.x
             let newY: number = character.y
             if (character.speed != 0) {
                 //calculate new position
-                newX = character.x + character.speed * Math.sin(character.angle) * dt / this.speedMultiplier
-                newY = character.y - character.speed * Math.cos(character.angle) * dt / this.speedMultiplier
-                //console.log('newX', newX)
-            }
-
-            if (character.acceleration == 0 && character.speed != 0) {
-                //console.log('slowing down speed', character.speed)
+                newX = character.x + character.speed * Math.sin(character.direction) * dt / this.speedMultiplier
+                newY = character.y - character.speed * Math.cos(character.direction) * dt / this.speedMultiplier
             }
 
             let newSpeed = 0
             //calculate new speed
-            if (character.acceleration != 0) {
-                //console.log('accelerating speed',character.speed)
-                //console.log(character.acceleration)
-                newSpeed = Math.max(-character.maxSpeed, Math.min(character.speed + character.acceleration * dt / this.accelerationMultiplier, character.maxSpeed))
+            if (character.speedAcceleration != 0) {
+                //TODO slow down the transition from sprint to run
+                newSpeed = Math.max(-character.maxSpeed * character.mode, Math.min(character.speed + character.speedAcceleration * dt / this.accelerationMultiplier, character.maxSpeed * character.mode))
                 //console.log('new speed', newSpeed)
             }
             else if (character.speed > 0) {
                 //slow down
-                //console.log('speed', character.speed)
                 newSpeed = Math.max(character.speed - dt / this.accelerationMultiplier, 0)
-                //console.log(newSpeed)
-
             }
             else if (character.speed < 0) {
-                //console.log('speed', character.speed)
                 newSpeed = Math.min(character.speed + dt / this.accelerationMultiplier, 0)
 
             }
-            if (newSpeed == 0 && character.speed != 0) {
-                //console.log('STOPPED----------')
-            }
-            return { ...character, x: newX, y: newY, speed: newSpeed, angle: newAngle }
+            return { ...character, x: newX, y: newY, speed: newSpeed, direction: newAngle }
         })
-        //60 frames per second is one frame every 16.66 milliseconds
-        setTimeout(this.step.bind(this), 17);
+        //60 frames per second is one frame every ~17 milliseconds
+        //30 frames per second is one frame every ~33 milliseconds
+        setTimeout(this.step.bind(this), 20);
     }
 
     start() {

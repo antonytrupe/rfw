@@ -21,7 +21,7 @@ export default class GameWorld {
                 Math.pow(character.x - position.x, 2) +
                 Math.pow(character.y - position.y, 2))
             //console.log('distance', distance)
-            return distance < character.size
+            return distance < character.size/2
         })
     }
     characters: Character[] = [];

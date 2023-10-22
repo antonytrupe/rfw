@@ -3,7 +3,7 @@ import EventEmitter from "events";
 import { Socket, io } from "socket.io-client";
 import {
     ACCELERATE, CONNECT, CREATE_CHARACTER, DECELERATE, DISCONNECT, PC_CURRENT, PC_DISCONNECT, PC_JOIN,
-    CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP, CLIENT_UPDATE
+    CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP, CLIENT_UPDATE, DECELERATE_DOUBLE, ACCELERATE_DOUBLE, STOP_DOUBLE_ACCELERATE
 } from "./CONSTANTS";
 import GameEngine from "./GameEngine";
 import Character from "../app/Character";
@@ -47,57 +47,90 @@ export default class ClientEngine {
         //this.drawInit()
         window.requestAnimationFrame(renderLoop.bind(this))
     }
+
+    scaleStyle(ctx: CanvasRenderingContext2D) {
+        ctx.font = 18 * this.ratio + "px Arial";
+        ctx.fillStyle = '#000000'
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1 * this.ratio;
+    }
+
+    drawTurnScale(ctx: CanvasRenderingContext2D) {
+        const xOffset = 10
+        const yOffset = 10
+        ctx.save()
+        ctx.translate(xOffset * this.ratio, yOffset * this.ratio)
+        const ticks = 6
+        const tickSize = 5
+        ctx.beginPath()
+        //horizontal line
+        ctx.moveTo(0, 0)
+        ctx.lineTo(0 + ticks * tickSize * this.PIXELS_TO_FOOT, 0)
+        this.scaleStyle(ctx);
+
+        //tick marks
+        [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
+            ctx.moveTo(i * tickSize * this.PIXELS_TO_FOOT, 0)
+            ctx.lineTo(i * tickSize * this.PIXELS_TO_FOOT, 10 * this.ratio)
+            ctx.fillText(i * tickSize + 'ft', i * tickSize * this.PIXELS_TO_FOOT, 25 * this.ratio)
+            ctx.fillText(i * tickSize / 5 + 's', i * tickSize * this.PIXELS_TO_FOOT, 45 * this.ratio)
+        })
+
+        ctx.stroke()
+        ctx.restore()
+    }
+
     drawMinuteScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
         const ticks = 10
         const tickSize = 1
-        ctx.beginPath()
-        //horizontal line
-        ctx.moveTo(xOffset, yOffset)
-        ctx.lineTo(xOffset + ticks * 30 * this.PIXELS_TO_FOOT, yOffset)
-        ctx.font = 18 * this.ratio + "px Arial";
-        ctx.fillStyle = '#000000'
-        ctx.strokeStyle = '#000000';
-        //tick marks
-        [0, 1, 3, 5, 10].forEach((i) => {
-            ctx.moveTo(xOffset + i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset)
-            ctx.lineTo(xOffset + i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset + 10 * this.ratio)
-            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset + 20 * this.ratio)
-            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, yOffset + 40 * this.ratio)
-        })
-
-        ctx.stroke()
-    }
-    PIXELS_TO_FOOT = 2
-
-    drawHourScale(ctx: CanvasRenderingContext2D) {
-        const xOffset = 10
-        const yOffset = 10
         ctx.save()
-        ctx.translate(xOffset, yOffset)
-
-        const ticks = 60
-        const tickSize = 1
+        ctx.translate(xOffset * this.ratio, yOffset * this.ratio)
+        this.scaleStyle(ctx);
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
-        ctx.lineTo(+ (ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, 0)
-        ctx.font = 18 * this.ratio + "px Arial"
-        ctx.fillStyle = '#000000'
-        ctx.strokeStyle = '#000000';
+        ctx.lineTo(ticks * 30 * this.PIXELS_TO_FOOT, 0);
+
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
-            ctx.moveTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0)
-            ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0 + 40 * this.ratio)
-            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0 + 50 * this.ratio)
-            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0 + 70 * this.ratio)
+            ctx.moveTo(i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 0)
+            ctx.lineTo(i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 10 * this.ratio)
+            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 25 * this.ratio)
+            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 45 * this.ratio)
         })
+
         ctx.stroke()
         ctx.restore()
     }
 
+    PIXELS_TO_FOOT = 10
 
+    drawHourScale(ctx: CanvasRenderingContext2D) {
+        const xOffset = 10
+        const yOffset = 10
+        const ticks = 60
+        const tickSize = 1
+        ctx.save()
+        ctx.translate(xOffset * this.ratio, yOffset * this.ratio)
+        this.scaleStyle(ctx);
+
+        ctx.beginPath()
+        //horizontal line
+        ctx.moveTo(0, 0)
+        ctx.lineTo(+ (ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, 0);
+
+        //tick marks
+        [0, 1, 3, 5, 10].forEach((i) => {
+            ctx.moveTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0)
+            ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 10 * this.ratio)
+            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 25 * this.ratio)
+            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 45 * this.ratio)
+        })
+        ctx.stroke()
+        ctx.restore()
+    }
 
     draw() {
         if (!this.getCanvas) { return }
@@ -120,21 +153,23 @@ export default class ClientEngine {
 
         ctx.setTransform(1 / this.ratio, 0, 0, 1 / this.ratio, 0, 0)
 
-
         //draw the scale
-        if (this.ratio <= 3) {
+        if (this.ratio <= 2) {
+            this.drawTurnScale(ctx)
+        }
+        else if (this.ratio <= 8) {
             this.drawMinuteScale(ctx)
         }
-
-        if (this.ratio > 3) {
+        else {
             this.drawHourScale(ctx)
         }
+
         //draw all the characters
         this.gameEngine.gameWorld.characters.forEach((character: Character) => {
 
             ctx.save()
             ctx.translate(character.x * this.PIXELS_TO_FOOT, character.y * this.PIXELS_TO_FOOT)
-            ctx.rotate(character.angle)
+            ctx.rotate(character.direction)
 
             ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
                 return selectedCharacter.id == character.id
@@ -172,43 +207,46 @@ export default class ClientEngine {
             })
         this.selectedCharacters = characters
         this.emit(CLIENT_UPDATE, this.selectedCharacters)
-     }
+    }
 
     wheelHandler(e: WheelEvent) {
-        this.ratio = Math.min(Math.max(.1, this.ratio + e.deltaY / 1000), 12)
-        //console.log(this.ratio)
+        this.ratio = Math.min(Math.max(.5, this.ratio + e.deltaY / 1000), 100)
+        console.log(this.ratio)
     }
 
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
-        //console.log(e)
 
         if (code == 'KeyD') {
-            //console.log('emit', TURN_RIGHT)
             if (this.selectedCharacters) {
                 this.emit(TURN_RIGHT, this.selectedCharacters)
-                this.socket?.emit(TURN_RIGHT,this.selectedCharacters)
+                this.socket?.emit(TURN_RIGHT, this.selectedCharacters)
             }
         }
         else if (code == 'KeyA') {
-            //console.log('emit', TURN_LEFT)
             if (this.selectedCharacters) {
                 this.emit(TURN_LEFT, this.selectedCharacters)
-                this.socket?.emit(TURN_LEFT,this.selectedCharacters)
+                this.socket?.emit(TURN_LEFT, this.selectedCharacters)
             }
         }
         else if (code == 'KeyS') {
-            //console.log('emit', DECELERATE)
             if (this.selectedCharacters) {
-                this.emit(DECELERATE, this.selectedCharacters)
-                this.socket?.emit(DECELERATE,this.selectedCharacters)
+                //if holding shift then double fast goer
+                this.emit(  DECELERATE, this.selectedCharacters)
+                this.socket?.emit(  DECELERATE, this.selectedCharacters)
             }
         }
         else if (code == 'KeyW') {
-            //console.log('ClientEngine emit', 'ACCELERATE')
             if (this.selectedCharacters) {
-                this.emit(ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(ACCELERATE,this.selectedCharacters)
+                //if holding shift then double fast goer
+                this.emit(  ACCELERATE, this.selectedCharacters)
+                this.socket?.emit(  ACCELERATE, this.selectedCharacters)
+            }
+        }
+        else if (code == "ShiftLeft") {
+            if (this.selectedCharacters) {
+                this.emit(ACCELERATE_DOUBLE, this.selectedCharacters)
+                this.socket?.emit(ACCELERATE_DOUBLE, this.selectedCharacters)
             }
         }
     }
@@ -218,31 +256,33 @@ export default class ClientEngine {
         //console.log(e)
 
         if (code == 'KeyD') {
-            //console.log('emit', TURN_STOP)
             if (this.selectedCharacters) {
                 this.emit(TURN_STOP, this.selectedCharacters)
-                this.socket?.emit(TURN_STOP,this.selectedCharacters)
+                this.socket?.emit(TURN_STOP, this.selectedCharacters)
             }
         }
         else if (code == 'KeyA') {
-            // console.log('emit', TURN_STOP)
             if (this.selectedCharacters) {
                 this.emit(TURN_STOP, this.selectedCharacters)
-                this.socket?.emit(TURN_STOP,this.selectedCharacters)
+                this.socket?.emit(TURN_STOP, this.selectedCharacters)
             }
         }
         else if (code == 'KeyS') {
-            //console.log('emit', 'STOP_ACCELERATE')
             if (this.selectedCharacters) {
                 this.emit(STOP_ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(DECELERATE,this.selectedCharacters)
+                this.socket?.emit(STOP_ACCELERATE, this.selectedCharacters)
             }
         }
         else if (code == 'KeyW') {
-            // console.log('ClientEngine emit', 'STOP_ACCELERATE')
             if (this.selectedCharacters) {
                 this.emit(STOP_ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(ACCELERATE,this.selectedCharacters)
+                this.socket?.emit(STOP_ACCELERATE, this.selectedCharacters)
+            }
+        }
+        else if (code == "ShiftLeft") {
+            if (this.selectedCharacters) {
+                this.emit(STOP_DOUBLE_ACCELERATE, this.selectedCharacters)
+                this.socket?.emit(STOP_DOUBLE_ACCELERATE, this.selectedCharacters)
             }
         }
     }

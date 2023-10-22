@@ -4,6 +4,8 @@ npm build
 npm run start-dev
 
 ## TODO
+get the server engine running and persisting
+move stuff out of world.ts
 collision
 double run with shift
 stay centered on selected characters
@@ -20,6 +22,8 @@ leveling up system
 clean up draw resetting
 
 ## DONE
+double run with shift
+change default scale to turn ratio
 show selected character stats
 change default zoom
 deploy to somewhere public

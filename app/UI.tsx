@@ -22,11 +22,6 @@ export default function UI() {
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
-    console.log('rerender')
-
-  })
-
-  useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
     eventEmitter.on(WORLD_UPDATE, (world: GameWorld) => {
       setWorldState(world);
@@ -94,9 +89,7 @@ export default function UI() {
             <div> x:{character.x}</div>
             <div> y:{character.y}</div>
           </div>)
-
         })}
-
       </div>
     </>
   )
