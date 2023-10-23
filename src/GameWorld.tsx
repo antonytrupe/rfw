@@ -1,4 +1,4 @@
-import Character from "../app/Character";
+import Character from "./Character";
 
 export default class GameWorld {
     updateCharacter(character: Partial<Character>) {
@@ -21,11 +21,12 @@ export default class GameWorld {
                 Math.pow(character.x - position.x, 2) +
                 Math.pow(character.y - position.y, 2))
             //console.log('distance', distance)
-            return distance < character.size/2
+            return distance < character.size / 2
         })
     }
     characters: Character[] = [];
     currentPlayer!: Character;
-    constructor() {
+    constructor(characters: Character[]) {
+        this.characters = characters
     }
 }

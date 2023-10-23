@@ -1,12 +1,9 @@
 "use client"
 import EventEmitter from "events";
 import { Socket, io } from "socket.io-client";
-import {
-    ACCELERATE, CONNECT, CREATE_CHARACTER, DECELERATE, DISCONNECT, PC_CURRENT, PC_DISCONNECT, PC_JOIN,
-    CHARACTER_LOCATION, TURN_LEFT, TURN_RIGHT, STOP_ACCELERATE, TURN_STOP, CLIENT_UPDATE, DECELERATE_DOUBLE, ACCELERATE_DOUBLE, STOP_DOUBLE_ACCELERATE
-} from "./CONSTANTS";
-import GameEngine from "./GameEngine";
-import Character from "../app/Character";
+import GameEngine from "@/GameEngine";
+import Character from "./Character";
+import * as CONSTANTS from "@/CONSTANTS";
 
 export default class ClientEngine {
     selectedCharacters: Character[] = [];
@@ -28,10 +25,10 @@ export default class ClientEngine {
     getCanvas: (() => HTMLCanvasElement);
     connected: boolean = false
 
-    constructor(eventEmitter: EventEmitter, gameEngine: GameEngine, getCanvas: (() => HTMLCanvasElement)) {
+    constructor(eventEmitter: EventEmitter,  getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
         this.getCanvas = getCanvas
-        this.gameEngine = gameEngine
+        this.gameEngine = new GameEngine(eventEmitter,[])
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
@@ -195,7 +192,7 @@ export default class ClientEngine {
     createCharacter() {
         //console.log('ClientEngine.createCharacter')
         //tell the server to create a new PC
-        this.socket?.emit(CREATE_CHARACTER)
+        this.socket?.emit(CONSTANTS.CREATE_CHARACTER)
     }
 
     clickHandler(e: MouseEvent) {
@@ -206,12 +203,11 @@ export default class ClientEngine {
                 y: (e.clientY - rect.top) * this.ratio / this.PIXELS_TO_FOOT
             })
         this.selectedCharacters = characters
-        this.emit(CLIENT_UPDATE, this.selectedCharacters)
+        this.emit(CONSTANTS.CLIENT_UPDATE, this.selectedCharacters)
     }
 
     wheelHandler(e: WheelEvent) {
         this.ratio = Math.min(Math.max(.5, this.ratio + e.deltaY / 1000), 100)
-        console.log(this.ratio)
     }
 
     keyDownHandler(e: KeyboardEvent) {
@@ -219,34 +215,34 @@ export default class ClientEngine {
 
         if (code == 'KeyD') {
             if (this.selectedCharacters) {
-                this.emit(TURN_RIGHT, this.selectedCharacters)
-                this.socket?.emit(TURN_RIGHT, this.selectedCharacters)
+                this.emit(CONSTANTS.TURN_RIGHT, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.TURN_RIGHT, this.selectedCharacters)
             }
         }
         else if (code == 'KeyA') {
             if (this.selectedCharacters) {
-                this.emit(TURN_LEFT, this.selectedCharacters)
-                this.socket?.emit(TURN_LEFT, this.selectedCharacters)
+                this.emit(CONSTANTS.TURN_LEFT, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.TURN_LEFT, this.selectedCharacters)
             }
         }
         else if (code == 'KeyS') {
             if (this.selectedCharacters) {
                 //if holding shift then double fast goer
-                this.emit(  DECELERATE, this.selectedCharacters)
-                this.socket?.emit(  DECELERATE, this.selectedCharacters)
+                this.emit(CONSTANTS.DECELERATE, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.DECELERATE, this.selectedCharacters)
             }
         }
         else if (code == 'KeyW') {
             if (this.selectedCharacters) {
                 //if holding shift then double fast goer
-                this.emit(  ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(  ACCELERATE, this.selectedCharacters)
+                this.emit(CONSTANTS.ACCELERATE, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.ACCELERATE, this.selectedCharacters)
             }
         }
         else if (code == "ShiftLeft") {
             if (this.selectedCharacters) {
-                this.emit(ACCELERATE_DOUBLE, this.selectedCharacters)
-                this.socket?.emit(ACCELERATE_DOUBLE, this.selectedCharacters)
+                this.emit(CONSTANTS.ACCELERATE_DOUBLE, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, this.selectedCharacters)
             }
         }
     }
@@ -257,32 +253,32 @@ export default class ClientEngine {
 
         if (code == 'KeyD') {
             if (this.selectedCharacters) {
-                this.emit(TURN_STOP, this.selectedCharacters)
-                this.socket?.emit(TURN_STOP, this.selectedCharacters)
+                this.emit(CONSTANTS.TURN_STOP, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.TURN_STOP, this.selectedCharacters)
             }
         }
         else if (code == 'KeyA') {
             if (this.selectedCharacters) {
-                this.emit(TURN_STOP, this.selectedCharacters)
-                this.socket?.emit(TURN_STOP, this.selectedCharacters)
+                this.emit(CONSTANTS.TURN_STOP, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.TURN_STOP, this.selectedCharacters)
             }
         }
         else if (code == 'KeyS') {
             if (this.selectedCharacters) {
-                this.emit(STOP_ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(STOP_ACCELERATE, this.selectedCharacters)
+                this.emit(CONSTANTS.STOP_ACCELERATE, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, this.selectedCharacters)
             }
         }
         else if (code == 'KeyW') {
             if (this.selectedCharacters) {
-                this.emit(STOP_ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(STOP_ACCELERATE, this.selectedCharacters)
+                this.emit(CONSTANTS.STOP_ACCELERATE, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, this.selectedCharacters)
             }
         }
         else if (code == "ShiftLeft") {
             if (this.selectedCharacters) {
-                this.emit(STOP_DOUBLE_ACCELERATE, this.selectedCharacters)
-                this.socket?.emit(STOP_DOUBLE_ACCELERATE, this.selectedCharacters)
+                this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, this.selectedCharacters)
+                this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, this.selectedCharacters)
             }
         }
     }
@@ -292,42 +288,38 @@ export default class ClientEngine {
 
         await fetch('/api/world')
         this.socket = io()
-        this.socket.on(CONNECT, () => {
+        this.socket.on(CONSTANTS.CONNECT, () => {
             this.connected = true
 
-            //console.log('world connected')
-            //console.log('CONNECT on ', this.socket?.id)
-            //setSocketId(socket?.id)
-
             //disconnect handler
-            this.socket?.on(DISCONNECT, (reason) => {
+            this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
                 console.log('DISCONNECT', this.socket?.id)
                 this.connected = false
             })
 
             //pc disconnect
-            this.socket?.on(PC_DISCONNECT, (playerId) => {
+            this.socket?.on(CONSTANTS.PC_DISCONNECT, (playerId) => {
                 console.log('PC_DISCONNECT', playerId)
                 //dispatch(removePlayer(playerId))
             })
 
             //pc join
-            this.socket?.on(PC_JOIN, (character: Character) => {
+            this.socket?.on(CONSTANTS.PC_JOIN, (character: Character) => {
                 console.log('PC_JOIN', character)
                 //dispatch(addPlayer(player))
             })
 
             //pc current
-            this.socket?.on(PC_CURRENT, (character: Character) => {
+            this.socket?.on(CONSTANTS.PC_CURRENT, (character: Character) => {
                 console.log('PC_CURRENT', character)
                 //dispatch(setCurrentPlayer(player))
             })
 
             //pc location data
-            this.socket?.on(CHARACTER_LOCATION, (character: Character) => {
+            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (character: Character) => {
                 //console.log('socket on PC_LOCATION', character)
-                //TODO 
-                this.emit(CHARACTER_LOCATION, character)
+                //tell the gameengine we got an update 
+                this.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, character)
             })
         })
     }

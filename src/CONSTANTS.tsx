@@ -1,5 +1,3 @@
-//"use client";
-
 //client connect
 export const CONNECT = 'connect'
 //server connect
@@ -10,8 +8,12 @@ export const DISCONNECT = 'disconnect'
 export const MESSAGE_CLIENT_SEND = "message.client.send"
 export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 
+//db constants
+export const CHARACTER_PATH = '/CHARACTER/'
+
 //tell the client the current location and vector of a character
-export const CHARACTER_LOCATION = 'world.character.location'
+export const CLIENT_CHARACTER_UPDATE = 'world.character.location.client'
+export const SERVER_CHARACTER_UPDATE = 'world.character.location.server'
 export const PC_DISCONNECT = 'world.character.disconnect'
 export const PC_JOIN = 'world.character.join'
 //tell the server to create a character
@@ -30,4 +32,4 @@ export const ACCELERATE = 'world.character.accelerate'
 export const DECELERATE_DOUBLE = 'world.character.decelerate_double'
 export const ACCELERATE_DOUBLE = 'world.character.accelerate_double'
 export const STOP_ACCELERATE = 'world.character.stop_accelerate'
-export const STOP_DOUBLE_ACCELERATE= 'world.character.stop_double_accelerate'
+export const STOP_DOUBLE_ACCELERATE = 'world.character.stop_double_accelerate'

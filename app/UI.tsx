@@ -6,7 +6,7 @@ import GameEngine from '../src/GameEngine';
 import EventEmitter, { getEventListeners } from 'events';
 import GameWorld from '@/GameWorld';
 import { CLIENT_UPDATE, WORLD_UPDATE } from '@/CONSTANTS';
-import Character from './Character';
+import Character from '../src/Character';
 
 export default function UI() {
   //@ts-ignore
@@ -18,19 +18,19 @@ export default function UI() {
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
-  const [world, setWorldState] = useState<GameWorld>()
+  //const [world, setWorldState] = useState<GameWorld>()
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
     eventEmitter.on(WORLD_UPDATE, (world: GameWorld) => {
-      setWorldState(world);
+      //setWorldState(world);
     })
     eventEmitter.on(CLIENT_UPDATE, (selectedCharacter: Character[]) => {
       setSelectedCharacters(selectedCharacter);
     })
-    let gameEngine = new GameEngine(eventEmitter)
-    setClientEngine(new ClientEngine(eventEmitter, gameEngine, getCanvas))
+    //let gameEngine = new GameEngine(eventEmitter)
+    setClientEngine(new ClientEngine(eventEmitter, getCanvas))
   }, [])
 
   const connect = async () => {

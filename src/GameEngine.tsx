@@ -1,8 +1,10 @@
 "use client"
 import EventEmitter from "events";
-import Character from "../app/Character";
-import { TURN_RIGHT, TURN_LEFT, DECELERATE, ACCELERATE, CHARACTER_LOCATION as CHARACTER_LOCATION, STOP_ACCELERATE, TURN_STOP, DECELERATE_DOUBLE, ACCELERATE_DOUBLE, STOP_DOUBLE_ACCELERATE } from "./CONSTANTS";
+import Character from "./Character";
+import * as CONSTANTS from "./CONSTANTS";
 import GameWorld from "./GameWorld";
+import { v4 as uuidv4 } from 'uuid';
+
 
 export default class GameEngine {
     //EventEmitter function
@@ -10,62 +12,76 @@ export default class GameEngine {
     emit: (eventName: string | symbol, ...args: any[]) => boolean;
     eventNames: () => (string | symbol)[];
     //data object
-    gameWorld: GameWorld = new GameWorld()
+    gameWorld: GameWorld
 
-    constructor(eventEmitter: EventEmitter) {
+    constructor(eventEmitter: EventEmitter, characters: Character[]) {
+        this.gameWorld = new GameWorld(characters)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
 
-        this.on(TURN_RIGHT, (characters: Character[]) => {
+        this.on(CONSTANTS.CREATE_CHARACTER, () => {
+            //console.log('gameengine CREATE_CHARACTER')
+            let x = Math.random() * 60 + 10
+            let y = Math.random() * 60 + 10
+            const id = uuidv4()
+            let p = new Character({ id: id, size: 5, x: x, y: y })
+            this.gameWorld.characters.push(p)
+
+            //tell the server engine there's a character update so it can save it and update clients
+            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, p)
+        })
+
+        this.on(CONSTANTS.TURN_RIGHT, (characters: Character[]) => {
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
             })
         })
-        this.on(TURN_LEFT, (characters: Character[]) => {
+        this.on(CONSTANTS.TURN_LEFT, (characters: Character[]) => {
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
             })
         })
-        this.on(TURN_STOP, (characters: Character[]) => {
+        this.on(CONSTANTS.TURN_STOP, (characters: Character[]) => {
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
             })
         })
-        this.on(DECELERATE_DOUBLE, (characters: Character[]) => {
+        this.on(CONSTANTS.DECELERATE_DOUBLE, (characters: Character[]) => {
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
             })
         })
-        this.on(ACCELERATE_DOUBLE, (characters: Character[]) => {
+        this.on(CONSTANTS.ACCELERATE_DOUBLE, (characters: Character[]) => {
             characters.forEach((character: Character) => {
                 this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
             })
         })
-        this.on(DECELERATE, (characters: Character[]) => {
+        this.on(CONSTANTS.DECELERATE, (characters: Character[]) => {
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
             })
         })
-        this.on(ACCELERATE, (characters: Character[]) => {
+        this.on(CONSTANTS.ACCELERATE, (characters: Character[]) => {
             characters.forEach((character: Character) => {
                 this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
             })
         })
-        this.on(STOP_ACCELERATE, (characters: Character[]) => {
+        this.on(CONSTANTS.STOP_ACCELERATE, (characters: Character[]) => {
             //console.log('GameEngine on', 'STOP_ACCELERATE')
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
             })
         })
-        this.on(STOP_DOUBLE_ACCELERATE, (characters: Character[]) => {
+        this.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, (characters: Character[]) => {
             //console.log('GameEngine on', 'STOP_ACCELERATE')
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
             })
         })
 
-        this.on(CHARACTER_LOCATION, (character) => {
+        //got an update from the clientengine
+        this.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (character) => {
             //console.log('CHARACTER_LOCATION')
             this.gameWorld.updateCharacter(character)
 

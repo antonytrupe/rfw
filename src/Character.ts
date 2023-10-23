@@ -7,7 +7,7 @@ export default class Character {
         y = 0,
         maxSpeed = 30,
         mode = 1,
-        speed = 30,
+        speed = 0,
         directionAcceleration: directionAcceleration = 0,
         speedAcceleration: speedAcceleration = 0, }: {
             id?: string,
