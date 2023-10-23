@@ -18,6 +18,7 @@ export default class ServerEngine {
         this.emit = eventEmitter.emit.bind(eventEmitter)
         const db = new JsonDB(new Config("world", true, true, '/'));
         try {
+            db.save()
             db.load()
         }
         catch (e) {
