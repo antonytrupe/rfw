@@ -102,7 +102,7 @@ export default class GameEngine {
 
         //got an update from the clientengine
         this.on(CONSTANTS.WORLD_UPDATE, (gameWorld: GameWorld) => {
-            console.log('CONSTANTS.WORLD_UPDATE')
+            //console.log('CONSTANTS.WORLD_UPDATE')
             this.gameWorld.characters=gameWorld.characters
         })
     }

@@ -41,14 +41,14 @@ export default class ServerEngine {
 
         //don't do this until after the db loads maybe?
         //start the gameengines clock thingy
-       // gameEngine.start()
+        gameEngine.start()
 
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[]) => {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
             characters.forEach((character) => {
                 try {
                     //array version
-                    db.push(CONSTANTS.CHARACTER_PATH + '[' + character.id + ']', character)
+                    db.push(CONSTANTS.CHARACTER_PATH + character.id, character)
 
                     //map version
                     //db.push(CONSTANTS.CHARACTER_PATH + character.id, character)

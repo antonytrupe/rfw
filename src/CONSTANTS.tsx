@@ -9,7 +9,7 @@ export const MESSAGE_CLIENT_SEND = "message.client.send"
 export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 
 //db constants
-export const CHARACTER_PATH = '/CHARACTER'
+export const CHARACTER_PATH = '/CHARACTER/'
 
 //tell the client the current location and vector of a character
 export const CLIENT_CHARACTER_UPDATE = 'world.character.location.client'
