@@ -2,92 +2,101 @@ import EventEmitter from "events"
 import GameEngine from "@/GameEngine"
 import * as CONSTANTS from "@/CONSTANTS";
 import Character from "@/Character";
-import { Config, JsonDB } from "node-json-db";
+import { Config, JsonDB } from "@antonytrupe/node-json-db";
 import { Server } from "socket.io";
+import GameWorld from "./GameWorld";
 
 
 export default class ServerEngine {
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     emit: (eventName: string | symbol, ...args: any[]) => boolean
-    //gameEngine: GameEngine 
     constructor(io: Server) {
-
         const eventEmitter: EventEmitter = new EventEmitter();
-        //maybe need to bind to this instead?
+        const gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         const db = new JsonDB(new Config("world", true, true, '/'));
         try {
-            db.save()
-            db.load()
+            db.load().then(() => {
+                db.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
+                    //@ts-ignore
+                    const characters: Character[] = Object.entries(c).map(([id, character]: [id: string, character: Character]) => {
+                        //console.log('id', id)
+                        //console.log('character', character)
+                        return new Character(character)
+
+                    })
+                    console.log(characters)
+                    //TODO type this to get rid of typo
+                    this.emit(CONSTANTS.WORLD_UPDATE, { characters: characters } as GameWorld)
+                    console.log()
+                }).catch(err => {
+                    console.log('empty database')
+                })
+            })
         }
         catch (e) {
             console.log('failed to load')
         }
 
-        // initialize the gameengine/gameworld
-        const characters: Character[] = []
+        //don't do this until after the db loads maybe?
+        //start the gameengines clock thingy
+        gameEngine.start()
 
-        db.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-            //@ts-ignore
-            Object.entries(c).forEach(([id, character]: [id: string, character: Character]) => {
-                //console.log('id', id)
-                //console.log('character', character)
-                characters.push(new Character(character))
-
-            })
-        }).catch(err => {
-            console.log('empty database')
-        })
-        const gameEngine = new GameEngine(eventEmitter, characters)
-
-        //TODO start the gameengines clock thingy
-
-        this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (character: Character) => {
+        this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[]) => {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
-            try {
-                db.push(CONSTANTS.CHARACTER_PATH + character.id, character)
-            }
-            catch (e) {
-                console.log('failed to create character')
-            }
+            characters.forEach((character) => {
+                try {
+                    //array version
+                    db.push(CONSTANTS.CHARACTER_PATH + '[' + character.id + ']', character)
 
-            //  get the save sent out to browser clients somehow
-            io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, character)
+                    //map version
+                    //db.push(CONSTANTS.CHARACTER_PATH + character.id, character)
+                }
+                catch (e) {
+                    console.log('failed to create character')
+                }
+            })
+            //TODO only send the ones that changed
+            //  get the save sent out to browser clients  
+            io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
+
         })
 
         io.on(CONSTANTS.CONNECTION, socket => {
-            //console.log(CONNECTION, socket.id)
-
+            //console.log(CONNECTION, socket.id) 
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
                 //console.log('world CREATE_CHARACTER')
                 //tell the server engine to create a new character
                 this.emit(CONSTANTS.CREATE_CHARACTER)
             })
-
-            socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
-                //TODO
-            })
-
-            socket.on(CONSTANTS.STOP_ACCELERATE, async (characters: Character[]) => {
-                //TODO 
-            })
-
-            socket.on(CONSTANTS.ACCELERATE, async (characters: Character[]) => {
-                //TODO
-            })
-
-            socket.on(CONSTANTS.DECELERATE, async (characters: Character[]) => {
-                //TODO
-            })
-
             socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
-                //TODO
+                this.emit(CONSTANTS.TURN_LEFT, characters)
             })
-
             socket.on(CONSTANTS.TURN_RIGHT, async (characters: Character[]) => {
-                //TODO
+                this.emit(CONSTANTS.TURN_RIGHT, characters)
+            })
+            socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
+                this.emit(CONSTANTS.TURN_STOP, characters)
+            })
+            socket.on(CONSTANTS.STOP_ACCELERATE, async (characters: Character[]) => {
+                this.emit(CONSTANTS.STOP_ACCELERATE, characters)
+            })
+            socket.on(CONSTANTS.ACCELERATE, async (characters: Character[]) => {
+                this.emit(CONSTANTS.ACCELERATE, characters)
+            })
+            socket.on(CONSTANTS.DECELERATE, async (characters: Character[]) => {
+                this.emit(CONSTANTS.DECELERATE, characters)
+            })
+            socket.on(CONSTANTS.DECELERATE_DOUBLE, async (characters: Character[]) => {
+                this.emit(CONSTANTS.DECELERATE_DOUBLE, characters)
+            })
+            socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (characters: Character[]) => {
+                this.emit(CONSTANTS.ACCELERATE_DOUBLE, characters)
+            })
+            socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characters: Character[]) => {
+                this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, characters)
             })
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
@@ -100,12 +109,7 @@ export default class ServerEngine {
             });
 
             //tell the client where all the other character are
-            gameEngine.gameWorld.characters.forEach((character) => {
-                //console.log('character', character)
-                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, character)
-            })
+            socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, gameEngine.gameWorld.characters)
         })
-
-
     }
 }

@@ -4,6 +4,7 @@ import Character from "./Character";
 import * as CONSTANTS from "./CONSTANTS";
 import GameWorld from "./GameWorld";
 import { v4 as uuidv4 } from 'uuid';
+import isEqual from 'lodash.isequal';
 
 
 export default class GameEngine {
@@ -14,11 +15,22 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
-    constructor(eventEmitter: EventEmitter, characters: Character[]) {
-        this.gameWorld = new GameWorld(characters)
+    ticksPerSecond: number = 1
+
+    lastTimestamp: DOMHighResTimeStamp | undefined
+    //lower number means faster, higher means slower
+    accelerationMultiplier: number = 20
+    turnMultiplier: number = 420
+    //1px/ft
+    //5ft/s*1000ms/s
+    speedMultiplier: number = 5000
+
+    constructor({ ticksPerSecond }: { ticksPerSecond: number }, eventEmitter: EventEmitter) {
+        this.gameWorld = new GameWorld()
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
+        this.ticksPerSecond = ticksPerSecond
 
         this.on(CONSTANTS.CREATE_CHARACTER, () => {
             //console.log('gameengine CREATE_CHARACTER')
@@ -29,7 +41,7 @@ export default class GameEngine {
             this.gameWorld.characters.push(p)
 
             //tell the server engine there's a character update so it can save it and update clients
-            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, p)
+            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, [p])
         })
 
         this.on(CONSTANTS.TURN_RIGHT, (characters: Character[]) => {
@@ -80,20 +92,21 @@ export default class GameEngine {
             })
         })
 
-        //got an update from the clientengine
-        this.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (character) => {
+         //got an update from the clientengine
+         this.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
             //console.log('CHARACTER_LOCATION')
-            this.gameWorld.updateCharacter(character)
+            characters.forEach((character) => {
+                this.gameWorld.updateCharacter(character)
+            })
+        })
 
+        //got an update from the clientengine
+        this.on(CONSTANTS.WORLD_UPDATE, (gameWorld: GameWorld) => {
+            console.log('CONSTANTS.WORLD_UPDATE')
+            this.gameWorld.characters=gameWorld.characters
         })
     }
-    lastTimestamp: DOMHighResTimeStamp | undefined
-    //lower number means faster, higher means slower
-    accelerationMultiplier: number = 20
-    turnMultiplier: number = 420
-    //1px/ft
-    //5ft/s*1000ms/s
-    speedMultiplier: number = 5000
+
     step() {
         //console.log('GameEngine.step')
         const now = (new Date()).getTime()
@@ -132,11 +145,18 @@ export default class GameEngine {
                 newSpeed = Math.min(character.speed + dt / this.accelerationMultiplier, 0)
 
             }
+            //TODO compare the values and see if they are different at all
+            if (!isEqual({ ...character, x: newX, y: newY, speed: newSpeed, direction: newAngle }, character)) {
+
+            }
+
             return { ...character, x: newX, y: newY, speed: newSpeed, direction: newAngle }
         })
         //60 frames per second is one frame every ~17 milliseconds
         //30 frames per second is one frame every ~33 milliseconds
-        setTimeout(this.step.bind(this), 20);
+        setTimeout(this.step.bind(this), 1000 / this.ticksPerSecond);
+        //TODO is this the right place?
+        this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, this.gameWorld.characters)
     }
 
     start() {

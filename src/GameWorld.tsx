@@ -1,6 +1,11 @@
 import Character from "./Character";
 
 export default class GameWorld {
+    characters: Character[] = [];
+    //currentPlayer!: Character;
+    constructor() {
+    }
+
     updateCharacter(character: Partial<Character>) {
         const i = this.characters.findIndex((it): boolean => {
             //look for an existing character to update
@@ -24,9 +29,5 @@ export default class GameWorld {
             return distance < character.size / 2
         })
     }
-    characters: Character[] = [];
-    currentPlayer!: Character;
-    constructor(characters: Character[]) {
-        this.characters = characters
-    }
+   
 }

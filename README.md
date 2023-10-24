@@ -6,7 +6,6 @@ npm run start-dev
 ## TODO
 admin tool to interact with world
 miles/hour scale
-get the server engine ticking
 collision
 stay centered on selected characters
 zoom centered on mouse
@@ -22,6 +21,7 @@ leveling up system
 clean up draw resetting
 
 ## DONE
+get the server engine ticking
 got server engine persisting
 double run with shift
 move stuff out of world.ts

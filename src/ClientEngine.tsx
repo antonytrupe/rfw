@@ -28,7 +28,7 @@ export default class ClientEngine {
     constructor(eventEmitter: EventEmitter,  getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
         this.getCanvas = getCanvas
-        this.gameEngine = new GameEngine(eventEmitter,[])
+        this.gameEngine = new GameEngine({ticksPerSecond:30},eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
@@ -316,10 +316,10 @@ export default class ClientEngine {
             })
 
             //pc location data
-            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (character: Character) => {
+            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
                 //console.log('socket on PC_LOCATION', character)
                 //tell the gameengine we got an update 
-                this.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, character)
+                this.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
             })
         })
     }
