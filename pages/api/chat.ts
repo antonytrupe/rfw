@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io'
-import { JsonDB, Config } from '@antonytrupe/node-json-db';
+import { JsonDB, Config } from 'node-json-db';
 import { SocketResponse } from '../../src/SocketResponse';
 import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/CONSTANTS';
 import { CONNECTION } from '@/CONSTANTS';

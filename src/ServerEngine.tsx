@@ -2,7 +2,7 @@ import EventEmitter from "events"
 import GameEngine from "@/GameEngine"
 import * as CONSTANTS from "@/CONSTANTS";
 import Character from "@/Character";
-import { Config, JsonDB } from "@antonytrupe/node-json-db";
+import { Config, JsonDB } from "node-json-db";
 import { Server } from "socket.io";
 import GameWorld from "./GameWorld";
 
