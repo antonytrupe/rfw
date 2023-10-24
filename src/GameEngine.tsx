@@ -15,7 +15,7 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
-    ticksPerSecond: number = 1
+    ticksPerSecond: number
 
     lastTimestamp: DOMHighResTimeStamp | undefined
     //lower number means faster, higher means slower

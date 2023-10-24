@@ -11,17 +11,21 @@ export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 //db constants
 export const CHARACTER_PATH = '/CHARACTER/'
 
-//tell the client the current location and vector of a character
+//serverengine to clientengine
+//clientengine to gameengine
 export const CLIENT_CHARACTER_UPDATE = 'world.character.location.client'
+//gameengine to serverengine
 export const SERVER_CHARACTER_UPDATE = 'world.character.location.server'
 export const PC_DISCONNECT = 'world.character.disconnect'
 export const PC_JOIN = 'world.character.join'
 //tell the server to create a character
 export const CREATE_CHARACTER = 'world.character.create'
-//tell the client which character it is controlling
+//tell the client which character it is controlling(not implemented)
 export const PC_CURRENT = 'world.character.current'
+//serverengine notify gameengine
 export const WORLD_UPDATE = 'world.update'
-export const CLIENT_UPDATE = 'client.selected_characters.update'
+//clientengine notify UI
+export const CLIENT_SELECTED_CHARACTERS = 'client.selected_characters.update'
 
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'

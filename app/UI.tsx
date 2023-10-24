@@ -5,7 +5,7 @@ import ClientEngine from '../src/ClientEngine';
 import GameEngine from '../src/GameEngine';
 import EventEmitter, { getEventListeners } from 'events';
 import GameWorld from '@/GameWorld';
-import { CLIENT_UPDATE, WORLD_UPDATE } from '@/CONSTANTS';
+import * as CONSTANTS from '@/CONSTANTS';
 import Character from '../src/Character';
 
 export default function UI() {
@@ -23,11 +23,10 @@ export default function UI() {
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
-    eventEmitter.on(WORLD_UPDATE, (world: GameWorld) => {
-      //setWorldState(world);
-    })
-    eventEmitter.on(CLIENT_UPDATE, (selectedCharacter: Character[]) => {
-      setSelectedCharacters(selectedCharacter);
+
+    eventEmitter.on(CONSTANTS.CLIENT_SELECTED_CHARACTERS, (s: Character[]) => {
+      //console.log(s)
+      setSelectedCharacters(s);
     })
     //let gameEngine = new GameEngine(eventEmitter)
     setClientEngine(new ClientEngine(eventEmitter, getCanvas))
@@ -80,14 +79,14 @@ export default function UI() {
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp} />
       <div>
-        {selectedCharacters.map((character: Character) => {
+        {selectedCharacters && selectedCharacters.map((character: Character) => {
           return (<div key={character.id}>
             <div> id:{character.id}</div>
             <div> size:{character.size}</div>
-            <div> speed:{character.speed}</div>
+            <div> speed:{Math.round(character.speed)}</div>
             <div> maxSpeed:{character.maxSpeed}</div>
-            <div> x:{character.x}</div>
-            <div> y:{character.y}</div>
+            <div> x:{Math.round(character.x)}</div>
+            <div> y:{Math.round(character.y)}</div>
           </div>)
         })}
       </div>

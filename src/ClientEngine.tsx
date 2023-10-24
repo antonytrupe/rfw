@@ -25,10 +25,10 @@ export default class ClientEngine {
     getCanvas: (() => HTMLCanvasElement);
     connected: boolean = false
 
-    constructor(eventEmitter: EventEmitter,  getCanvas: (() => HTMLCanvasElement)) {
+    constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
         this.getCanvas = getCanvas
-        this.gameEngine = new GameEngine({ticksPerSecond:30},eventEmitter)
+        this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
@@ -203,7 +203,7 @@ export default class ClientEngine {
                 y: (e.clientY - rect.top) * this.ratio / this.PIXELS_TO_FOOT
             })
         this.selectedCharacters = characters
-        this.emit(CONSTANTS.CLIENT_UPDATE, this.selectedCharacters)
+        this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.selectedCharacters)
     }
 
     wheelHandler(e: WheelEvent) {
@@ -320,6 +320,15 @@ export default class ClientEngine {
                 //console.log('socket on PC_LOCATION', character)
                 //tell the gameengine we got an update 
                 this.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
+                const merged = this.selectedCharacters.map((selected) => {
+                    //looping over all selected charecters
+                    //look for each selected character in the list of characters
+                    const u = characters.find((c) => { return c.id == selected.id; });
+                     //if we didn't find it in the list of updated characters, then just use the current value
+                    return { ...selected, ...u };
+                });
+                 //tell the ui about the updates to the selected characters
+                this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, merged)
             })
         })
     }
