@@ -26,17 +26,17 @@ export default class ServerEngine {
                         return new Character(character)
 
                     })
-                    console.log(characters)
+                    //console.log(characters)
                     //TODO type this to get rid of typo
                     this.emit(CONSTANTS.WORLD_UPDATE, { characters: characters } as GameWorld)
-                    console.log()
+                    //console.log()
                 }).catch(err => {
-                    console.log('empty database')
+                    //console.log('empty database')
                 })
             })
         }
         catch (e) {
-            console.log('failed to load')
+            //console.log('failed to load')
         }
 
         //don't do this until after the db loads maybe?
