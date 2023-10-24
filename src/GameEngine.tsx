@@ -92,8 +92,8 @@ export default class GameEngine {
             })
         })
 
-         //got an update from the clientengine
-         this.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
+        //got an update from the clientengine
+        this.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
             //console.log('CHARACTER_LOCATION')
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter(character)
@@ -103,7 +103,7 @@ export default class GameEngine {
         //got an update from the clientengine
         this.on(CONSTANTS.WORLD_UPDATE, (gameWorld: GameWorld) => {
             //console.log('CONSTANTS.WORLD_UPDATE')
-            this.gameWorld.characters=gameWorld.characters
+            this.gameWorld.characters = gameWorld.characters
         })
     }
 
@@ -113,6 +113,7 @@ export default class GameEngine {
         this.lastTimestamp = this.lastTimestamp || now
         const dt = now - this.lastTimestamp
         this.lastTimestamp = now
+        const updatedCharacters: Character[] = []
 
         this.gameWorld.characters = this.gameWorld.characters.map((character: Character): Character => {
 
@@ -147,7 +148,7 @@ export default class GameEngine {
             }
             //TODO compare the values and see if they are different at all
             if (!isEqual({ ...character, x: newX, y: newY, speed: newSpeed, direction: newAngle }, character)) {
-
+                updatedCharacters.push({ ...character, x: newX, y: newY, speed: newSpeed, direction: newAngle })
             }
 
             return { ...character, x: newX, y: newY, speed: newSpeed, direction: newAngle }
@@ -156,7 +157,9 @@ export default class GameEngine {
         //30 frames per second is one frame every ~33 milliseconds
         setTimeout(this.step.bind(this), 1000 / this.ticksPerSecond);
         //TODO is this the right place?
-        this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, this.gameWorld.characters)
+        if (updatedCharacters.length > 0) {
+            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
+        }
     }
 
     start() {

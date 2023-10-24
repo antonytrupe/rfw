@@ -4,6 +4,7 @@ npm build
 npm run start-dev
 
 ## TODO
+replace node-json-db with redis
 admin tool to interact with world
 miles/hour scale
 collision
@@ -21,6 +22,7 @@ leveling up system
 clean up draw resetting
 
 ## DONE
+only send updated characters to the client
 get the server engine ticking
 got server engine persisting
 double run with shift

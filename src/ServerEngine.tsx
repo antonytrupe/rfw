@@ -27,7 +27,6 @@ export default class ServerEngine {
 
                     })
                     //console.log(characters)
-                    //TODO type this to get rid of typo
                     this.emit(CONSTANTS.WORLD_UPDATE, { characters: characters } as GameWorld)
                     //console.log()
                 }).catch(err => {
