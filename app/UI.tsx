@@ -2,9 +2,7 @@
 import styles from './UI.module.scss'
 import { MutableRefObject, useEffect, useRef, useState, } from 'react'
 import ClientEngine from '../src/ClientEngine';
-import GameEngine from '../src/GameEngine';
-import EventEmitter, { getEventListeners } from 'events';
-import GameWorld from '@/GameWorld';
+import EventEmitter from 'events';
 import * as CONSTANTS from '@/CONSTANTS';
 import Character from '../src/Character';
 
@@ -85,6 +83,7 @@ export default function UI() {
             <div> size:{character.size}</div>
             <div> speed:{Math.round(character.speed)}</div>
             <div> maxSpeed:{character.maxSpeed}</div>
+            <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>
             <div> x:{Math.round(character.x)}</div>
             <div> y:{Math.round(character.y)}</div>
           </div>)

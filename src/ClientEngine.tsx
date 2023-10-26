@@ -7,7 +7,7 @@ import * as CONSTANTS from "@/CONSTANTS";
 
 export default class ClientEngine {
     selectedCharacters: Character[] = [];
-    ratio: number = 1
+    scale: number = 1
     stop() {
         this.stopped = true;
     }
@@ -24,6 +24,8 @@ export default class ClientEngine {
     gameEngine: GameEngine
     getCanvas: (() => HTMLCanvasElement);
     connected: boolean = false
+  
+    PIXELS_TO_FOOT = 20
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
@@ -32,7 +34,7 @@ export default class ClientEngine {
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        let renderLoop = (timestamp: DOMHighResTimeStamp) => {
+        let renderLoop = () => {
             if (this.stopped) {
                 return
             }
@@ -45,18 +47,99 @@ export default class ClientEngine {
         window.requestAnimationFrame(renderLoop.bind(this))
     }
 
-    scaleStyle(ctx: CanvasRenderingContext2D) {
-        ctx.font = 18 * this.ratio + "px Arial";
+    wheelHandler(e: WheelEvent) {
+        const rect = this.getCanvas().getBoundingClientRect()
+        let mouseX = (e.clientX - rect.left) * this.scale / this.PIXELS_TO_FOOT
+        //  console.log('mouseX', mouseX)
+
+        let left = (rect.left) * this.scale / this.PIXELS_TO_FOOT
+        //   console.log('left', left)
+
+        let right = (rect.right) * this.scale / this.PIXELS_TO_FOOT
+        //  console.log('right', right)
+        let width = right - left
+
+        let grow = width * e.deltaY / 1000
+        //  console.log('grow', grow)
+ 
+       // this.translateX -= grow / 2
+        //find the center of the canvas
+
+        this.scale = Math.min(Math.max(1, this.scale + e.deltaY / 1000), 100)
+ 
+    }
+
+    draw4040(ctx: CanvasRenderingContext2D) {
+        let center = 20
+        ctx.save();
         ctx.fillStyle = '#000000'
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1 * this.ratio;
+        ctx.lineWidth = 1 * this.scale;
+        ctx.moveTo(center * this.PIXELS_TO_FOOT, 0);
+        ctx.lineTo(center * this.PIXELS_TO_FOOT, center * 2 * this.PIXELS_TO_FOOT);
+
+        ctx.moveTo(0, center * this.PIXELS_TO_FOOT);
+        ctx.lineTo(center * 2 * this.PIXELS_TO_FOOT, center * this.PIXELS_TO_FOOT);
+        ctx.stroke()
+
+        ctx.restore();
+    }
+    translateX = 0
+    translateY = 0
+
+    draw() {
+        if (!this.getCanvas) { return }
+        const canvas: HTMLCanvasElement | null = this.getCanvas()
+        if (!canvas) { return }
+        //@ts-ignore
+        const ctx: CanvasRenderingContext2D = canvas.getContext('2d')
+
+
+        // Use the identity matrix while clearing the canvas
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+        //TODO
+        //this.scale = 2
+
+        ctx.translate(this.translateX * this.PIXELS_TO_FOOT / this.scale, this.translateY * this.PIXELS_TO_FOOT / this.scale)
+        ctx.scale(1 / this.scale, 1 / this.scale);
+        //  ctx.translate(20 * this.PIXELS_TO_FOOT*this.translateX  , 20  * this.PIXELS_TO_FOOT*this.translateY )
+        //ctx.translate(-20 * this.PIXELS_TO_FOOT * this.scale, -20 * this.PIXELS_TO_FOOT * this.scale)
+
+
+        //draw the scale
+        if (this.scale <= 2) {
+            this.drawTurnScale(ctx)
+        }
+        else if (this.scale <= 8) {
+            this.drawMinuteScale(ctx)
+        }
+        else {
+            this.drawHourScale(ctx)
+        }
+
+        this.draw4040(ctx)
+
+        //draw all the characters
+        this.gameEngine.gameWorld.characters.forEach((character: Character) => {
+
+            this.drawCharacter(ctx, character);
+        })
+    }
+
+
+    scaleStyle(ctx: CanvasRenderingContext2D) {
+        ctx.font = 18 * this.scale + "px Arial";
+        ctx.fillStyle = '#000000'
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1 * this.scale;
     }
 
     drawTurnScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
         ctx.save()
-        ctx.translate(xOffset * this.ratio, yOffset * this.ratio)
+        ctx.translate(xOffset * this.scale, yOffset * this.scale)
         const ticks = 6
         const tickSize = 5
         ctx.beginPath()
@@ -68,9 +151,9 @@ export default class ClientEngine {
         //tick marks
         [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
             ctx.moveTo(i * tickSize * this.PIXELS_TO_FOOT, 0)
-            ctx.lineTo(i * tickSize * this.PIXELS_TO_FOOT, 10 * this.ratio)
-            ctx.fillText(i * tickSize + 'ft', i * tickSize * this.PIXELS_TO_FOOT, 25 * this.ratio)
-            ctx.fillText(i * tickSize / 5 + 's', i * tickSize * this.PIXELS_TO_FOOT, 45 * this.ratio)
+            ctx.lineTo(i * tickSize * this.PIXELS_TO_FOOT, 10 * this.scale)
+            ctx.fillText(i * tickSize + 'ft', i * tickSize * this.PIXELS_TO_FOOT, 25 * this.scale)
+            ctx.fillText(i * tickSize / 5 + 's', i * tickSize * this.PIXELS_TO_FOOT, 45 * this.scale)
         })
 
         ctx.stroke()
@@ -83,7 +166,7 @@ export default class ClientEngine {
         const ticks = 10
         const tickSize = 1
         ctx.save()
-        ctx.translate(xOffset * this.ratio, yOffset * this.ratio)
+        ctx.translate(xOffset * this.scale, yOffset * this.scale)
         this.scaleStyle(ctx);
         ctx.beginPath()
         //horizontal line
@@ -93,16 +176,16 @@ export default class ClientEngine {
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
             ctx.moveTo(i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 0)
-            ctx.lineTo(i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 10 * this.ratio)
-            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 25 * this.ratio)
-            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 45 * this.ratio)
+            ctx.lineTo(i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 10 * this.scale)
+            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 25 * this.scale)
+            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3 * this.PIXELS_TO_FOOT, 45 * this.scale)
         })
 
         ctx.stroke()
         ctx.restore()
     }
 
-    PIXELS_TO_FOOT = 10
+
 
     drawHourScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
@@ -110,63 +193,25 @@ export default class ClientEngine {
         const ticks = 60
         const tickSize = 1
         ctx.save()
-        ctx.translate(xOffset * this.ratio, yOffset * this.ratio)
+        ctx.translate(xOffset * this.scale, yOffset * this.scale)
         this.scaleStyle(ctx);
 
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
-        ctx.lineTo(+ (ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, 0);
+        ctx.lineTo((ticks / tickSize) * 300 * this.PIXELS_TO_FOOT, 0);
 
         //tick marks
         [0, 1, 3, 5, 10].forEach((i) => {
             ctx.moveTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 0)
-            ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 10 * this.ratio)
-            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 25 * this.ratio)
-            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 45 * this.ratio)
+            ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 10 * this.scale)
+            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 25 * this.scale)
+            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_TO_FOOT, 45 * this.scale)
         })
         ctx.stroke()
         ctx.restore()
     }
 
-    draw() {
-        if (!this.getCanvas) { return }
-        const canvas: HTMLCanvasElement | null = this.getCanvas()
-        if (!canvas) { return }
-        //@ts-ignore
-        const ctx: CanvasRenderingContext2D = canvas.getContext('2d')
-
-        {
-            // Store the current transformation matrix
-            ctx.save()
-
-            // Use the identity matrix while clearing the canvas
-            ctx.setTransform(1, 0, 0, 1, 0, 0)
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
-            // Restore the transform
-            ctx.restore()
-        }
-
-        ctx.setTransform(1 / this.ratio, 0, 0, 1 / this.ratio, 0, 0)
-
-        //draw the scale
-        if (this.ratio <= 2) {
-            this.drawTurnScale(ctx)
-        }
-        else if (this.ratio <= 8) {
-            this.drawMinuteScale(ctx)
-        }
-        else {
-            this.drawHourScale(ctx)
-        }
-
-        //draw all the characters
-        this.gameEngine.gameWorld.characters.forEach((character: Character) => {
-
-            this.drawCharacter(ctx, character);
-        })
-    }
 
     private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
         ctx.save();
@@ -201,17 +246,19 @@ export default class ClientEngine {
 
     clickHandler(e: MouseEvent) {
         const rect = this.getCanvas().getBoundingClientRect()
+        console.log('click x', this.mouseX(e, rect))
         const characters = this.gameEngine.gameWorld.findCharacters(
             {
-                x: (e.clientX - rect.left) * this.ratio / this.PIXELS_TO_FOOT,
-                y: (e.clientY - rect.top) * this.ratio / this.PIXELS_TO_FOOT
+                x: this.mouseX(e, rect),
+                y: (e.clientY - rect.top) * this.scale / this.PIXELS_TO_FOOT
             })
         this.selectedCharacters = characters
+        //tell the ui about the selected characters
         this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.selectedCharacters)
     }
 
-    wheelHandler(e: WheelEvent) {
-        this.ratio = Math.min(Math.max(.5, this.ratio + e.deltaY / 1000), 100)
+    private mouseX(e: MouseEvent, rect: DOMRect): number {
+        return (e.clientX - rect.left) * this.scale / this.PIXELS_TO_FOOT + this.translateX;
     }
 
     keyDownHandler(e: KeyboardEvent) {
@@ -328,10 +375,10 @@ export default class ClientEngine {
                     //looping over all selected charecters
                     //look for each selected character in the list of characters
                     const u = characters.find((c) => { return c.id == selected.id; });
-                     //if we didn't find it in the list of updated characters, then just use the current value
+                    //if we didn't find it in the list of updated characters, then just use the current value
                     return { ...selected, ...u };
                 });
-                 //tell the ui about the updates to the selected characters
+                //tell the ui about the updates to the selected characters
                 this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, merged)
             })
         })

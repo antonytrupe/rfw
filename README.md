@@ -4,13 +4,14 @@ npm build
 npm run start-dev
 
 ## TODO
-fix the jump from sprinting to running
+zoom centered on mouse
+change the position calculation with respect to turning
+https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
 replace node-json-db with redis
 admin tool to interact with world
 miles/hour scale
 collision
 stay centered on selected characters
-zoom centered on mouse
 rightclick move the screen
 change selected character stats
 chat
@@ -23,6 +24,7 @@ leveling up system
 clean up draw resetting
 
 ## DONE
+fix the jump from sprinting to running
 only send updated characters to the client
 get the server engine ticking
 got server engine persisting
