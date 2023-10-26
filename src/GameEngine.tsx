@@ -132,7 +132,8 @@ export default class GameEngine {
 
             let newSpeed = this.calculateSpeed(character, dt);
 
-            let { newX, newY }: { newX: number; newY: number; } = this.calculatePosition({ ...character, speed: newSpeed }, dt);
+            //TODO pass the new speed to the location calculatin or not?
+            let { newX, newY }: { newX: number; newY: number; } = this.calculatePosition({ ...character, }, dt);
 
 
             //  compare the values and see if they are different at all
@@ -163,8 +164,8 @@ export default class GameEngine {
         let newSpeed = 0;
         //soft caps might be the same as hard caps
         //if mode or acceleration are 0 then the soft caps get pushed to 0
-        const currentModeMaxSpeed = character.maxSpeed * character.mode * character.speedAcceleration;
-        const currentModeMinSpeed = -character.maxSpeed * character.mode * character.speedAcceleration;
+        const currentModeMaxSpeed = character.maxSpeed * character.mode * Math.abs(character.speedAcceleration)
+        const currentModeMinSpeed = -character.maxSpeed * character.mode * Math.abs(character.speedAcceleration)
         let mode = character.mode;
 
         let outsideSoftCaps = currentModeMinSpeed > character.speed || character.speed > currentModeMaxSpeed
@@ -209,18 +210,21 @@ export default class GameEngine {
             //character is already moving forward
             if (character.speed >= 0) {
                 //accelerating forward while moving forward 
-                //don't let the character go faster maxspeed*mode
-                newSpeed = Math.min(character.maxSpeed * character.mode, character.speed + speedDelta)
-                //if we started out going faster then the new speed
-                if (character.speed > newSpeed) {
+                //if we started out going faster then currentModeMaxSpeed
+                if (character.speed > currentModeMaxSpeed) {
                     //then don't slow down to less then the softmax
-                    newSpeed = Math.max(currentModeMaxSpeed, newSpeed)
+                    newSpeed = Math.max(currentModeMaxSpeed, character.speed + speedDelta)
                 }
-                // console.log(newSpeed)
+                //we started out going slower then currentModeMaxSpeed 
+                else {
+                    //then don't go faster then currentModeMaxSpeed
+                    newSpeed = Math.min(currentModeMaxSpeed, character.speed + speedDelta)
+
+                }
             }
             else if (character.speed < 0) {
                 //accelerating forward while going backwards
-                //don't let the character go faster then maxspeed*mode
+                //don't let the character go faster then currentModeMaxSpeed
                 newSpeed = Math.min(currentModeMaxSpeed, character.speed + speedDelta)
             }
         }
@@ -229,17 +233,20 @@ export default class GameEngine {
             //character is already moving forward
             if (character.speed >= 0) {
                 //accelerating backwards while moving forwards
-                //don't let the character go slower then maxspeed*mode
+                //don't let the character go slower then currentModeMinSpeed
                 newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta)
             }
             else if (character.speed < 0) {
-                //accelerating backwards whlie moving backwards
-                //don't let the character go slower then -maxspeed*mode
-                newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta)
-                //character started out going backwards faster then newspeed
-                if (character.speed < newSpeed) {
-                    //then don't slow down to less then the softmax
-                    newSpeed = Math.min(currentModeMinSpeed, newSpeed)
+                //accelerating backwards while moving backwards
+                //character started out going backwards faster then currentModeMinSpeed
+                if (character.speed < currentModeMinSpeed) {
+                    //then don't slow down to less then currentModeMinSpeed
+                    newSpeed = Math.min(currentModeMinSpeed, character.speed + speedDelta)
+                }
+                //accelerating backward while moving backward slower then currentModeMaxSpeed 
+                else {
+                    //then don't go faster then currentModeMinSpeed
+                    newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta) 
                 }
             }
         }

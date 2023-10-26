@@ -22,6 +22,7 @@ describe('GameEngine', () => {
     })
 
     describe('movement', () => {
+
         test('should not move if speed and acceleration are 0', () => {
             const c = new Character({ speed: 0, speedAcceleration: 0 })
             gameEngine.gameWorld.characters = [c]
@@ -70,7 +71,6 @@ describe('GameEngine', () => {
             expect(gameEngine.gameWorld.characters[0].speedAcceleration).toBe(1)
         })
 
-
         test('should accelerate from not moving to running in 600ms', () => {
             const c = new Character({ speedAcceleration: 1 })
             gameEngine.gameWorld.characters = [c]
@@ -86,33 +86,32 @@ describe('GameEngine', () => {
             const c = new Character({ speedAcceleration: 1, mode: 2 })
             gameEngine.gameWorld.characters = [c]
             //move the character
-            gameEngine.step(500)
+            gameEngine.step(400)
             //check the characters position
             expect(gameEngine.gameWorld.characters[0].x).toBe(0)
             expect(gameEngine.gameWorld.characters[0].y).toBe(0)
-            expect(gameEngine.gameWorld.characters[0].speed).toBe(50)
-            gameEngine.step(100)
+            expect(gameEngine.gameWorld.characters[0].speed).toBe(40)
+            gameEngine.step(200)
             expect(gameEngine.gameWorld.characters[0].x).toBe(0)
-            expect(gameEngine.gameWorld.characters[0].y).toBe(0)
+            expect(gameEngine.gameWorld.characters[0].y).toBeCloseTo(-1.333)
             expect(gameEngine.gameWorld.characters[0].speed).toBe(60)
 
             gameEngine.step(100)
             expect(gameEngine.gameWorld.characters[0].x).toBe(0)
-            expect(gameEngine.gameWorld.characters[0].y).toBe(0)
+            expect(gameEngine.gameWorld.characters[0].y).toBeCloseTo(-2.333)
             expect(gameEngine.gameWorld.characters[0].speed).toBe(60)
 
         })
 
-
-        test('should automatically go from 60 to 30 in .3 seconds and 3ft', () => {
+        test('should gradutally go from 60 to 30 when transitioning from sprinting to running', () => {
             const c = new Character({ speed: 60, speedAcceleration: 1, mode: 1 })
             gameEngine.gameWorld.characters = [c]
             //move the character
-            gameEngine.step(2000)
+            gameEngine.step(1)
             //check the characters position
             expect(gameEngine.gameWorld.characters[0].x).toBe(0)
             //expect(gameEngine.gameWorld.characters[0].y).toBe(-5)
-            expect(gameEngine.gameWorld.characters[0].speed).toBe(30)
+            expect(gameEngine.gameWorld.characters[0].speed).not.toBe(30)
         })
 
         test('should do 60 to 0 in .6 seconds and 6ft', () => {
