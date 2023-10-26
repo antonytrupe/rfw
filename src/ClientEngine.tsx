@@ -164,29 +164,33 @@ export default class ClientEngine {
         //draw all the characters
         this.gameEngine.gameWorld.characters.forEach((character: Character) => {
 
-            ctx.save()
-            ctx.translate(character.x * this.PIXELS_TO_FOOT, character.y * this.PIXELS_TO_FOOT)
-            ctx.rotate(character.direction)
-
-            ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
-                return selectedCharacter.id == character.id
-            }) ? '#009900' : '#000000'
-
-            ctx.beginPath()
-            ctx.arc(0, 0, character.size * this.PIXELS_TO_FOOT / 2, 0, 2 * Math.PI)
-            ctx.fill()
-
-            //draw an arrow
-            ctx.beginPath()
-            ctx.strokeStyle = '#FFFFFF'
-
-            ctx.moveTo(0, - (character.size) + 1)
-            ctx.lineTo(0, (character.size) - 1)
-
-            ctx.stroke()
-
-            ctx.restore()
+            this.drawCharacter(ctx, character);
         })
+    }
+
+    private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
+        ctx.save();
+        ctx.translate(character.x * this.PIXELS_TO_FOOT, character.y * this.PIXELS_TO_FOOT);
+        ctx.rotate(character.direction);
+
+        ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
+            return selectedCharacter.id == character.id;
+        }) ? '#009900' : '#000000';
+
+        ctx.beginPath();
+        ctx.arc(0, 0, character.size * this.PIXELS_TO_FOOT / 2, 0, 2 * Math.PI);
+        ctx.fill();
+
+        //draw an arrow
+        ctx.beginPath();
+        ctx.strokeStyle = '#FFFFFF';
+
+        ctx.moveTo(0, -(character.size) + 1);
+        ctx.lineTo(0, (character.size) - 1);
+
+        ctx.stroke();
+
+        ctx.restore();
     }
 
     createCharacter() {

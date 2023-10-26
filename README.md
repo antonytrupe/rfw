@@ -4,6 +4,7 @@ npm build
 npm run start-dev
 
 ## TODO
+fix the jump from sprinting to running
 replace node-json-db with redis
 admin tool to interact with world
 miles/hour scale

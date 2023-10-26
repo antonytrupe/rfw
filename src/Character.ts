@@ -9,19 +9,20 @@ export default class Character {
         mode = 1,
         speed = 0,
         directionAcceleration: directionAcceleration = 0,
-        speedAcceleration: speedAcceleration = 0, }: {
-            id?: string,
-            size?: number,
-            angle?: number
-            x?: number,
-            y?: number,
-            maxSpeed?: number,
-            mode?: number,
-            speed?: number,
-            directionAcceleration?: number,
-            speedAcceleration?: number,
+        speedAcceleration: speedAcceleration = 0
+    }: {
+        id?: string,
+        size?: number,
+        angle?: number
+        x?: number,
+        y?: number,
+        maxSpeed?: number,
+        mode?: number,
+        speed?: number,
+        directionAcceleration?: number,
+        speedAcceleration?: number,
 
-        }) {
+    }) {
         this.id = id
         this.size = size
         this.maxSpeed = maxSpeed
