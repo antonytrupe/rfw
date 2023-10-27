@@ -35,8 +35,8 @@ export default class GameEngine {
 
         this.on(CONSTANTS.CREATE_CHARACTER, () => {
             //console.log('gameengine CREATE_CHARACTER')
-            let x = Math.random() * 60 + 10
-            let y = Math.random() * 60 + 10
+            let x = Math.random() * 30 - 15
+            let y = Math.random() * 30 - 15
             const id = uuidv4()
             let p = new Character({ id: id, size: 5, x: x, y: y })
             this.gameWorld.characters.push(p)
