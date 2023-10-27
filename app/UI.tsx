@@ -5,6 +5,11 @@ import ClientEngine from '../src/ClientEngine';
 import EventEmitter from 'events';
 import * as CONSTANTS from '@/CONSTANTS';
 import Character from '../src/Character';
+//import steamworks from 'steamworks.js';
+
+//steamworks.electronEnableSteamOverlay()
+//const client = steamworks.init()
+//console.log(client.localplayer.getName())
 
 export default function UI() {
   //@ts-ignore
@@ -89,8 +94,8 @@ export default function UI() {
             <div> speed:{Math.round(character.speed)}</div>
             <div> maxSpeed:{character.maxSpeed}</div>
             <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>
-            <div> x:{Math.round(character.x)}</div>
-            <div> y:{Math.round(character.y)}</div>
+            <div> x:{character.x.toFixed(2)}</div>
+            <div> y:{character.y.toFixed(2)}</div>
           </div>)
         })}
       </div>

@@ -45,46 +45,38 @@ export default class ClientEngine {
 
     wheelHandler(e: WheelEvent) {
         let zoom = e.deltaY / 1000
-        console.log('zoom', zoom)
+        //  console.log('zoom', zoom)
 
         let mouseX = this.mouseX(e)
         let mouseY = this.mouseY(e)
-        console.log('mouseX', mouseX)
-        console.log('mouseY', mouseY)
+        // console.log('mouseX', mouseX)
+        //  console.log('mouseY', mouseY)
 
-        console.log('this.translateX', this.translateX)
-        console.log('this.translateY', this.translateY)
+        //  console.log('this.translateX', this.translateX)
+        //  console.log('this.translateY', this.translateY)
 
-
-        //  let left = (rect.left) * this.scale / this.PIXELS_TO_FOOT
-        //  let top = (rect.top) * this.scale / this.PIXELS_TO_FOOT
-        // console.log('left',left)
-        // console.log('top',top)
-        //  const rect = this.getCanvas().getBoundingClientRect()
-
-        // const width = rect.width / this.PIXELS_PER_FOOT * this.scale;
-
-
-        let deltaX = (mouseX - this.translateX) * zoom
-        let deltaY = (mouseY - this.translateY) * zoom
-        console.log('deltax', deltaX)
-        console.log('deltaY', deltaY)
+        //TODO this is close 
+        let deltaX = (this.translateX - mouseX) * zoom / this.scale
+        let deltaY = (this.translateY - mouseY) * zoom / this.scale
+        //  console.log('deltax', deltaX)
+        // console.log('deltaY', deltaY)
 
         const newScale = Math.min(Math.max(1, this.scale + zoom), 100);
         if (newScale != this.scale) {
             this.scale = newScale
-            //    this.translateX -= deltaX
-            //    this.translateY -= deltaY
+            this.translateX += deltaX
+            this.translateY += deltaY
 
-            console.log('translateX', this.translateX)
-            console.log('translateY', this.translateY)
-
+            //   console.log('translateX', this.translateX)
+            //   console.log('translateY', this.translateY)
         }
-        console.log('scale', this.scale)
+
+        //  console.log('scale', this.scale)
     }
-    translateX = -18
-    translateY = -18
-    scale: number = 1.1
+    scale: number = 1
+
+    translateX = -20 * this.scale
+    translateY = -20 * this.scale
 
     draw() {
         if (!this.getCanvas) { return }
@@ -97,18 +89,8 @@ export default class ClientEngine {
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-        //TODO this probably isn't right yet
-        ctx.translate(-this.translateX * this.PIXELS_PER_FOOT * this.scale, -this.translateY * this.PIXELS_PER_FOOT * this.scale)
+        ctx.translate(-this.translateX * this.PIXELS_PER_FOOT / this.scale, -this.translateY * this.PIXELS_PER_FOOT / this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
-        //  ctx.scale(1/ this.PIXELS_PER_FOOT, 1/ this.PIXELS_PER_FOOT)
-
-        let a = 1 / this.scale,
-            b = 0,
-            c = 0,
-            d = 1 / this.scale,
-            e = -this.translateX * this.PIXELS_PER_FOOT,
-            f = -this.translateY * this.PIXELS_PER_FOOT
-        // ctx.transform(a, b, c, d, e, f)
 
         //draw the scale
         if (this.scale <= 2) {
@@ -139,19 +121,19 @@ export default class ClientEngine {
         ctx.lineWidth = 1 * this.scale;
         //vertical line
         ctx.moveTo(
-            center * this.PIXELS_PER_FOOT  ,
-            -length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT  );
+            center * this.PIXELS_PER_FOOT / this.scale,
+            (-length / 2 + center) * this.PIXELS_PER_FOOT / this.scale)
         ctx.lineTo(
-            center * this.PIXELS_PER_FOOT  ,
-            length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT  );
+            center * this.PIXELS_PER_FOOT / this.scale,
+            (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale);
 
         //horizontal line
         ctx.moveTo(
-            -length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT ,
-            center * this.PIXELS_PER_FOOT  );
+            (-length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
+            center * this.PIXELS_PER_FOOT);
         ctx.lineTo(
-            length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT  ,
-            center * this.PIXELS_PER_FOOT  );
+            (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
+            center * this.PIXELS_PER_FOOT / this.scale);
         ctx.stroke()
 
         ctx.restore();
@@ -281,13 +263,13 @@ export default class ClientEngine {
         const x = this.mouseX(e);
         const y = this.mouseY(e);
 
-        console.log('scale', this.scale)
+        // console.log('scale', this.scale)
 
-        console.log('this.translateX', this.translateX)
-        console.log('this.translateY', this.translateY)
+        // console.log('this.translateX', this.translateX)
+        // console.log('this.translateY', this.translateY)
 
-        console.log('x', x)
-        console.log('y', y)
+        // console.log('x', x)
+        // console.log('y', y)
 
         const characters = this.gameEngine.gameWorld.getCharactersAt(
             {
@@ -301,14 +283,14 @@ export default class ClientEngine {
 
     private mouseX(e: MouseEvent): number {
         const rect = this.getCanvas().getBoundingClientRect()
-        const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT*this.scale)) / this.PIXELS_PER_FOOT*this.scale
+        const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
         // console.log('x', x)
         return x;
     }
 
     private mouseY(e: MouseEvent): number {
         const rect = this.getCanvas().getBoundingClientRect()
-        const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT*this.scale)) / this.PIXELS_PER_FOOT*this.scale
+        const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
         //  console.log('y', y)
         return y;
     }

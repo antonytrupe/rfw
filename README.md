@@ -1,15 +1,14 @@
 ## INFO
 how to run
-npm build
-npm run start-dev
+npm install
+npm run dev
 
 ## TODO
-zoom centered on mouse
+package as exe.etc with electron
+add steam support
 change the position calculation with respect to turning
 https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
-replace node-json-db with redis
 admin tool to interact with world
-miles/hour scale
 collision
 stay centered on selected characters
 rightclick move the screen
@@ -24,7 +23,9 @@ leveling up system
 clean up draw resetting
 
 ## DONE
+zoom centered on mouse
 fix the jump from sprinting to running
+miles/hour scale
 only send updated characters to the client
 get the server engine ticking
 got server engine persisting
@@ -50,3 +51,6 @@ get dev mode working
 rip out pong
 player entities
 move left and right
+
+## WONTFIX
+replace node-json-db with redis
