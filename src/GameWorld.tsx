@@ -17,13 +17,19 @@ export default class GameWorld {
         }
         return character
     }
-    findCharacters(position: { x: number, y: number }) {
+    getCharactersAt(position: { x: number, y: number }) {
         return this.characters.filter((character): boolean => {
             const distance = Math.sqrt(
                 Math.pow(character.x - position.x, 2) +
                 Math.pow(character.y - position.y, 2))
             //console.log('distance', distance)
             return distance < character.size / 2
+        })
+    }
+
+    getCharacters(ids: string[]) {
+        return this.characters.filter((character): boolean => {
+            return ids.includes(character.id)
         })
     }
 

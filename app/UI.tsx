@@ -60,11 +60,7 @@ export default function UI() {
 
   return (
     <>
-      <div className={`${styles.hud} ${styles.flexColumn} `}>
-        {!connected && (<button onClick={connect}>connect</button>)}
-        {connected && (<button onClick={createCharacter}>Create Character</button>)}
-        {connected && (<button onClick={disconnect}>Disconnect</button>)}
-      </div>
+
 
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
@@ -75,7 +71,16 @@ export default function UI() {
         onWheel={onWheel}
         onClick={onClick}
         onKeyDown={onKeyDown}
-        onKeyUp={onKeyUp} />
+        onKeyUp={onKeyUp}
+        data-testid="canvas" />
+
+      <div className={`${styles.hud} ${styles.flexColumn} `}>
+        {!connected && (<button onClick={connect}>connect</button>)}
+        {connected && (<button onClick={createCharacter}>Create Character</button>)}
+        {connected && (<button onClick={disconnect}>Disconnect</button>)}
+      </div>
+
+
       <div>
         {selectedCharacters && selectedCharacters.map((character: Character) => {
           return (<div key={character.id}>
