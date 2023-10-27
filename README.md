@@ -23,6 +23,7 @@ leveling up system
 clean up draw resetting
 
 ## DONE
+character health ui
 zoom centered on mouse
 fix the jump from sprinting to running
 miles/hour scale

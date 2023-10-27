@@ -22,6 +22,9 @@ export default class ClientEngine {
 
     //drawing things
     PIXELS_PER_FOOT = 20
+    scale: number = 1
+    translateX = -20 * this.scale
+    translateY = -20 * this.scale
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
@@ -73,10 +76,6 @@ export default class ClientEngine {
 
         //  console.log('scale', this.scale)
     }
-    scale: number = 1
-
-    translateX = -20 * this.scale
-    translateY = -20 * this.scale
 
     draw() {
         if (!this.getCanvas) { return }
@@ -228,26 +227,39 @@ export default class ClientEngine {
     }
 
     drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
+
+        const drawHealth = () => {
+            ctx.beginPath()
+            // ctx.setLineDash([10, 10])
+            ctx.strokeStyle = "#FF0000"
+            ctx.lineWidth=3
+            ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
+             (-character.hp / character.maxHp) * Math.PI -       Math.PI/2,
+             (character.hp / character.maxHp) * Math.PI -    Math.PI/2)
+            ctx.stroke()
+        }
+
         ctx.save();
-        ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT);
-        ctx.rotate(character.direction);
+        ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
+        ctx.rotate(character.direction)
 
         ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
-            return selectedCharacter.id == character.id;
-        }) ? '#009900' : '#000000';
+            return selectedCharacter.id == character.id
+        }) ? '#009900' : '#000000'
 
-        ctx.beginPath();
-        ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.beginPath()
+        ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2, 0, 2 * Math.PI)
+        ctx.fill()
 
         //draw an arrow
-        ctx.beginPath();
-        ctx.strokeStyle = '#FFFFFF';
+        ctx.beginPath()
+        ctx.strokeStyle = '#FFFFFF'
 
-        ctx.moveTo(0, -(character.size) + 1);
-        ctx.lineTo(0, (character.size) - 1);
+        ctx.moveTo(0, -(character.size) + 1)
+        ctx.lineTo(0, (character.size) - 1)
 
-        ctx.stroke();
+        ctx.stroke()
+        drawHealth()
 
         ctx.restore();
     }

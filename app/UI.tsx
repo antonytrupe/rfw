@@ -1,10 +1,11 @@
 "use client"
 import styles from './UI.module.scss'
 import { MutableRefObject, useEffect, useRef, useState, } from 'react'
-import ClientEngine from '../src/ClientEngine';
+import ClientEngine from '@/ClientEngine';
 import EventEmitter from 'events';
 import * as CONSTANTS from '@/CONSTANTS';
-import Character from '../src/Character';
+import Character from '@/Character';
+import CharacterUI from './CharacterUI';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
@@ -65,8 +66,6 @@ export default function UI() {
 
   return (
     <>
-
-
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
         style={{ width: "800px", height: "800px" }}
@@ -85,18 +84,9 @@ export default function UI() {
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
 
-
       <div>
         {selectedCharacters && selectedCharacters.map((character: Character) => {
-          return (<div key={character.id}>
-            <div> id:{character.id}</div>
-            <div> size:{character.size}</div>
-            <div> speed:{Math.round(character.speed)}</div>
-            <div> maxSpeed:{character.maxSpeed}</div>
-            <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>
-            <div> x:{character.x.toFixed(2)}</div>
-            <div> y:{character.y.toFixed(2)}</div>
-          </div>)
+          return <CharacterUI character={character} key={character.id} />
         })}
       </div>
     </>

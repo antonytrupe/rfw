@@ -9,7 +9,10 @@ export default class Character {
         mode = 1,
         speed = 0,
         directionAcceleration: directionAcceleration = 0,
-        speedAcceleration: speedAcceleration = 0
+        speedAcceleration: speedAcceleration = 0,
+        hp = 1,
+        tmpHp = 0,
+        maxHp = 1
     }: {
         id?: string,
         size?: number,
@@ -21,7 +24,9 @@ export default class Character {
         speed?: number,
         directionAcceleration?: number,
         speedAcceleration?: number,
-
+        hp?: number,
+        tmpHp?: number,
+        maxHp?: number
     }) {
         this.id = id
         this.size = size
@@ -33,6 +38,9 @@ export default class Character {
         this.directionAcceleration = directionAcceleration
         this.direction = direction
         this.speedAcceleration = speedAcceleration
+        this.hp = hp
+        this.tmpHp = tmpHp
+        this.maxHp = maxHp
     }
     speedAcceleration: number
     id: string
@@ -44,5 +52,8 @@ export default class Character {
     mode: number //1 for run, 2 for double run, .5 for walk/stealth, .25 for crawl
     directionAcceleration: number
     direction: number
+    hp: number
+    tmpHp: number
+    maxHp: number
 }
 

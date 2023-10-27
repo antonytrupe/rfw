@@ -33,9 +33,6 @@ import ServerEngine from '@/ServerEngine';
 
 let serverEngine: ServerEngine
 
-let one = 1;
-//console.log(1, one)
-
 export default function (req: NextRequest, res: SocketResponse) {
   if (res.socket.server?.io) {
     //console.log('Socket is already running')
