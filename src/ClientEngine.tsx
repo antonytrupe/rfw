@@ -45,7 +45,7 @@ export default class ClientEngine {
 
     wheelHandler(e: WheelEvent) {
         let zoom = e.deltaY / 1000
-        console.log(zoom)
+        console.log('zoom', zoom)
 
         let mouseX = this.mouseX(e)
         let mouseY = this.mouseY(e)
@@ -73,8 +73,8 @@ export default class ClientEngine {
         const newScale = Math.min(Math.max(1, this.scale + zoom), 100);
         if (newScale != this.scale) {
             this.scale = newScale
-        //    this.translateX -= deltaX
-        //    this.translateY -= deltaY
+            //    this.translateX -= deltaX
+            //    this.translateY -= deltaY
 
             console.log('translateX', this.translateX)
             console.log('translateY', this.translateY)
@@ -98,9 +98,9 @@ export default class ClientEngine {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
         //TODO this probably isn't right yet
-        ctx.translate(-this.translateX * this.PIXELS_PER_FOOT*this.scale  , -this.translateY * this.PIXELS_PER_FOOT  *this.scale)
+        ctx.translate(-this.translateX * this.PIXELS_PER_FOOT * this.scale, -this.translateY * this.PIXELS_PER_FOOT * this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
-       // ctx.scale(1 / this.PIXELS_PER_FOOT, 1 / this.PIXELS_PER_FOOT)
+        //  ctx.scale(1/ this.PIXELS_PER_FOOT, 1/ this.PIXELS_PER_FOOT)
 
         let a = 1 / this.scale,
             b = 0,
@@ -139,19 +139,19 @@ export default class ClientEngine {
         ctx.lineWidth = 1 * this.scale;
         //vertical line
         ctx.moveTo(
-            center * this.PIXELS_PER_FOOT,
-            -length / 2 * this.PIXELS_PER_FOOT + center * this.PIXELS_PER_FOOT);
+            center * this.PIXELS_PER_FOOT  ,
+            -length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT  );
         ctx.lineTo(
-            center * this.PIXELS_PER_FOOT,
-            length / 2 * this.PIXELS_PER_FOOT + center * this.PIXELS_PER_FOOT);
+            center * this.PIXELS_PER_FOOT  ,
+            length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT  );
 
         //horizontal line
         ctx.moveTo(
-            -length / 2 * this.PIXELS_PER_FOOT + center * this.PIXELS_PER_FOOT,
-            center * this.PIXELS_PER_FOOT);
+            -length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT ,
+            center * this.PIXELS_PER_FOOT  );
         ctx.lineTo(
-            length / 2 * this.PIXELS_PER_FOOT + center * this.PIXELS_PER_FOOT,
-            center * this.PIXELS_PER_FOOT);
+            length / 2 * this.PIXELS_PER_FOOT   + center * this.PIXELS_PER_FOOT  ,
+            center * this.PIXELS_PER_FOOT  );
         ctx.stroke()
 
         ctx.restore();
@@ -301,14 +301,14 @@ export default class ClientEngine {
 
     private mouseX(e: MouseEvent): number {
         const rect = this.getCanvas().getBoundingClientRect()
-        const x = (e.clientX - rect.left + (this.PIXELS_PER_FOOT * this.translateX)) * this.scale / this.PIXELS_PER_FOOT
+        const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT*this.scale)) / this.PIXELS_PER_FOOT*this.scale
         // console.log('x', x)
         return x;
     }
 
     private mouseY(e: MouseEvent): number {
         const rect = this.getCanvas().getBoundingClientRect()
-        const y = (e.clientY - rect.top + (this.PIXELS_PER_FOOT * this.translateY)) * this.scale / this.PIXELS_PER_FOOT
+        const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT*this.scale)) / this.PIXELS_PER_FOOT*this.scale
         //  console.log('y', y)
         return y;
     }
