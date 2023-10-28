@@ -104,6 +104,16 @@ export default class ServerEngine {
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
+             socket.on(CONSTANTS.CREATE_COMMUNITY, async (size) => {
+                //   console.log('spellName',spellName)
+                 //  console.log('casterId',casterId)
+                 //  console.log('targets',targets)
+                   const updatedCharacters = this.gameEngine.createCommunity(size)
+                 //  console.log(updatedCharacters)
+                   io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+               })
+
+
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 // ...
                 console.log(CONSTANTS.DISCONNECT, socket.id)

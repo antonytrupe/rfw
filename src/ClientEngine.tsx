@@ -281,6 +281,10 @@ export default class ClientEngine {
         //tell the server to create a new PC
         this.socket?.emit(CONSTANTS.CREATE_CHARACTER)
     }
+    
+    createCommunity(size:string){
+        this.socket?.emit(CONSTANTS.CREATE_COMMUNITY,size)
+    }
 
     clickHandler(e: MouseEvent) {
         const rect = this.getCanvas().getBoundingClientRect()

@@ -20,6 +20,8 @@ export const PC_DISCONNECT = 'world.character.disconnect'
 export const PC_JOIN = 'world.character.join'
 //tell the server to create a character
 export const CREATE_CHARACTER = 'world.character.create'
+
+export const CREATE_COMMUNITY='world.create_community'
 //tell the client which character it is controlling(not implemented)
 export const PC_CURRENT = 'world.character.current'
 //serverengine notify gameengine

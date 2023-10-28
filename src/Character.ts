@@ -2,33 +2,35 @@ export default class Character {
     constructor({
         id = "undefined",
         size = 5,
-        angle: direction = 0,
+        direction = 0,
         x = 0,
         y = 0,
         maxSpeed = 30,
         mode = 1,
         speed = 0,
-        directionAcceleration: directionAcceleration = 0,
-        speedAcceleration: speedAcceleration = 0,
+        directionAcceleration = 0,
+        speedAcceleration = 0,
         hp = 1,
         tmpHp = 0,
         maxHp = 1,
-        characterClass= 'COMMONER'
+        characterClass = 'COMMONER',
+        level = 1
     }: {
-        id?: string,
-        size?: number,
-        angle?: number
-        x?: number,
-        y?: number,
-        maxSpeed?: number,
-        mode?: number,
-        speed?: number,
-        directionAcceleration?: number,
-        speedAcceleration?: number,
-        hp?: number,
-        tmpHp?: number,
-        maxHp?: number,
+        id?: string
+        size: number
+        direction?: number
+        x?: number
+        y?: number
+        maxSpeed?: number
+        mode?: number
+        speed?: number
+        directionAcceleration?: number
+        speedAcceleration?: number
+        hp?: number
+        tmpHp?: number
+        maxHp?: number
         characterClass?: string
+        level?: number
     }) {
         this.id = id
         this.size = size
@@ -44,6 +46,7 @@ export default class Character {
         this.tmpHp = tmpHp
         this.maxHp = maxHp
         this.characterClass = characterClass
+        this.level = level
     }
     speedAcceleration: number
     id: string
@@ -59,5 +62,6 @@ export default class Character {
     tmpHp: number
     maxHp: number
     characterClass: string
+    level: number
 }
 

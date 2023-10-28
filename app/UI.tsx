@@ -24,12 +24,13 @@ export default function UI() {
   const [connected, setConnected] = useState(false)
   //const [world, setWorldState] = useState<GameWorld>()
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
+  const [communitySize, setCommunitySize] = useState('THORP');
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
 
     eventEmitter.on(CONSTANTS.CLIENT_SELECTED_CHARACTERS, (s: Character[]) => {
-    //  console.log(s)
+      //  console.log(s)
       setSelectedCharacters(s);
     })
     //let gameEngine = new GameEngine(eventEmitter)
@@ -64,6 +65,10 @@ export default function UI() {
     clientEngine?.createCharacter()
   }
 
+  const createCommunity = () => {
+    clientEngine?.createCommunity(communitySize)
+  }
+
   const castSpell = (casterId: string, spellName: string, targets: string[]) => {
     clientEngine?.castSpell(casterId, spellName, targets)
   }
@@ -85,6 +90,21 @@ export default function UI() {
       <div className={`${styles.hud} ${styles.flexColumn} `}>
         {!connected && (<button onClick={connect}>connect</button>)}
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
+        {connected && (<><button onClick={createCommunity}>Create Community</button>
+
+          <select
+            value={communitySize}
+            onChange={e => setCommunitySize(e.target.value)}
+          >
+            <option value="THORP">Thorp</option>
+            <option value="HAMLET">Hamlet</option>
+            <option value="VILLAGE">Village</option>
+            <option value="SMALL_TOWN">Small Town</option>
+            <option value="LARGE_TOWN">Large Town</option>
+            <option value="SMALL_CITY">Small City</option>
+          </select>
+        </>
+        )}
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
 
