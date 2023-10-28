@@ -10,9 +10,10 @@ import GameWorld from "./GameWorld";
 export default class ServerEngine {
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     emit: (eventName: string | symbol, ...args: any[]) => boolean
+    gameEngine: GameEngine
     constructor(io: Server) {
         const eventEmitter: EventEmitter = new EventEmitter();
-        const gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
+        this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         const db = new JsonDB(new Config("world", true, true, '/'));
@@ -40,7 +41,7 @@ export default class ServerEngine {
 
         //don't do this until after the db loads maybe?
         //start the gameengines clock thingy
-        gameEngine.start()
+        this.gameEngine.start()
 
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[]) => {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
@@ -48,16 +49,13 @@ export default class ServerEngine {
                 try {
                     //array version
                     db.push(CONSTANTS.CHARACTER_PATH + character.id, character)
-
-                    //map version
-                    //db.push(CONSTANTS.CHARACTER_PATH + character.id, character)
                 }
                 catch (e) {
                     console.log('failed to create character')
                 }
             })
             //TODO only send the ones that changed
-            //  get the save sent out to browser clients  
+            // get the save sent out to browser clients  
             io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
 
         })
@@ -71,7 +69,7 @@ export default class ServerEngine {
                 this.emit(CONSTANTS.CREATE_CHARACTER)
             })
             socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
-                this.emit(CONSTANTS.TURN_LEFT, characters)
+                this.gameEngine.turnLeft(characters)
             })
             socket.on(CONSTANTS.TURN_RIGHT, async (characters: Character[]) => {
                 this.emit(CONSTANTS.TURN_RIGHT, characters)
@@ -97,6 +95,14 @@ export default class ServerEngine {
             socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, characters)
             })
+            socket.on(CONSTANTS.CAST_SPELL, async ({casterId: casterId, spellName: spellName,  targets: targets }) => {
+             //   console.log('spellName',spellName)
+              //  console.log('casterId',casterId)
+              //  console.log('targets',targets)
+                const updatedCharacters = this.gameEngine.castSpell(casterId, spellName, targets)
+              //  console.log(updatedCharacters)
+                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+            })
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 // ...
@@ -108,7 +114,7 @@ export default class ServerEngine {
             });
 
             //tell the client where all the other character are
-            socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, gameEngine.gameWorld.characters)
+            socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.characters)
         })
     }
 }

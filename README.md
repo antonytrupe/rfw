@@ -4,12 +4,15 @@ npm install
 npm run dev
 
 ## TODO
-package as exe.etc with electron
+no moving while incapacitated/dying/dead
+collision
+combat
+leveling up system
+package as exe/etc with electron
 add steam support
 change the position calculation with respect to turning
 https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
 admin tool to interact with world
-collision
 stay centered on selected characters
 rightclick move the screen
 change selected character stats
@@ -18,11 +21,10 @@ reconnect after disconnect
 randomly spawn new characters
 randomly move characters
 character health ui
-combat
-leveling up system
-clean up draw resetting
 
 ## DONE
+disintegrate
+clean up draw resetting
 character health ui
 zoom centered on mouse
 fix the jump from sprinting to running

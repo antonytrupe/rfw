@@ -230,12 +230,20 @@ export default class ClientEngine {
 
         const drawHealth = () => {
             ctx.beginPath()
-            // ctx.setLineDash([10, 10])
-            ctx.strokeStyle = "#FF0000"
-            ctx.lineWidth=3
-            ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
-             (-character.hp / character.maxHp) * Math.PI -       Math.PI/2,
-             (character.hp / character.maxHp) * Math.PI -    Math.PI/2)
+            ctx.lineWidth = 3
+            if (character.hp > 0) {
+                ctx.strokeStyle = "#99FF99"
+                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
+                (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
+                (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
+            }
+            else {
+                ctx.strokeStyle = "#FF0000"
+                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
+                ((character.hp+10) / -10) * Math.PI - Math.PI / 2,
+                ((-character.hp+10) / -10) * Math.PI - Math.PI / 2)
+            }
+ 
             ctx.stroke()
         }
 
@@ -275,14 +283,6 @@ export default class ClientEngine {
         const x = this.mouseX(e);
         const y = this.mouseY(e);
 
-        // console.log('scale', this.scale)
-
-        // console.log('this.translateX', this.translateX)
-        // console.log('this.translateY', this.translateY)
-
-        // console.log('x', x)
-        // console.log('y', y)
-
         const characters = this.gameEngine.gameWorld.getCharactersAt(
             {
                 x: x,
@@ -291,6 +291,15 @@ export default class ClientEngine {
         this.selectedCharacters = characters
         //tell the ui about the selected characters
         this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.getSelectedCharacters())
+    }
+
+    castSpell(casterId: string, spellName: string, targets: string[]) {
+        //todo maybe don't tell the local gameengine because the damage will end up being wrong?
+        //  console.log('spellName', spellName)
+        // console.log('casterId', casterId)
+        // console.log('targets', targets)
+        this.gameEngine.castSpell(casterId, spellName, targets)
+        this.socket?.emit(CONSTANTS.CAST_SPELL, { casterId: casterId, spellName: spellName, targets: targets })
     }
 
     private mouseX(e: MouseEvent): number {
@@ -318,7 +327,8 @@ export default class ClientEngine {
         }
         else if (code == 'KeyA') {
             if (this.selectedCharacters) {
-                this.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
+                //this.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
+                this.gameEngine.turnLeft(this.selectedCharacters)
                 this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
             }
         }
@@ -431,7 +441,8 @@ export default class ClientEngine {
             this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
                 //console.log('socket on PC_LOCATION', character)
                 //tell the gameengine we got an update 
-                this.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
+                // console.log(characters)
+                this.gameEngine.updateCharacters(characters)
                 const merged = this.selectedCharacters.map((selected) => {
                     //looping over all selected charecters
                     //look for each selected character in the list of characters
@@ -440,6 +451,7 @@ export default class ClientEngine {
                     return { ...selected, ...u };
                 });
                 //tell the ui about the updates to the selected characters
+                //  console.log(merged)
                 this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, merged)
             })
         })

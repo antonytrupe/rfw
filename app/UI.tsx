@@ -29,7 +29,7 @@ export default function UI() {
     let eventEmitter: EventEmitter = new EventEmitter()
 
     eventEmitter.on(CONSTANTS.CLIENT_SELECTED_CHARACTERS, (s: Character[]) => {
-      //console.log(s)
+    //  console.log(s)
       setSelectedCharacters(s);
     })
     //let gameEngine = new GameEngine(eventEmitter)
@@ -64,6 +64,10 @@ export default function UI() {
     clientEngine?.createCharacter()
   }
 
+  const castSpell = (casterId: string, spellName: string, targets: string[]) => {
+    clientEngine?.castSpell(casterId, spellName, targets)
+  }
+
   return (
     <>
       <canvas ref={canvasRef}
@@ -86,7 +90,9 @@ export default function UI() {
 
       <div>
         {selectedCharacters && selectedCharacters.map((character: Character) => {
-          return <CharacterUI character={character} key={character.id} />
+          return <CharacterUI character={character} key={character.id} >
+            <button onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+          </CharacterUI>
         })}
       </div>
     </>

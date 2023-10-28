@@ -12,7 +12,8 @@ export default class Character {
         speedAcceleration: speedAcceleration = 0,
         hp = 1,
         tmpHp = 0,
-        maxHp = 1
+        maxHp = 1,
+        characterClass= 'COMMONER'
     }: {
         id?: string,
         size?: number,
@@ -26,7 +27,8 @@ export default class Character {
         speedAcceleration?: number,
         hp?: number,
         tmpHp?: number,
-        maxHp?: number
+        maxHp?: number,
+        characterClass?: string
     }) {
         this.id = id
         this.size = size
@@ -41,6 +43,7 @@ export default class Character {
         this.hp = hp
         this.tmpHp = tmpHp
         this.maxHp = maxHp
+        this.characterClass = characterClass
     }
     speedAcceleration: number
     id: string
@@ -55,5 +58,6 @@ export default class Character {
     hp: number
     tmpHp: number
     maxHp: number
+    characterClass: string
 }
 

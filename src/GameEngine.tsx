@@ -26,6 +26,19 @@ export default class GameEngine {
     //30ft/6seconds
     speedMultiplier: number = 6000
 
+    turnLeft = (characters: Character[]) => {
+        characters.forEach((character) => {
+            this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
+        })
+    }
+
+    updateCharacters(characters: Character[]) {
+        // console.log(characters)
+        characters.forEach((character) => {
+            this.gameWorld.updateCharacter(character)
+        })
+    }
+
     constructor({ ticksPerSecond }: { ticksPerSecond: number }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
         this.on = eventEmitter.on.bind(eventEmitter)
@@ -35,14 +48,7 @@ export default class GameEngine {
 
         this.on(CONSTANTS.CREATE_CHARACTER, () => {
             //console.log('gameengine CREATE_CHARACTER')
-            let x = Math.random() * 30 - 15
-            let y = Math.random() * 30 - 15
-            const id = uuidv4()
-            let p = new Character({ id: id, size: 5, x: x, y: y })
-            this.gameWorld.characters.push(p)
-
-            //tell the server engine there's a character update so it can save it and update clients
-            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, [p])
+            this.createCharacter();
         })
 
         this.on(CONSTANTS.TURN_RIGHT, (characters: Character[]) => {
@@ -50,11 +56,7 @@ export default class GameEngine {
                 this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
             })
         })
-        this.on(CONSTANTS.TURN_LEFT, (characters: Character[]) => {
-            characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
-            })
-        })
+
         this.on(CONSTANTS.TURN_STOP, (characters: Character[]) => {
             characters.forEach((character) => {
                 this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
@@ -94,19 +96,47 @@ export default class GameEngine {
         })
 
         //got an update from the clientengine
-        this.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
-            //console.log('CHARACTER_LOCATION')
-            characters.forEach((character) => {
-                this.gameWorld.updateCharacter(character)
-            })
-        })
-
-        //got an update from the clientengine
         this.on(CONSTANTS.WORLD_UPDATE, (gameWorld: GameWorld) => {
             //console.log('CONSTANTS.WORLD_UPDATE')
             this.gameWorld.characters = gameWorld.characters
         })
     }
+    private createCharacter() {
+        let x = Math.random() * 30 - 15;
+        let y = Math.random() * 30 - 15;
+        const id = uuidv4();
+        let maxHp = Math.floor(Math.random() * 5) - 1
+
+        let p = new Character({ id: id, size: 5, x: x, y: y, maxHp: maxHp, hp: maxHp });
+        this.gameWorld.characters.push(p);
+
+        //tell the server engine there's a character update so it can save it and update clients
+        this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, [p]);
+    }
+
+    private roll(size: number) {
+        return Math.floor(Math.random() * (size + 1))
+    }
+
+    castSpell(casterId: string, spellName: string, targetIds: string[]) {
+        //TODO
+        //console.log('spellName', spellName)
+        switch (spellName) {
+            case 'DISINTEGRATE':
+                //     console.log('targetIds', targetIds)
+                const damagedTargets = this.gameWorld.getCharacters(targetIds).map((character) => {
+                    const damage = this.roll(6) + this.roll(6)
+                    character.hp = Math.max(-10, character.hp - damage)
+                    return this.gameWorld.updateCharacter(character)
+
+                })
+                //TODO update the caster character too and return it
+                return damagedTargets
+            default:
+                return []
+        }
+    }
+
     //this is the wrapper and callback function that calls step
     tick() {
         const now = (new Date()).getTime()
@@ -246,7 +276,7 @@ export default class GameEngine {
                 //accelerating backward while moving backward slower then currentModeMaxSpeed 
                 else {
                     //then don't go faster then currentModeMinSpeed
-                    newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta) 
+                    newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta)
                 }
             }
         }
