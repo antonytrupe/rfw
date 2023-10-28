@@ -228,22 +228,26 @@ export default class ClientEngine {
 
     drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
 
+        //don't draw dead characters
+        if (character.hp <= -10)
+            return
+
         const drawHealth = () => {
             ctx.beginPath()
             ctx.lineWidth = 3
             if (character.hp > 0) {
                 ctx.strokeStyle = "#99FF99"
                 ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
-                (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
-                (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
+                    (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
+                    (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
             }
             else {
                 ctx.strokeStyle = "#FF0000"
                 ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
-                ((character.hp+10) / -10) * Math.PI - Math.PI / 2,
-                ((-character.hp+10) / -10) * Math.PI - Math.PI / 2)
+                    ((character.hp + 10) / -10) * Math.PI - Math.PI / 2,
+                    ((-character.hp + 10) / -10) * Math.PI - Math.PI / 2)
             }
- 
+
             ctx.stroke()
         }
 

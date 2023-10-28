@@ -4,6 +4,8 @@ npm install
 npm run dev
 
 ## TODO
+community generation
+random class and stats when spawning
 no moving while incapacitated/dying/dead
 collision
 combat
@@ -23,6 +25,7 @@ randomly move characters
 character health ui
 
 ## DONE
+added dying hp indicator
 disintegrate
 clean up draw resetting
 character health ui
