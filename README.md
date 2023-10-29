@@ -7,9 +7,7 @@ npm run dev
 make the client only request what it can see
 reconnect automatically
 reconnect after disconnect
-making zooming out scale faster
-place communities and zoom to their location
-add race to community generation
+make zooming out scale faster
 random stats when spawning
 no moving while incapacitated/dying/dead
 collision
@@ -29,6 +27,8 @@ randomly move characters
 character health ui
 
 ## DONE
+add race to community generation
+place communities in center of client viewport
 connect automatically
 community generation
 added dying hp indicator
