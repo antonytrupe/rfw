@@ -38,12 +38,10 @@ export default class ClientEngine {
             if (this.stopped) {
                 return
             }
-            // this.gameEngine.step()
             this.draw()
             window.requestAnimationFrame(renderLoop.bind(this))
         }
         this.gameEngine.start()
-        //this.drawInit()
         window.requestAnimationFrame(renderLoop.bind(this))
     }
 
@@ -431,32 +429,19 @@ export default class ClientEngine {
         //console.log('Client Engine connect')
 
         try {
-            await fetch('/api/world').then((response) => {
-                if (response.status >= 400 && response.status < 600) {
-                    throw new Error("Bad response from server");
-                }
-                return response
-            }).catch((error) => {
-
-                throw error
+            this.socket = io({
+                path: "/api/world/"
             })
-
-            this.socket = io()
             this.socket.on(CONSTANTS.CONNECT, () => {
                 this.connected = true
-                return true
-            })
-
-            //disconnect handler
-            this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
-                //  console.log('DISCONNECT', reason)
-                this.connected = false
+                this.emit(CONSTANTS.CONNECT)
             })
 
             //disconnect handler
             this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
                 console.log('DISCONNECT', reason)
                 this.connected = false
+                this.emit(CONSTANTS.DISCONNECT)
             })
 
             //pc disconnect
@@ -497,7 +482,8 @@ export default class ClientEngine {
             })
         }
         catch (e) {
-            //something went wrong
+            //something went wrongc
+            console.log(e)
             return false
         }
 

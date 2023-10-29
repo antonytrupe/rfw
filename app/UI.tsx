@@ -28,13 +28,20 @@ export default function UI() {
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
-    console.log('useEffect[]')
     let eventEmitter: EventEmitter = new EventEmitter()
 
     eventEmitter.on(CONSTANTS.CLIENT_SELECTED_CHARACTERS, (s: Character[]) => {
-      //  console.log(s)
       setSelectedCharacters(s);
     })
+    eventEmitter.on(CONSTANTS.DISCONNECT, (s: Character[]) => {
+      setConnected(false)
+      setConnecting(false)
+    })
+    eventEmitter.on(CONSTANTS.CONNECT, (s: Character[]) => {
+      setConnected(true)
+      setConnecting(false)
+    })
+
     const ce = new ClientEngine(eventEmitter, getCanvas);
     setClientEngine(ce)
 
@@ -51,13 +58,8 @@ export default function UI() {
   }, [clientEngine])
 
   const connect = async () => {
-    //  console.log('connecting')
     setConnecting(true)
-    const connected = !!await clientEngine?.connect()
-    //  console.log('connected', connected)
-    setConnected(connected)
-    setConnecting(false)
-    // console.log('connected')
+    clientEngine?.connect()
   }
 
   const onClick = (event: any) => {

@@ -36,11 +36,13 @@ let serverEngine: ServerEngine
 export default function (req: NextRequest, res: SocketResponse) {
   if (res.socket.server?.io) {
     //console.log('Socket is already running')
-   // console.log(2, ++one)
+    // console.log(2, ++one)
 
   } else {
-   // console.log(3, ++one)
-    const io = new Server(res.socket.server)
+    // console.log(3, ++one)
+    const io = new Server(res.socket.server, {
+      path: "/api/world/"
+    })
     res.socket.server.io = io
     serverEngine = new ServerEngine(io)
   }
