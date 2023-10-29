@@ -4,6 +4,9 @@ npm install
 npm run dev
 
 ## TODO
+connect automatically
+reconnect automatically
+reconnect after disconnect
 making zooming out scale faster
 place communities and zoom to their location
 add race to community generation
@@ -21,7 +24,6 @@ stay centered on selected characters
 rightclick move the screen
 change selected character stats
 chat
-reconnect after disconnect
 randomly spawn new characters
 randomly move characters
 character health ui

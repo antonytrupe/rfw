@@ -22,6 +22,7 @@ export default function UI() {
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
+  const [connecting, setConnecting] = useState(false)
   //const [world, setWorldState] = useState<GameWorld>()
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
   const [communitySize, setCommunitySize] = useState('THORP');
@@ -38,8 +39,10 @@ export default function UI() {
   }, [])
 
   const connect = async () => {
-    clientEngine?.connect()
-    setConnected(true)
+    setConnecting(true)
+    const connected = !!await clientEngine?.connect()
+    setConnected(connected)
+    setConnecting(false)
   }
 
   const onClick = (event: any) => {
@@ -88,7 +91,7 @@ export default function UI() {
         data-testid="canvas" />
 
       <div className={`${styles.hud} ${styles.flexColumn} `}>
-        {!connected && (<button onClick={connect}>connect</button>)}
+        {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
         {connected && (<><button onClick={createCommunity}>Create Community</button>
 

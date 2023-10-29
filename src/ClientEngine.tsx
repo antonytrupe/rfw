@@ -47,8 +47,16 @@ export default class ClientEngine {
     }
 
     wheelHandler(e: WheelEvent) {
-        let zoom = e.deltaY / 1000
-        //  console.log('zoom', zoom)
+        let zoom
+
+        if (e.deltaY > 0) {
+            zoom = .1
+        }
+        else {
+            zoom = -.1
+        }
+
+        console.log('zoom', zoom)
 
         let mouseX = this.mouseX(e)
         let mouseY = this.mouseY(e)
@@ -414,14 +422,32 @@ export default class ClientEngine {
     async connect() {
         //console.log('Client Engine connect')
 
-        await fetch('/api/world')
-        this.socket = io()
-        this.socket.on(CONSTANTS.CONNECT, () => {
-            this.connected = true
+        try {
+            await fetch('/api/world').then((response) => {
+                if (response.status >= 400 && response.status < 600) {
+                    throw new Error("Bad response from server");
+                }
+                return response
+            }).catch((error) => {
+               
+                throw error
+            }) 
+
+            this.socket = io() 
+            this.socket.on(CONSTANTS.CONNECT, () => {
+                this.connected = true
+                return true
+            })
 
             //disconnect handler
             this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
-                console.log('DISCONNECT', this.socket?.id)
+                console.log('DISCONNECT', reason)
+                this.connected = false
+            })
+
+            //disconnect handler
+            this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
+                console.log('DISCONNECT', reason)
                 this.connected = false
             })
 
@@ -429,13 +455,14 @@ export default class ClientEngine {
             this.socket?.on(CONSTANTS.PC_DISCONNECT, (playerId) => {
                 console.log('PC_DISCONNECT', playerId)
                 //dispatch(removePlayer(playerId))
-            })
+                this.disconnect()
+            }) 
 
             //pc join
             this.socket?.on(CONSTANTS.PC_JOIN, (character: Character) => {
                 console.log('PC_JOIN', character)
                 //dispatch(addPlayer(player))
-            })
+            }) 
 
             //pc current
             this.socket?.on(CONSTANTS.PC_CURRENT, (character: Character) => {
@@ -460,6 +487,12 @@ export default class ClientEngine {
                 //  console.log(merged)
                 this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, merged)
             })
-        })
+        }
+        catch (e) {
+            //something went wrong
+             return false
+        }
+
+        return true
     }
 }
