@@ -26,19 +26,6 @@ export default class GameEngine {
     //30ft/6seconds
     speedMultiplier: number = 6000
 
-    turnLeft = (characters: Character[]) => {
-        characters.forEach((character) => {
-            this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
-        })
-    }
-
-    updateCharacters(characters: Character[]) {
-        // console.log(characters)
-        characters.forEach((character) => {
-            this.gameWorld.updateCharacter(character)
-        })
-    }
-
     constructor({ ticksPerSecond }: { ticksPerSecond: number }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
         this.on = eventEmitter.on.bind(eventEmitter)
@@ -98,6 +85,20 @@ export default class GameEngine {
             this.gameWorld.characters = gameWorld.characters
         })
     }
+
+    turnLeft = (characters: Character[]) => {
+        characters.forEach((character) => {
+            this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
+        })
+    }
+
+    updateCharacters(characters: Character[]) {
+        // console.log(characters)
+        characters.forEach((character) => {
+            this.gameWorld.updateCharacter(character)
+        })
+    }
+
     createCharacter(character: Partial<Character>) {
         const id = uuidv4();
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
@@ -108,7 +109,7 @@ export default class GameEngine {
         return p
     }
 
-    getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
+    private getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
         const direction = Math.random() * Math.PI * 2
         const r = Math.random() * radius
         x = r * Math.cos(direction) + x
@@ -351,7 +352,7 @@ export default class GameEngine {
     }
 
     //this is the wrapper and callback function that calls step
-    tick() {
+    private tick() {
         const now = (new Date()).getTime()
         this.lastTimestamp = this.lastTimestamp || now
         const dt = now - this.lastTimestamp
@@ -363,7 +364,7 @@ export default class GameEngine {
         setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
     }
 
-    step(dt: number) {
+    private step(dt: number) {
         //console.log('GameEngine.step')
 
         const updatedCharacters: Character[] = []
