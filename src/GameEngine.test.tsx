@@ -14,9 +14,7 @@ describe('GameEngine', () => {
 
     describe('Events', () => {
         test('should add a new chararacter ', () => {
-            eventEmitter.emit(CONSTANTS.CREATE_CHARACTER)
-            eventEmitter.emit(CONSTANTS.CREATE_CHARACTER)
-            eventEmitter.emit(CONSTANTS.CREATE_CHARACTER)
+            gameEngine.createCharacter({})
             expect(gameEngine.gameWorld.characters.length).toBe(3)
         })
     })

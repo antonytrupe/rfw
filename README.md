@@ -4,8 +4,10 @@ npm install
 npm run dev
 
 ## TODO
-community generation
-random class and stats when spawning
+making zooming out scale faster
+place communities and zoom to their location
+add race to community generation
+random stats when spawning
 no moving while incapacitated/dying/dead
 collision
 combat
@@ -25,6 +27,7 @@ randomly move characters
 character health ui
 
 ## DONE
+community generation
 added dying hp indicator
 disintegrate
 clean up draw resetting

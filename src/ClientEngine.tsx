@@ -91,6 +91,14 @@ export default class ClientEngine {
         ctx.translate(-this.translateX * this.PIXELS_PER_FOOT / this.scale, -this.translateY * this.PIXELS_PER_FOOT / this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
 
+        this.drawCrossHair(ctx)
+
+        //draw all the characters
+        this.gameEngine.gameWorld.characters.forEach((character: Character) => {
+
+            this.drawCharacter(ctx, character);
+        })
+
         //draw the scale
         if (this.scale <= 2) {
             this.drawTurnScale(ctx)
@@ -101,14 +109,6 @@ export default class ClientEngine {
         else {
             this.drawHourScale(ctx)
         }
-
-        this.drawCrossHair(ctx)
-
-        //draw all the characters
-        this.gameEngine.gameWorld.characters.forEach((character: Character) => {
-
-            this.drawCharacter(ctx, character);
-        })
     }
 
     drawCrossHair(ctx: CanvasRenderingContext2D) {
@@ -236,13 +236,13 @@ export default class ClientEngine {
             ctx.beginPath()
             ctx.lineWidth = 3
             if (character.hp > 0) {
-                ctx.strokeStyle = "#99FF99"
+                ctx.strokeStyle = "#008000"
                 ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
                     (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
                     (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
             }
             else {
-                ctx.strokeStyle = "#FF0000"
+                ctx.strokeStyle = "#D22B2B"
                 ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
                     ((character.hp + 10) / -10) * Math.PI - Math.PI / 2,
                     ((-character.hp + 10) / -10) * Math.PI - Math.PI / 2)
@@ -277,13 +277,11 @@ export default class ClientEngine {
     }
 
     createCharacter() {
-        //console.log('ClientEngine.createCharacter')
-        //tell the server to create a new PC
         this.socket?.emit(CONSTANTS.CREATE_CHARACTER)
     }
-    
-    createCommunity(size:string){
-        this.socket?.emit(CONSTANTS.CREATE_COMMUNITY,size)
+
+    createCommunity(size: string) {
+        this.socket?.emit(CONSTANTS.CREATE_COMMUNITY, size)
     }
 
     clickHandler(e: MouseEvent) {

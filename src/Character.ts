@@ -17,7 +17,7 @@ export default class Character {
         level = 1
     }: {
         id?: string
-        size: number
+        size?: number
         direction?: number
         x?: number
         y?: number

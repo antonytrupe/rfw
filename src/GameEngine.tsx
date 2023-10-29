@@ -46,10 +46,7 @@ export default class GameEngine {
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
 
-        this.on(CONSTANTS.CREATE_CHARACTER, () => {
-            //console.log('gameengine CREATE_CHARACTER')
-            this.createCharacter({});
-        })
+
 
         this.on(CONSTANTS.TURN_RIGHT, (characters: Character[]) => {
             characters.forEach((character) => {
@@ -101,27 +98,27 @@ export default class GameEngine {
             this.gameWorld.characters = gameWorld.characters
         })
     }
-    private createCharacter(character: Partial<Character>) {
-        let originX = 0
-        let originY = 0
-        let spreadX = 30
-        let spreadY = 30
-
-        let x = originX + Math.random() * spreadX - spreadX / 2;
-        let y = originY + Math.random() * spreadY - spreadY / 2;
+    createCharacter(character: Partial<Character>) {
         const id = uuidv4();
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
-        const merged = { ...character, id: id, size: 5, x: x, y: y, maxHp: maxHp, hp: maxHp };
+        const merged = { ...character, id: id, size: 5, maxHp: maxHp, hp: maxHp };
         let p = new Character(merged);
         this.gameWorld.characters.push(p);
-
-        //tell the server engine there's a character update so it can save it and update clients
-        this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, [p]);
         return p
     }
 
-    private populateClass(className: string, diceCount: number, diceSize: number, modifier: number) {
+    getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
+        const direction = Math.random() * Math.PI * 2
+        const r = Math.random() * radius
+        x = r * Math.cos(direction) + x
+        y = r * Math.sin(direction) + y
+        return { x, y }
+    }
+
+    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }:
+        { className: string, diceCount: number, diceSize: number, modifier: number, origin: { x: number, y: number }, radius: number }) {
+        let { x, y } = this.getRandomPoint({ origin, radius })
         const updatedCharacters: Character[] = []
         const highestLevel = this.roll({ size: diceSize, count: diceCount, modifier: modifier });
         // work our way down from highest level
@@ -129,7 +126,7 @@ export default class GameEngine {
             //console.log('level', level);
             //make the right amount of each level
             for (let i = 0; i < highestLevel / level; i++) {
-                updatedCharacters.push(this.createCharacter({ characterClass: className, level: Math.round(level) }));
+                updatedCharacters.push(this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y }));
             }
         }
         return updatedCharacters
@@ -138,82 +135,195 @@ export default class GameEngine {
     createCommunity(size: string) {
         console.log('createCommunity')
         let updatedCharacters: Character[] = []
+        let modifier = -16
+        let totalSize = 0
+        let originX = 0
+        let originY = 0
+        let radius = 90
+
         switch (size) {
             case "THORP":
-                let modifier = -3
-                let totalSize = this.roll({ size: 60, modifier: 20 })
-
-                //pc classes
-                //barbarians
-                updatedCharacters = updatedCharacters.concat(this.populateClass('BARBARIAN', 1, 4, modifier))
-                //bards
-                updatedCharacters = updatedCharacters.concat(this.populateClass('BARD', 1, 6, modifier))
-                //clerics
-                updatedCharacters = updatedCharacters.concat(this.populateClass('CLERIC', 1, 6, modifier))
-                //druid
-                updatedCharacters = updatedCharacters.concat(this.populateClass('DRUID', 1, 6, modifier))
-                //fighter
-                updatedCharacters = updatedCharacters.concat(this.populateClass('FIGHTER', 1, 8, modifier))
-                //monk
-                updatedCharacters = updatedCharacters.concat(this.populateClass('MONK', 1, 4, modifier))
-                //paladin
-                updatedCharacters = updatedCharacters.concat(this.populateClass('PALADIN', 1, 3, modifier))
-                //ranger
-                updatedCharacters = updatedCharacters.concat(this.populateClass('RANGER', 1, 3, modifier))
-                //rogue
-                updatedCharacters = updatedCharacters.concat(this.populateClass('ROGUE', 1, 8, modifier))
-                //sorcerer
-                updatedCharacters = updatedCharacters.concat(this.populateClass('SORCERER', 1, 4, modifier))
-                //warrior
-                updatedCharacters = updatedCharacters.concat(this.populateClass('WARRIOR', 2, 4, modifier))
-                //wizard
-                updatedCharacters = updatedCharacters.concat(this.populateClass('WIZARD', 1, 4, modifier))
-
-
-                //npc classes
-                //adepts
-                updatedCharacters = updatedCharacters.concat(this.populateClass('ADEPT', 1, 6, modifier))
-                //aristocrats
-                updatedCharacters = updatedCharacters.concat(this.populateClass('ARISTOCRAT', 1, 4, modifier))
-                //commoner
-                updatedCharacters = updatedCharacters.concat(this.populateClass('COMMONER', 4, 4, modifier))
-                //expert
-                updatedCharacters = updatedCharacters.concat(this.populateClass('EXPERT', 3, 4, modifier))
-                //warrior
-                updatedCharacters = updatedCharacters.concat(this.populateClass('WARRIOR', 2, 4, modifier))
-
-
-                let remaining = totalSize - updatedCharacters.length
-                //make more level 1 characters
-                //create .5% aristocrats
-                for (let i = 0; i < remaining * .005; i++) {
-                    updatedCharacters.push(this.createCharacter({ characterClass: "ARISTOCRAT" }))
-                }
-
-                //create .5% adepts
-                for (let i = 0; i < remaining * .005; i++) {
-                    updatedCharacters.push(this.createCharacter({ characterClass: "ADEPT" }))
-                }
-                //create 3% experts
-                for (let i = 0; i < remaining * .03; i++) {
-                    updatedCharacters.push(this.createCharacter({ characterClass: "EXPERT" }))
-                }
-                //create 5% warriors
-                for (let i = 0; i < remaining * .05; i++) {
-                    updatedCharacters.push(this.createCharacter({ characterClass: "WARRIOR" }))
-                }
-                //create the rest as commoners
-                for (let i = 0; i < totalSize - updatedCharacters.length * .005; i++) {
-                    updatedCharacters.push(this.createCharacter({ characterClass: "ARISTOCRAT" }))
-                }
-                console.log('generated characters', updatedCharacters.length)
-                console.log('totalSize', totalSize)
+                modifier = -3
+                totalSize = this.roll({ size: 60, modifier: 20 })
+                break
+            case "HAMLET":
+                modifier = -2
+                totalSize = this.roll({ size: 320, modifier: 80 })
+                radius = 200
+                break
+            case "VILLAGE":
+                modifier = -1
+                totalSize = this.roll({ size: 500, modifier: 400 })
+                radius = 300
+                break
+            case "SMALL_TOWN":
+                modifier = 0
+                totalSize = this.roll({ size: 1100, modifier: 900 })
+                radius = 500
+                break
+            case "LARGE_TOWN":
+                modifier = 3
+                totalSize = this.roll({ size: 3000, modifier: 2000 })
+                radius = 800
+                break
+            case "SMALL_CITY":
+                modifier = 6
+                totalSize = this.roll({ size: 7000, modifier: 5000 })
+                radius = 1100
+                break
+            case "LARGE_CITY":
+                modifier = 9
+                totalSize = this.roll({ size: 13000, modifier: 12000 })
+                radius = 1600
+                break
+            case "METROPOLIS":
+                modifier = 12
+                totalSize = this.roll({ size: 75000, modifier: 25000 })
+                radius = 3200
                 break
         }
+  
+        //pc classes
+        //barbarians
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'BARBARIAN',
+            diceCount: 1, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //bards
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'BARD',
+            diceCount: 1, diceSize: 6, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //clerics
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'BARD',
+            diceCount: 1, diceSize: 6, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //druid
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'DRUID',
+            diceCount: 1, diceSize: 6, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //fighter
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'FIGHTER',
+            diceCount: 1, diceSize: 8, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //monk
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'MONK',
+            diceCount: 1, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //paladin
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'PALADIN',
+            diceCount: 1, diceSize: 3, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //ranger
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'RANGER',
+            diceCount: 1, diceSize: 3, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //rogue
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'ROGUE',
+            diceCount: 1, diceSize: 8, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //sorcerer
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'SORCERER',
+            diceCount: 1, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //warrior
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'WARRIOR',
+            diceCount: 2, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //wizard
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'WIZARD',
+            diceCount: 1, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+
+        //npc classes
+        //adepts
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'ADEPT',
+            diceCount: 1, diceSize: 6, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //aristocrats
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'ARISTOCRAT',
+            diceCount: 1, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //commoner
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'COMMONER',
+            diceCount: 4, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //expert
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'EXPERT',
+            diceCount: 3, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+        //warrior
+        updatedCharacters = updatedCharacters.concat(this.populateClass({
+            className: 'WARRIOR',
+            diceCount: 2, diceSize: 4, modifier: modifier,
+            origin: { x: 0, y: 0 }, radius: radius
+        }))
+
+ 
+        let remaining = totalSize - updatedCharacters.length
+         //make more level 1 characters
+        //create .5% aristocrats
+        for (let i = 0; i < remaining * .005; i++) {
+            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "ARISTOCRAT", x: x, y: y }))
+        }
+
+        //create .5% adepts
+        for (let i = 0; i < remaining * .005; i++) {
+            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "ADEPT", x: x, y: y }))
+        }
+        //create 3% experts
+        for (let i = 0; i < remaining * .03; i++) {
+            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "EXPERT", x: x, y: y }))
+        }
+        //create 5% warriors
+        for (let i = 0; i < remaining * .05; i++) {
+            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "WARRIOR", x: x, y: y }))
+        } 
+ 
+        //create the rest as commoners
+        for (let i = 0; updatedCharacters.length < totalSize; i++) {
+            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "COMMONER", x: x, y: y }))
+        }
+ 
         return updatedCharacters
     }
 
-    private roll({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }) {
+    roll({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }) {
         let sum = modifier
         for (let i = 0; i < count; i++) {
             sum += Math.floor(Math.random() * (size + 1))
