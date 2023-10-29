@@ -56,7 +56,7 @@ export default class ClientEngine {
             zoom = -.1
         }
 
-        console.log('zoom', zoom)
+        //  console.log('zoom', zoom)
 
         let mouseX = this.mouseX(e)
         let mouseY = this.mouseY(e)
@@ -85,7 +85,7 @@ export default class ClientEngine {
         //  console.log('scale', this.scale)
     }
 
-    draw() {
+    private draw() {
         if (!this.getCanvas) { return }
         const canvas: HTMLCanvasElement | null = this.getCanvas()
         if (!canvas) { return }
@@ -119,7 +119,7 @@ export default class ClientEngine {
         }
     }
 
-    drawCrossHair(ctx: CanvasRenderingContext2D) {
+    private drawCrossHair(ctx: CanvasRenderingContext2D) {
         let center = 0
         let length = 20
         ctx.save();
@@ -146,14 +146,14 @@ export default class ClientEngine {
         ctx.restore();
     }
 
-    scaleStyle(ctx: CanvasRenderingContext2D) {
+    private scaleStyle(ctx: CanvasRenderingContext2D) {
         ctx.font = 18 * this.scale + "px Arial";
         ctx.fillStyle = '#000000'
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1 * this.scale;
     }
 
-    drawTurnScale(ctx: CanvasRenderingContext2D) {
+    private drawTurnScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
         ctx.save()
@@ -180,7 +180,7 @@ export default class ClientEngine {
         ctx.restore()
     }
 
-    drawMinuteScale(ctx: CanvasRenderingContext2D) {
+    private drawMinuteScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
         const ticks = 10
@@ -207,7 +207,7 @@ export default class ClientEngine {
         ctx.restore()
     }
 
-    drawHourScale(ctx: CanvasRenderingContext2D) {
+    private drawHourScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
         const ticks = 60
@@ -234,7 +234,7 @@ export default class ClientEngine {
         ctx.restore()
     }
 
-    drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
+    private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
 
         //don't draw dead characters
         if (character.hp <= -10)
@@ -288,8 +288,12 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.CREATE_CHARACTER)
     }
 
-    createCommunity(size: string) {
-        this.socket?.emit(CONSTANTS.CREATE_COMMUNITY, size)
+    createCommunity(options: { size: string, race: string }) {
+        // get client center
+        const origin = this.getViewPortOrigin()
+        // console.log(origin)
+        // console.log({ ...options, location: origin })
+        this.socket?.emit(CONSTANTS.CREATE_COMMUNITY, { ...options, location: origin })
     }
 
     clickHandler(e: MouseEvent) {
@@ -316,10 +320,16 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.CAST_SPELL, { casterId: casterId, spellName: spellName, targets: targets })
     }
 
+    private getViewPortOrigin() {
+        const rect = this.getCanvas().getBoundingClientRect()
+        const middleX = (rect.right - rect.left) / this.PIXELS_PER_FOOT * this.scale / 2 + this.translateX
+        const middleY = (rect.bottom - rect.top) / this.PIXELS_PER_FOOT * this.scale / 2 + this.translateY
+        return { x: middleX, y: middleY }
+    }
+
     private mouseX(e: MouseEvent): number {
         const rect = this.getCanvas().getBoundingClientRect()
         const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
-        // console.log('x', x)
         return x;
     }
 
@@ -405,12 +415,12 @@ export default class ClientEngine {
         }
     }
 
-    getSelectedCharacters() {
+    private getSelectedCharacters() {
         const ids: string[] = this.selectedCharacters.map((c) => { return c.id })
         return this.gameEngine.gameWorld.getCharacters(ids)
     }
 
-    stop() {
+    private stop() {
         this.stopped = true;
     }
 
@@ -441,7 +451,7 @@ export default class ClientEngine {
 
             //disconnect handler
             this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
-                console.log('DISCONNECT', reason)
+                //  console.log('DISCONNECT', reason)
                 this.connected = false
             })
 

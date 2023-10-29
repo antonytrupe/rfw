@@ -4,7 +4,7 @@ npm install
 npm run dev
 
 ## TODO
-connect automatically
+make the client only request what it can see
 reconnect automatically
 reconnect after disconnect
 making zooming out scale faster
@@ -29,6 +29,7 @@ randomly move characters
 character health ui
 
 ## DONE
+connect automatically
 community generation
 added dying hp indicator
 disintegrate

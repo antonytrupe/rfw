@@ -14,7 +14,7 @@ export default class ServerEngine {
     io: Server;
     db: JsonDB;
     constructor(io: Server) {
-        this.io=io
+        this.io = io
         const eventEmitter: EventEmitter = new EventEmitter();
         this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
@@ -98,15 +98,14 @@ export default class ServerEngine {
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
-            socket.on(CONSTANTS.CREATE_COMMUNITY, async (size) => {
-                //   console.log('spellName',spellName)
-                //  console.log('casterId',casterId)
+            socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: { x: number, y: number } }) => {
+               // console.log('options', options)
+              //  console.log('location', location)
                 //  console.log('targets',targets)
-                const updatedCharacters = this.gameEngine.createCommunity(size)
+                const updatedCharacters = this.gameEngine.createCommunity(options)
                 //  console.log(updatedCharacters)
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
-            })
-
+            }) 
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 // ...
@@ -124,7 +123,7 @@ export default class ServerEngine {
 
     private sendAndSaveCharacterUpdates(characters: Character[]) {
         this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters);
-        
+
         characters.forEach((character) => {
             try {
                 //array version
@@ -134,6 +133,6 @@ export default class ServerEngine {
                 console.log('failed to create character');
             }
         });
-        
+
     }
 }

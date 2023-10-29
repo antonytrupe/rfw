@@ -6,6 +6,7 @@ import EventEmitter from 'events';
 import * as CONSTANTS from '@/CONSTANTS';
 import Character from '@/Character';
 import CharacterUI from './CharacterUI';
+import CommunityCreation from './CommunityCreation';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
@@ -25,7 +26,6 @@ export default function UI() {
   const [connecting, setConnecting] = useState(false)
   //const [world, setWorldState] = useState<GameWorld>()
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
-  const [communitySize, setCommunitySize] = useState('THORP');
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
@@ -45,13 +45,13 @@ export default function UI() {
   }, [clientEngine])
 
   const connect = async () => {
-    console.log('connecting')
+    //  console.log('connecting')
     setConnecting(true)
     const connected = !!await clientEngine?.connect()
-    console.log('connected', connected)
+    //  console.log('connected', connected)
     setConnected(connected)
     setConnecting(false)
-    console.log('connected')
+    // console.log('connected')
   }
 
   const onClick = (event: any) => {
@@ -77,8 +77,9 @@ export default function UI() {
     clientEngine?.createCharacter()
   }
 
-  const createCommunity = () => {
-    clientEngine?.createCommunity(communitySize)
+  const createCommunity = (options: { size: string, race: string }) => {
+   // console.log(options)
+    clientEngine?.createCommunity(options)
   }
 
   const castSpell = (casterId: string, spellName: string, targets: string[]) => {
@@ -102,20 +103,10 @@ export default function UI() {
       <div className={`${styles.hud} ${styles.flexColumn} `}>
         {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
         {connected && (<button onClick={createCharacter}>Create Character</button>)}
-        {connected && (<><button onClick={createCommunity}>Create Community</button>
+        {connected && (
+          <CommunityCreation action={createCommunity}>
+          </CommunityCreation>
 
-          <select
-            value={communitySize}
-            onChange={e => setCommunitySize(e.target.value)}
-          >
-            <option value="THORP">Thorp</option>
-            <option value="HAMLET">Hamlet</option>
-            <option value="VILLAGE">Village</option>
-            <option value="SMALL_TOWN">Small Town</option>
-            <option value="LARGE_TOWN">Large Town</option>
-            <option value="SMALL_CITY">Small City</option>
-          </select>
-        </>
         )}
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>

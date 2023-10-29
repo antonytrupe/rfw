@@ -132,13 +132,12 @@ export default class GameEngine {
         return updatedCharacters
     }
 
-    createCommunity(size: string) {
-        console.log('createCommunity')
+    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
+        // console.log('createCommunity')
         let updatedCharacters: Character[] = []
         let modifier = -16
         let totalSize = 0
-        let originX = 0
-        let originY = 0
+
         let radius = 90
 
         switch (size) {
@@ -182,79 +181,79 @@ export default class GameEngine {
                 radius = 3200
                 break
         }
-  
+
         //pc classes
         //barbarians
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'BARBARIAN',
             diceCount: 1, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //bards
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'BARD',
             diceCount: 1, diceSize: 6, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //clerics
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'BARD',
             diceCount: 1, diceSize: 6, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //druid
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'DRUID',
             diceCount: 1, diceSize: 6, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //fighter
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'FIGHTER',
             diceCount: 1, diceSize: 8, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //monk
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'MONK',
             diceCount: 1, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //paladin
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'PALADIN',
             diceCount: 1, diceSize: 3, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //ranger
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'RANGER',
             diceCount: 1, diceSize: 3, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //rogue
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'ROGUE',
             diceCount: 1, diceSize: 8, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //sorcerer
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'SORCERER',
             diceCount: 1, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //warrior
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //wizard
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'WIZARD',
             diceCount: 1, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
 
         //npc classes
@@ -262,64 +261,64 @@ export default class GameEngine {
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'ADEPT',
             diceCount: 1, diceSize: 6, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //aristocrats
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'ARISTOCRAT',
             diceCount: 1, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //commoner
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'COMMONER',
             diceCount: 4, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //expert
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'EXPERT',
             diceCount: 3, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
         //warrior
         updatedCharacters = updatedCharacters.concat(this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: { x: 0, y: 0 }, radius: radius
+            origin: location, radius: radius
         }))
 
- 
+
         let remaining = totalSize - updatedCharacters.length
-         //make more level 1 characters
+        //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
-            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "ARISTOCRAT", x: x, y: y }))
+            let p = this.getRandomPoint({ origin: location, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y }))
         }
 
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
-            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "ADEPT", x: x, y: y }))
+            let p = this.getRandomPoint({ origin: location, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y }))
         }
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
-            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "EXPERT", x: x, y: y }))
+            let p = this.getRandomPoint({ origin: location, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y }))
         }
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
-            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "WARRIOR", x: x, y: y }))
-        } 
- 
+            let p = this.getRandomPoint({ origin: location, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y }))
+        }
+
         //create the rest as commoners
         for (let i = 0; updatedCharacters.length < totalSize; i++) {
-            let { x, y } = this.getRandomPoint({ origin: { x: 0, y: 0 }, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "COMMONER", x: x, y: y }))
+            let p = this.getRandomPoint({ origin: location, radius })
+            updatedCharacters.push(this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y }))
         }
- 
+
         return updatedCharacters
     }
 
@@ -392,6 +391,7 @@ export default class GameEngine {
         if (updatedCharacters.length > 0) {
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
         }
+        return updatedCharacters
     }
 
     private calculateDirection(character: Character, dt: number) {
