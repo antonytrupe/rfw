@@ -364,7 +364,7 @@ export default class GameEngine {
         setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
     }
 
-    private step(dt: number) {
+    step(dt: number) {
         //console.log('GameEngine.step')
 
         const updatedCharacters: Character[] = []

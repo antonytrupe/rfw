@@ -28,15 +28,21 @@ export default function UI() {
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
+    console.log('useEffect[]')
     let eventEmitter: EventEmitter = new EventEmitter()
 
     eventEmitter.on(CONSTANTS.CLIENT_SELECTED_CHARACTERS, (s: Character[]) => {
       //  console.log(s)
       setSelectedCharacters(s);
     })
-    //let gameEngine = new GameEngine(eventEmitter)
-    setClientEngine(new ClientEngine(eventEmitter, getCanvas))
+    const ce = new ClientEngine(eventEmitter, getCanvas);
+    setClientEngine(ce)
 
+    return () => {
+      //stop the current client engine's draw loop/flag
+      disconnect()
+      ce.stopped = true
+    }
   }, [])
 
   useEffect(() => {
@@ -78,7 +84,6 @@ export default function UI() {
   }
 
   const createCommunity = (options: { size: string, race: string }) => {
-   // console.log(options)
     clientEngine?.createCommunity(options)
   }
 

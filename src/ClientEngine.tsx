@@ -5,6 +5,7 @@ import GameEngine from "@/GameEngine";
 import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
 
+
 export default class ClientEngine {
     //event things
     socket: Socket | undefined
@@ -12,7 +13,7 @@ export default class ClientEngine {
     emit: (eventName: string | symbol, ...args: any[]) => boolean
 
     //state things
-    stopped: boolean = false
+    stopped: boolean = false //control the draw loop
     connected: boolean = false
     selectedCharacters: Character[] = []
     gameEngine: GameEngine
@@ -50,10 +51,10 @@ export default class ClientEngine {
         let zoom
 
         if (e.deltaY > 0) {
-            zoom = .1
+            zoom = this.scale / 10
         }
         else {
-            zoom = -.1
+            zoom = - this.scale / 10
         }
 
         //  console.log('zoom', zoom)
@@ -72,7 +73,7 @@ export default class ClientEngine {
         //  console.log('deltax', deltaX)
         // console.log('deltaY', deltaY)
 
-        const newScale = Math.min(Math.max(1, this.scale + zoom), 100);
+        const newScale = Math.min(Math.max(1, this.scale + zoom), 100000);
         if (newScale != this.scale) {
             this.scale = newScale
             this.translateX += deltaX
@@ -95,7 +96,6 @@ export default class ClientEngine {
         // Use the identity matrix while clearing the canvas
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
         ctx.translate(-this.translateX * this.PIXELS_PER_FOOT / this.scale, -this.translateY * this.PIXELS_PER_FOOT / this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
 
@@ -103,7 +103,6 @@ export default class ClientEngine {
 
         //draw all the characters
         this.gameEngine.gameWorld.characters.forEach((character: Character) => {
-
             this.drawCharacter(ctx, character);
         })
 
@@ -111,7 +110,7 @@ export default class ClientEngine {
         if (this.scale <= 2) {
             this.drawTurnScale(ctx)
         }
-        else if (this.scale <= 8) {
+        else if (this.scale <= 15) {
             this.drawMinuteScale(ctx)
         }
         else {
@@ -142,7 +141,6 @@ export default class ClientEngine {
             (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
             center * this.PIXELS_PER_FOOT / this.scale);
         ctx.stroke()
-
         ctx.restore();
     }
 
@@ -156,24 +154,24 @@ export default class ClientEngine {
     private drawTurnScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
+        const ticks = 6
+        const tickSize = 5
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.translate(xOffset, yOffset)
         ctx.scale(1 / this.scale, 1 / this.scale);
-        const ticks = 6
-        const tickSize = 5
-        ctx.beginPath()
+        this.scaleStyle(ctx);
+        ctx.beginPath();
         //horizontal line
         ctx.moveTo(0, 0)
-        ctx.lineTo(0 + ticks * tickSize * this.PIXELS_PER_FOOT, 0)
-        this.scaleStyle(ctx);
+        ctx.lineTo(0 + ticks * tickSize * this.PIXELS_PER_FOOT, 0);
 
         //tick marks
         [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
             ctx.moveTo(i * tickSize * this.PIXELS_PER_FOOT, 0)
             ctx.lineTo(i * tickSize * this.PIXELS_PER_FOOT, 10 * this.scale)
             ctx.fillText(i * tickSize + 'ft', i * tickSize * this.PIXELS_PER_FOOT, 25 * this.scale)
-            ctx.fillText(i * tickSize / 5 + 's', i * tickSize * this.PIXELS_PER_FOOT, 45 * this.scale)
+            ctx.fillText(i + 's', i * tickSize * this.PIXELS_PER_FOOT, 45 * this.scale)
         })
 
         ctx.stroke()
