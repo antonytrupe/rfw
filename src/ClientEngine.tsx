@@ -429,11 +429,11 @@ export default class ClientEngine {
                 }
                 return response
             }).catch((error) => {
-               
-                throw error
-            }) 
 
-            this.socket = io() 
+                throw error
+            })
+
+            this.socket = io()
             this.socket.on(CONSTANTS.CONNECT, () => {
                 this.connected = true
                 return true
@@ -456,13 +456,13 @@ export default class ClientEngine {
                 console.log('PC_DISCONNECT', playerId)
                 //dispatch(removePlayer(playerId))
                 this.disconnect()
-            }) 
+            })
 
             //pc join
             this.socket?.on(CONSTANTS.PC_JOIN, (character: Character) => {
                 console.log('PC_JOIN', character)
                 //dispatch(addPlayer(player))
-            }) 
+            })
 
             //pc current
             this.socket?.on(CONSTANTS.PC_CURRENT, (character: Character) => {
@@ -490,7 +490,7 @@ export default class ClientEngine {
         }
         catch (e) {
             //something went wrong
-             return false
+            return false
         }
 
         return true

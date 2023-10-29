@@ -36,13 +36,22 @@ export default function UI() {
     })
     //let gameEngine = new GameEngine(eventEmitter)
     setClientEngine(new ClientEngine(eventEmitter, getCanvas))
+
   }, [])
 
+  useEffect(() => {
+    //connect automatically once the clientengine is setup
+    connect()
+  }, [clientEngine])
+
   const connect = async () => {
+    console.log('connecting')
     setConnecting(true)
     const connected = !!await clientEngine?.connect()
+    console.log('connected', connected)
     setConnected(connected)
     setConnecting(false)
+    console.log('connected')
   }
 
   const onClick = (event: any) => {
