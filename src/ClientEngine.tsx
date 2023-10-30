@@ -46,6 +46,8 @@ export default class ClientEngine {
     }
 
     wheelHandler(e: WheelEvent) {
+        e.stopPropagation()
+        // e.preventDefault()
         let zoom
 
         if (e.deltaY > 0) {
@@ -55,33 +57,21 @@ export default class ClientEngine {
             zoom = - this.scale / 10
         }
 
-        //  console.log('zoom', zoom)
-
         let mouseX = this.mouseX(e)
         let mouseY = this.mouseY(e)
-        // console.log('mouseX', mouseX)
-        //  console.log('mouseY', mouseY)
 
-        //  console.log('this.translateX', this.translateX)
-        //  console.log('this.translateY', this.translateY)
-
-        //TODO this is close 
         let deltaX = (this.translateX - mouseX) * zoom / this.scale
         let deltaY = (this.translateY - mouseY) * zoom / this.scale
-        //  console.log('deltax', deltaX)
-        // console.log('deltaY', deltaY)
 
         const newScale = Math.min(Math.max(1, this.scale + zoom), 100000);
         if (newScale != this.scale) {
             this.scale = newScale
             this.translateX += deltaX
             this.translateY += deltaY
-
-            //   console.log('translateX', this.translateX)
-            //   console.log('translateY', this.translateY)
+            //TODO tell the server our viewport changed
+            this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
         }
-
-        //  console.log('scale', this.scale)
+       // console.log(this.scale)
     }
 
     private draw() {
@@ -100,18 +90,20 @@ export default class ClientEngine {
         this.drawCrossHair(ctx)
 
         //draw all the characters
-        this.gameEngine.gameWorld.characters.forEach((character: Character) => {
-            this.drawCharacter(ctx, character);
-        })
+        // only get the characters from the right zones, just in case we have more data then we need to draw
+        this.gameEngine.gameWorld.getCharactersWithin(this.getViewPort())
+            .forEach((character: Character) => {
+                this.drawCharacter(ctx, character);
+            })
 
         //draw the scale
-        if (this.scale <= 2) {
+        if (this.scale <= 3) {
             this.drawTurnScale(ctx)
         }
-        else if (this.scale <= 15) {
+        else if (this.scale <= 30) {
             this.drawMinuteScale(ctx)
         }
-        else {
+        else if (this.scale <= 1000) {
             this.drawHourScale(ctx)
         }
     }
@@ -220,7 +212,7 @@ export default class ClientEngine {
         ctx.lineTo((ticks / tickSize) * 300 * this.PIXELS_PER_FOOT, 0);
 
         //tick marks
-        [0, 1, 3, 5, 10].forEach((i) => {
+        [0, 1, 5, 15, 30, 60].forEach((i) => {
             ctx.moveTo(i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 0)
             ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 10 * this.scale)
             ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 25 * this.scale)
@@ -293,7 +285,12 @@ export default class ClientEngine {
     }
 
     clickHandler(e: MouseEvent) {
-        const rect = this.getCanvas().getBoundingClientRect()
+        const rect = this.getViewPort()
+        console.log(rect)
+        const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
+        console.log(c.length)
+        const d = this.gameEngine.gameWorld.getAllCharacters()
+        console.log(Array.from(d.values()).length)
         const x = this.mouseX(e);
         const y = this.mouseY(e);
 
@@ -435,6 +432,7 @@ export default class ClientEngine {
             this.socket.on(CONSTANTS.CONNECT, () => {
                 this.connected = true
                 this.emit(CONSTANTS.CONNECT)
+                this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
             })
 
             //disconnect handler
@@ -488,5 +486,18 @@ export default class ClientEngine {
         }
 
         return true
+    }
+
+    private getViewPort(): { left: number, right: number, top: number, bottom: number } {
+        const clientRect = this.getCanvas().getBoundingClientRect()
+
+        const left = (clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
+        const right = (clientRect.right) / this.PIXELS_PER_FOOT * this.scale + this.translateX
+        const top = (clientRect.top) / this.PIXELS_PER_FOOT * this.scale + this.translateY
+        const bottom = (clientRect.bottom) / this.PIXELS_PER_FOOT * this.scale + this.translateY
+
+        const rect = { left: left, right: right, top: top, bottom: bottom };
+        //console.log(rect)
+        return rect
     }
 }

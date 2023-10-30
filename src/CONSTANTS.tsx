@@ -24,9 +24,7 @@ export const CREATE_CHARACTER = 'world.character.create'
 export const CREATE_COMMUNITY='world.create_community'
 //tell the client which character it is controlling(not implemented)
 export const PC_CURRENT = 'world.character.current'
-//serverengine notify gameengine
-export const WORLD_UPDATE = 'world.update'
-//clientengine notify UI
+ //clientengine notify UI
 export const CLIENT_SELECTED_CHARACTERS = 'client.selected_characters.update'
 
 //ASDW key inputs

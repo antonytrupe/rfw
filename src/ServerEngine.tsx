@@ -19,35 +19,17 @@ export default class ServerEngine {
         this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
-        this.db = new JsonDB(new Config("world", true, true, '/'));
-        try {
-            this.db.load().then(() => {
-                this.db.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                    //@ts-ignore
-                    const characters: Character[] = Object.entries(c).map(([id, character]: [id: string, character: Character]) => {
-                        //console.log('id', id)
-                        //console.log('character', character)
-                        return new Character(character)
 
-                    })
-                    //console.log(characters)
-                    this.emit(CONSTANTS.WORLD_UPDATE, { characters: characters } as GameWorld)
-                    //console.log()
-                }).catch(err => {
-                    //console.log('empty database')
-                })
-            })
-        }
-        catch (e) {
-            //console.log('failed to load')
-        }
+        this.db = new JsonDB(new Config("world", true, true, '/'));
+        this.loadWorld();
 
         //don't do this until after the db loads maybe?
         //start the gameengines clock thingy
         this.gameEngine.start()
 
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[]) => {
-            //console.log('serverengine SERVER_CHARACTER_UPDATE')
+            //   console.log('serverengine SERVER_CHARACTER_UPDATE')
+            //TODO only 
             this.sendAndSaveCharacterUpdates(characters);
 
         })
@@ -56,11 +38,8 @@ export default class ServerEngine {
             //console.log(CONNECTION, socket.id) 
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                //console.log('world CREATE_CHARACTER')
-                //tell the gameengine to create a new character
-
-                let range = this.gameEngine.roll({ size: 30, modifier: -15 })
-                this.gameEngine.createCharacter({ x: range, y: range })
+                //  console.log('world CREATE_CHARACTER')
+                this.createCharacter();
             })
             socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
                 this.gameEngine.turnLeft(characters)
@@ -99,13 +78,13 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: { x: number, y: number } }) => {
-               // console.log('options', options)
-              //  console.log('location', location)
+                // console.log('options', options)
+                //  console.log('location', location)
                 //  console.log('targets',targets)
                 const updatedCharacters = this.gameEngine.createCommunity(options)
                 //  console.log(updatedCharacters)
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
-            }) 
+            })
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 // ...
@@ -116,12 +95,48 @@ export default class ServerEngine {
                 //socket.broadcast.emit(PC_DISCONNECT, socket.id)
             });
 
-            //tell the client where all the other character are
-            socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.characters)
+            //tell the client where all the character are
+            socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
+                // ...
+                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersWithin(viewPort))
+            });
         })
     }
 
+    private createCharacter() {
+        console.log('ServerEngine createCharacter')
+        let x = this.gameEngine.roll({ size: 30, modifier: -15 });
+        let y = this.gameEngine.roll({ size: 30, modifier: -15 });
+        const c = this.gameEngine.createCharacter({ x: x, y: y });
+        this.sendAndSaveCharacterUpdates([c])
+    }
+
+    private loadWorld() {
+        try {
+            this.db.load().then(() => {
+                this.db.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
+                    //  console.log(c);
+                    //  [index: string]: string
+                    const characters: Map<string, Character> = new Map<string, Character>()
+
+                    // @ts-check
+                    Object.entries(c).map(([id, character]: [id: string, character: any]) => {
+                        characters.set(id, new Character(character))
+
+                    });
+                    this.gameEngine.gameWorld.updateCharacters(characters)
+                }).catch(err => {
+                    //console.log('empty database')
+                });
+            });
+        }
+        catch (e) {
+            //console.log('failed to load')
+        }
+    }
+
     private sendAndSaveCharacterUpdates(characters: Character[]) {
+        //TODO only send character updates to the rooms they're in
         this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters);
 
         characters.forEach((character) => {

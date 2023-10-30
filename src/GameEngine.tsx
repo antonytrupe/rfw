@@ -6,7 +6,9 @@ import GameWorld from "./GameWorld";
 import { v4 as uuidv4 } from 'uuid';
 import isEqual from 'lodash.isequal';
 
-
+//processes game logic
+//interacts with the gameworld object and updates it
+//doesn't know anything about client/server
 export default class GameEngine {
     //EventEmitter function
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
@@ -79,11 +81,7 @@ export default class GameEngine {
             })
         })
 
-        //got an update from the clientengine
-        this.on(CONSTANTS.WORLD_UPDATE, (gameWorld: GameWorld) => {
-            //console.log('CONSTANTS.WORLD_UPDATE')
-            this.gameWorld.characters = gameWorld.characters
-        })
+
     }
 
     turnLeft = (characters: Character[]) => {
@@ -104,8 +102,8 @@ export default class GameEngine {
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
         const merged = { ...character, id: id, size: 5, maxHp: maxHp, hp: maxHp };
-        let p = new Character(merged);
-        this.gameWorld.characters.push(p);
+        const p = new Character(merged)
+        this.gameWorld.updateCharacter(p)
         return p
     }
 
@@ -332,17 +330,17 @@ export default class GameEngine {
     }
 
     castSpell(casterId: string, spellName: string, targetIds: string[]) {
-
         //TODO
         //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
-                //     console.log('targetIds', targetIds)
+                // console.log('targetIds', targetIds) 
                 const damagedTargets = this.gameWorld.getCharacters(targetIds).map((character) => {
                     const damage = this.roll({ size: 6, count: 2 })
-                    character.hp = Math.max(-10, character.hp - damage)
-                    return this.gameWorld.updateCharacter(character)
-
+                    if (character) {
+                        character.hp = Math.max(-10, character.hp - damage)
+                        return this.gameWorld.updateCharacter(character)
+                    }
                 })
                 //TODO update the caster character too and return it
                 return damagedTargets
@@ -367,29 +365,37 @@ export default class GameEngine {
     step(dt: number) {
         //console.log('GameEngine.step')
 
+        //TODO keep track of characters that have their direction and speed acceleration changed separately from their position changed
+        //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Character[] = []
 
-        this.gameWorld.characters = this.gameWorld.characters.map((character: Character): Character => {
+        Array.from(this.gameWorld.getAllCharacters().values())
+            .map((character: Character): Character => {
 
-            //calculate the new angle
-            let newDirection = this.calculateDirection(character, dt);
+                //calculate the new angle
+                let newDirection = this.calculateDirection(character, dt);
 
-            let newSpeed = this.calculateSpeed(character, dt);
+                let newSpeed = this.calculateSpeed(character, dt);
 
-            //TODO pass the new speed to the location calculatin or not?
-            let { newX, newY }: { newX: number; newY: number; } = this.calculatePosition({ ...character, }, dt);
+                //TODO pass the new speed to the location calculatin or not?
+                let { newX, newY }: { newX: number; newY: number; } = this.calculatePosition({ ...character, }, dt);
 
+                const updates = { ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection }
+                //  compare the values and see if they are different at all
+                if (!isEqual(updates, character)) {
+                    updatedCharacters.push({ ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection })
+                }
 
-            //  compare the values and see if they are different at all
-            if (!isEqual({ ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection }, character)) {
-                updatedCharacters.push({ ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection })
-            }
+                return updates
+            })
 
-            return { ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection }
-        })
-
-        //TODO is this the right place?
         if (updatedCharacters.length > 0) {
+            //update the gameworld state 
+            updatedCharacters.forEach((character: Character) => {
+                this.gameWorld.updateCharacter(character)
+            })
+
+            //tell the server engine about the updated characters
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
         }
         return updatedCharacters

@@ -34,7 +34,9 @@ describe('ClientEngine', () => {
     describe('Events', () => {
         test('should test something ', () => {
             clientEngine.createCharacter()
-            expect(clientEngine.gameEngine.gameWorld.characters.length).toBe(3)
+            clientEngine.createCharacter()
+            clientEngine.createCharacter()
+            expect(Array.from(clientEngine.gameEngine.gameWorld.characters.values()).length).toBe(3)
         })
     })
 })
