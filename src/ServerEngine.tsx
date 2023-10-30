@@ -4,7 +4,7 @@ import * as CONSTANTS from "@/CONSTANTS";
 import Character from "@/Character";
 import { Config, JsonDB } from "node-json-db";
 import { Server } from "socket.io";
-import GameWorld from "./GameWorld";
+import { Zones } from "./GameWorld";
 
 
 export default class ServerEngine {
@@ -27,10 +27,10 @@ export default class ServerEngine {
         //start the gameengines clock thingy
         this.gameEngine.start()
 
-        this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[]) => {
+        this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[], zones: any) => {
             //   console.log('serverengine SERVER_CHARACTER_UPDATE')
             //TODO only 
-            this.sendAndSaveCharacterUpdates(characters);
+            this.sendAndSaveCharacterUpdates(characters, zones)
 
         })
 
@@ -81,9 +81,9 @@ export default class ServerEngine {
                 // console.log('options', options)
                 //  console.log('location', location)
                 //  console.log('targets',targets)
-                const updatedCharacters = this.gameEngine.createCommunity(options)
+                const [updatedCharacters, updatedZones] = this.gameEngine.createCommunity(options)
                 //  console.log(updatedCharacters)
-                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters, updatedZones)
             })
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
@@ -97,7 +97,24 @@ export default class ServerEngine {
 
             //tell the client where all the character are
             socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
-                // ...
+                // TODO join the right zones/rooms
+                let oldZones = socket.rooms
+                let newZones = this.gameEngine.getZonesIn(viewPort)
+                console.log(newZones)
+                //get the list of oldZones that aren't in newZones
+                //leave zones we shouldn't be in
+                oldZones.forEach((zone) => {
+                    if (!newZones.includes(zone)) {
+                        socket.leave(zone)
+                    }
+                })
+                //get the list of newZones that aren't in oldZones
+                newZones.forEach((zone) => {
+                    if (!Array.from(oldZones).includes(zone)) {
+                        socket.join(zone)
+                    }
+                })
+
                 socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersWithin(viewPort))
             });
         })
@@ -107,8 +124,8 @@ export default class ServerEngine {
         console.log('ServerEngine createCharacter')
         let x = this.gameEngine.roll({ size: 30, modifier: -15 });
         let y = this.gameEngine.roll({ size: 30, modifier: -15 });
-        const c = this.gameEngine.createCharacter({ x: x, y: y });
-        this.sendAndSaveCharacterUpdates([c])
+        const [c, zones] = this.gameEngine.createCharacter({ x: x, y: y });
+        this.sendAndSaveCharacterUpdates([c], zones)
     }
 
     private loadWorld() {
@@ -117,11 +134,11 @@ export default class ServerEngine {
                 this.db.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
                     //  console.log(c);
                     //  [index: string]: string
-                    const characters: Map<string, Character> = new Map<string, Character>()
+                    const characters: Character[] = []
 
                     // @ts-check
                     Object.entries(c).map(([id, character]: [id: string, character: any]) => {
-                        characters.set(id, new Character(character))
+                        characters.push(character)
 
                     });
                     this.gameEngine.gameWorld.updateCharacters(characters)
@@ -135,7 +152,7 @@ export default class ServerEngine {
         }
     }
 
-    private sendAndSaveCharacterUpdates(characters: Character[]) {
+    private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones) {
         //TODO only send character updates to the rooms they're in
         this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters);
 

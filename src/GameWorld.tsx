@@ -1,14 +1,14 @@
 import Character from "./Character";
 
+export type Zone = Set<string>;
+
+export type Zones = Map<string, Zone>;
+
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
 //doesn't know anything about client/server
 export default class GameWorld {
-    updateCharacters(characters: Map<string, Character>) {
-        characters.forEach((character) => {
-            this.updateCharacter(character)
-        })
-    }
+
     //needs to be private to force going through a setter to keep the zones up to date
     private characters: Map<string, Character> = new Map<string, Character>()
     //a character is always in 1 tactical zone
@@ -16,7 +16,16 @@ export default class GameWorld {
     //the keys are zone names
     //
     //the entries are just a list of character ids
-    zones: Map<string, string[]> = new Map<string, string[]>()
+    private zones: Zones = new Map<string, Zone>()
+
+    updateCharacters(characters: Character[]): [Character[], Map<string, Set<string>>] {
+        let updatedZones = new Map<string, Set<string>>()
+        characters.forEach((character) => {
+            let [c, z] = this.updateCharacter(character)
+            updatedZones = new Map([...updatedZones, ...z])
+        })
+        return [Array.from(characters.values()), updatedZones]
+    }
 
     getAllCharacters() {
         return this.characters
@@ -40,10 +49,10 @@ export default class GameWorld {
         return 'T:' + fx + ':' + fy
     }
 
-    updateCharacter(character: Partial<Character>) {
-        //if we don't have a character id, give u p
+    updateCharacter(character: Partial<Character>): [Character | Partial<Character>, Zones] {
+        //if we don't have a character id, give up
         if (!character.id) {
-            return
+            return [character, new Map()]
         }
 
         const old: Character | undefined = this.characters.get(character.id)
@@ -51,20 +60,24 @@ export default class GameWorld {
 
         if (!merged.x || !merged.y) {
             //bail if it doesn't have a location
-            return
+            return [character, new Map()]
         }
 
         const newZoneName = this.getTacticalZoneName({ x: merged.x, y: merged.y })
         let newZone = this.zones.get(newZoneName);
+        let updatedZones = new Map<string, Set<string>>()
 
         //if the new zone doesn't exist
         if (!newZone) {
             //create it and add them to it
-            this.zones.set(newZoneName, [character.id])
+            newZone = new Set(character.id)
+            this.zones.set(newZoneName, newZone)
         }
+
         //the new zone exists but they're not in it
-        else if (!Array.from(newZone.values()).includes(character.id)) {
-            newZone.push(character.id)
+        if (!Array.from(newZone.values()).includes(character.id)) {
+            newZone.add(character.id)
+            updatedZones.set(newZoneName, newZone)
         }
 
         if (!!old) {
@@ -76,14 +89,15 @@ export default class GameWorld {
                 //remove them from the old zone
                 let oldZone = this.zones.get(newZoneName);
                 if (oldZone) {
-                    let i = oldZone.indexOf(character.id)
-                    oldZone.splice(i, 1)
+                    //let i = oldZone.indexOf(character.id)
+                    oldZone.delete(character.id)
+                    updatedZones.set(oldZoneName, oldZone)
                 }
             }
         }
 
         this.characters.set(merged.id, merged)
-        return merged
+        return [merged, updatedZones]
     }
 
     getCharactersAt(position: { x: number, y: number }): Character[] {
@@ -95,7 +109,7 @@ export default class GameWorld {
         //make sure we got a zone0
         if (!!zone) {
             //create a list of characters out of the list of characterids
-            const characters: Character[] = zone.reduce((result: Character[], characterId) => {
+            const characters: Character[] = Array.from(zone).reduce((result: Character[], characterId: string) => {
                 //get the character object
                 let character = this.characters.get(characterId)
 

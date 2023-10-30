@@ -2,7 +2,7 @@
 import EventEmitter from "events";
 import Character from "./Character";
 import * as CONSTANTS from "./CONSTANTS";
-import GameWorld from "./GameWorld";
+import GameWorld, { Zones } from "./GameWorld";
 import { v4 as uuidv4 } from 'uuid';
 import isEqual from 'lodash.isequal';
 
@@ -10,6 +10,16 @@ import isEqual from 'lodash.isequal';
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+    getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
+        let zones = []
+        for (let i = left; i < right; i += 30) {
+            for (let j = top; j < bottom; j += 30) {
+                zones.push(this.gameWorld.getTacticalZoneName({ x: i, y: j }))
+
+            }
+        }
+        return zones
+    }
     //EventEmitter function
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
     emit: (eventName: string | symbol, ...args: any[]) => boolean;
@@ -97,14 +107,15 @@ export default class GameEngine {
         })
     }
 
-    createCharacter(character: Partial<Character>) {
+    createCharacter(character: Partial<Character>): [Character, Zones] {
         const id = uuidv4();
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
+        //this is dumb
         const merged = { ...character, id: id, size: 5, maxHp: maxHp, hp: maxHp };
         const p = new Character(merged)
-        this.gameWorld.updateCharacter(p)
-        return p
+        const [c, zones] = this.gameWorld.updateCharacter(merged)
+        return [p, zones]
     }
 
     private getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
@@ -116,24 +127,29 @@ export default class GameEngine {
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }:
-        { className: string, diceCount: number, diceSize: number, modifier: number, origin: { x: number, y: number }, radius: number }) {
+        { className: string, diceCount: number, diceSize: number, modifier: number, origin: { x: number, y: number }, radius: number })
+        : [Character[], Zones] {
         let { x, y } = this.getRandomPoint({ origin, radius })
         const updatedCharacters: Character[] = []
-        const highestLevel = this.roll({ size: diceSize, count: diceCount, modifier: modifier });
+        let updatedZones = new Map<string, Set<string>>()
+        const highestLevel = this.roll({ size: diceSize, count: diceCount, modifier: modifier })
         // work our way down from highest level
         for (let level = highestLevel; level >= 1; level /= 2) {
             //console.log('level', level);
             //make the right amount of each level
             for (let i = 0; i < highestLevel / level; i++) {
-                updatedCharacters.push(this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y }));
+                const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
+                updatedCharacters.push(c)
+                updatedZones = new Map([...updatedZones, ...zones])
             }
         }
-        return updatedCharacters
+        return [updatedCharacters, updatedZones]
     }
 
-    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
+    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }): [Character[], Zones] {
         // console.log('createCommunity')
         let updatedCharacters: Character[] = []
+        let updatedZones: Zones = new Map<string, Set<string>>()
         let modifier = -16
         let totalSize = 0
 
@@ -183,142 +199,204 @@ export default class GameEngine {
 
         //pc classes
         //barbarians
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+
+        let [characters, zones] = this.populateClass({
             className: 'BARBARIAN',
-            diceCount: 1, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
         //bards
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        [characters, zones] = this.populateClass({
             className: 'BARD',
-            diceCount: 1, diceSize: 6, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
         //clerics
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+
+        [characters, zones] = this.populateClass({
             className: 'BARD',
-            diceCount: 1, diceSize: 6, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
         //druid
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+
+        [characters, zones] = this.populateClass({
             className: 'DRUID',
-            diceCount: 1, diceSize: 6, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //fighter
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //fighter 
+        [characters, zones] = this.populateClass({
             className: 'FIGHTER',
-            diceCount: 1, diceSize: 8, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //monk
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //monk 
+        [characters, zones] = this.populateClass({
             className: 'MONK',
-            diceCount: 1, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //paladin
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //paladin 
+        [characters, zones] = this.populateClass({
             className: 'PALADIN',
-            diceCount: 1, diceSize: 3, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //ranger
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //ranger 
+        [characters, zones] = this.populateClass({
             className: 'RANGER',
-            diceCount: 1, diceSize: 3, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //rogue
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //rogue 
+        [characters, zones] = this.populateClass({
             className: 'ROGUE',
-            diceCount: 1, diceSize: 8, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //sorcerer
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //sorcerer 
+        [characters, zones] = this.populateClass({
             className: 'SORCERER',
-            diceCount: 1, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //warrior
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //warrior 
+        [characters, zones] = this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //wizard
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //wizard 
+        [characters, zones] = this.populateClass({
             className: 'WIZARD',
-            diceCount: 1, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
 
         //npc classes
-        //adepts
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        //adepts  
+        [characters, zones] = this.populateClass({
             className: 'ADEPT',
-            diceCount: 1, diceSize: 6, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //aristocrats
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //aristocrats 
+        [characters, zones] = this.populateClass({
             className: 'ARISTOCRAT',
-            diceCount: 1, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //commoner
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //commoner 
+        [characters, zones] = this.populateClass({
             className: 'COMMONER',
-            diceCount: 4, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-        //expert
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        })
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
+        //expert 
+        [characters, zones] = this.populateClass({
             className: 'EXPERT',
-            diceCount: 3, diceSize: 4, modifier: modifier,
+            diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
+        });
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
+
         //warrior
-        updatedCharacters = updatedCharacters.concat(this.populateClass({
+        [characters, zones] = this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        }))
-
+        });
+        updatedCharacters = updatedCharacters.concat(characters)
+        updatedZones = new Map([...updatedZones, ...zones]);
 
         let remaining = totalSize - updatedCharacters.length
         //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y }))
+            const [c, zones] = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
+            updatedCharacters.push(c)
+            updatedZones = new Map([...updatedZones, ...zones]);
         }
 
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y }))
+            const [c, zones] = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
+            updatedCharacters.push(c)
+            updatedZones = new Map([...updatedZones, ...zones]);
         }
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y }))
+            const [c, zones] = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
+            updatedCharacters.push(c)
+            updatedZones = new Map([...updatedZones, ...zones]);
         }
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y }))
+            const [c, zones] = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
+            updatedCharacters.push(c)
+            updatedZones = new Map([...updatedZones, ...zones]);
         }
 
         //create the rest as commoners
         for (let i = 0; updatedCharacters.length < totalSize; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
-            updatedCharacters.push(this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y }))
+            const [c, zones] = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
+            updatedCharacters.push(c)
+            updatedZones = new Map([...updatedZones, ...zones]);
         }
 
-        return updatedCharacters
+        return [updatedCharacters, updatedZones]
     }
 
     roll({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }) {
@@ -363,6 +441,7 @@ export default class GameEngine {
     }
 
     step(dt: number) {
+        const started = (new Date()).getTime()
         //console.log('GameEngine.step')
 
         //TODO keep track of characters that have their direction and speed acceleration changed separately from their position changed
@@ -378,12 +457,12 @@ export default class GameEngine {
                 let newSpeed = this.calculateSpeed(character, dt);
 
                 //TODO pass the new speed to the location calculatin or not?
-                let { newX, newY }: { newX: number; newY: number; } = this.calculatePosition({ ...character, }, dt);
+                let newPosition: { x: number, y: number } = this.calculatePosition(character, dt);
 
-                const updates = { ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection }
+                const updates = { ...character, ...newPosition, speed: newSpeed, direction: newDirection }
                 //  compare the values and see if they are different at all
                 if (!isEqual(updates, character)) {
-                    updatedCharacters.push({ ...character, x: newX, y: newY, speed: newSpeed, direction: newDirection })
+                    updatedCharacters.push({ ...character, ...newPosition, speed: newSpeed, direction: newDirection })
                 }
 
                 return updates
@@ -391,6 +470,7 @@ export default class GameEngine {
 
         if (updatedCharacters.length > 0) {
             //update the gameworld state 
+            this.gameWorld.updateCharacters(updatedCharacters)
             updatedCharacters.forEach((character: Character) => {
                 this.gameWorld.updateCharacter(character)
             })
@@ -398,6 +478,8 @@ export default class GameEngine {
             //tell the server engine about the updated characters
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
         }
+        const finished = (new Date()).getTime()
+       // console.log('step duration', finished - started)
         return updatedCharacters
     }
 
@@ -521,14 +603,14 @@ export default class GameEngine {
     }
 
     private calculatePosition(character: Character, dt: number) {
-        let newX: number = character.x;
-        let newY: number = character.y;
+        let x: number = character.x;
+        let y: number = character.y;
         if (character.speed != 0) {
             //calculate new position
-            newX = character.x + character.speed * Math.sin(character.direction) * dt / this.speedMultiplier;
-            newY = character.y - character.speed * Math.cos(character.direction) * dt / this.speedMultiplier;
+            x = character.x + character.speed * Math.sin(character.direction) * dt / this.speedMultiplier;
+            y = character.y - character.speed * Math.cos(character.direction) * dt / this.speedMultiplier;
         }
-        return { newX, newY };
+        return { x, y };
     }
 
     start() {

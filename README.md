@@ -4,7 +4,6 @@ npm install
 npm run dev
 
 ## TODO
-make the client only request what it can see
 random stats when spawning
 no moving while incapacitated/dying/dead
 collision
@@ -24,6 +23,7 @@ randomly move characters
 character health ui
 
 ## DONE
+make the client only request what it can see
 reconnect automatically
 reconnect after disconnect
 make zooming out scale faster

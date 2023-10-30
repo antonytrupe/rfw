@@ -4,6 +4,7 @@ import { Socket, io } from "socket.io-client";
 import GameEngine from "@/GameEngine";
 import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
+import { Zones } from "./GameWorld";
 
 
 export default class ClientEngine {
@@ -57,11 +58,10 @@ export default class ClientEngine {
             zoom = - this.scale / 10
         }
 
-        let mouseX = this.mouseX(e)
-        let mouseY = this.mouseY(e)
+        const mouse = this.getMousePosition(e)
 
-        let deltaX = (this.translateX - mouseX) * zoom / this.scale
-        let deltaY = (this.translateY - mouseY) * zoom / this.scale
+        let deltaX = (this.translateX - mouse.x) * zoom / this.scale
+        let deltaY = (this.translateY - mouse.y) * zoom / this.scale
 
         const newScale = Math.min(Math.max(1, this.scale + zoom), 100000);
         if (newScale != this.scale) {
@@ -71,7 +71,7 @@ export default class ClientEngine {
             //TODO tell the server our viewport changed
             this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
         }
-       // console.log(this.scale)
+        // console.log(this.scale)
     }
 
     private draw() {
@@ -285,23 +285,27 @@ export default class ClientEngine {
     }
 
     clickHandler(e: MouseEvent) {
-        const rect = this.getViewPort()
-        console.log(rect)
-        const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
-        console.log(c.length)
-        const d = this.gameEngine.gameWorld.getAllCharacters()
-        console.log(Array.from(d.values()).length)
-        const x = this.mouseX(e);
-        const y = this.mouseY(e);
+        const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
+        console.log(tzn)
 
-        const characters = this.gameEngine.gameWorld.getCharactersAt(
-            {
-                x: x,
-                y: y
-            })
+
+        const zivp = this.getZonesInViewPort()
+        console.log(zivp)
+        //  const rect = this.getViewPort()
+        //  console.log(rect)
+        //  const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
+        //  console.log(c.length)
+        //  const d = this.gameEngine.gameWorld.getAllCharacters()
+        //  console.log(Array.from(d.values()).length) 
+
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
         this.selectedCharacters = characters
         //tell the ui about the selected characters
         this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.getSelectedCharacters())
+    }
+
+    getZonesInViewPort() {
+        return this.gameEngine.getZonesIn(this.getViewPort())
     }
 
     castSpell(casterId: string, spellName: string, targets: string[]) {
@@ -320,17 +324,13 @@ export default class ClientEngine {
         return { x: middleX, y: middleY }
     }
 
-    private mouseX(e: MouseEvent): number {
-        const rect = this.getCanvas().getBoundingClientRect()
-        const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
-        return x;
-    }
-
-    private mouseY(e: MouseEvent): number {
+    private getMousePosition(e: MouseEvent) {
         const rect = this.getCanvas().getBoundingClientRect()
         const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
+        const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
+
         //  console.log('y', y)
-        return y;
+        return { x, y }
     }
 
     keyDownHandler(e: KeyboardEvent) {
@@ -462,7 +462,7 @@ export default class ClientEngine {
             })
 
             //pc location data
-            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
+            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[], zones: Zones) => {
                 //console.log('socket on PC_LOCATION', character)
                 //tell the gameengine we got an update 
                 // console.log(characters)
