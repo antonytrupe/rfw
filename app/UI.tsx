@@ -93,6 +93,10 @@ export default function UI() {
     clientEngine?.castSpell(casterId, spellName, targets)
   }
 
+  const claim = (characterId: string) => {
+    clientEngine?.claim(characterId)
+  }
+
   return (
     <>
       <canvas ref={canvasRef}
@@ -118,10 +122,11 @@ export default function UI() {
         {connected && (<button onClick={disconnect}>Disconnect</button>)}
       </div>
 
-      <div>
+      <div className={`${styles.characterList}`}>
         {selectedCharacters && selectedCharacters.map((character: Character) => {
           return <CharacterUI character={character} key={character.id} >
-            <button onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+            <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+            <button className={`btn`} onClick={() => claim(character.id)}>Claim</button>
           </CharacterUI>
         })}
       </div>

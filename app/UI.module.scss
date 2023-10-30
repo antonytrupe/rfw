@@ -7,13 +7,23 @@
         border: none;
     }
 }
-.flexColumn
-{
+
+.flexColumn {
     flex-direction: column;
     display: flex;
 }
 
 .hud {
+    button {
+        border: thin black solid;
+        border-radius: 5px;
+        padding: 0px 4px 0px 4px;
+        margin: 2px;
+    }
+}
+
+.characterList {
+    overflow: scroll;
     button {
         border: thin black solid;
         border-radius: 5px;

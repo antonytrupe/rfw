@@ -408,8 +408,7 @@ export default class GameEngine {
     }
 
     castSpell(casterId: string, spellName: string, targetIds: string[]) {
-        //TODO
-        //console.log('spellName', spellName)
+         //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
                 // console.log('targetIds', targetIds) 

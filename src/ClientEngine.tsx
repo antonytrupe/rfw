@@ -46,6 +46,10 @@ export default class ClientEngine {
         window.requestAnimationFrame(renderLoop.bind(this))
     }
 
+    claim(characterId: string) {
+        //TODO client claim
+    }
+
     wheelHandler(e: WheelEvent) {
         e.stopPropagation()
         // e.preventDefault()
@@ -68,7 +72,7 @@ export default class ClientEngine {
             this.scale = newScale
             this.translateX += deltaX
             this.translateY += deltaY
-            //TODO tell the server our viewport changed
+            // tell the server our viewport changed
             this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
         }
         // console.log(this.scale)
@@ -285,12 +289,12 @@ export default class ClientEngine {
     }
 
     clickHandler(e: MouseEvent) {
-        const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
-        console.log(tzn)
+        //  const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
+        // console.log(tzn)
 
 
-        const zivp = this.getZonesInViewPort()
-        console.log(zivp)
+        // const zivp = this.getZonesInViewPort()
+        // console.log(zivp)
         //  const rect = this.getViewPort()
         //  console.log(rect)
         //  const c = this.gameEngine.gameWorld.getCharactersWithin(rect)

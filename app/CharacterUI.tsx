@@ -10,7 +10,7 @@ export default function CharacterUI({ character, children }: { character: Charac
                 <div> {character.hp} / {character.maxHp} HP</div>
                 <div> Speed:{character.maxSpeed}ft</div>
                 <div> size:{character.size}</div>
-                <div> direction:{character.direction}</div>
+                <div> direction:{character.direction.toFixed(2)}</div>
                 <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>
                 <div> x:{character.x.toFixed(2)}</div>
                 <div> y:{character.y.toFixed(2)}</div>

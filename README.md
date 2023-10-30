@@ -4,6 +4,7 @@ npm install
 npm run dev
 
 ## TODO
+keep a list of characters that need
 random stats when spawning
 no moving while incapacitated/dying/dead
 collision

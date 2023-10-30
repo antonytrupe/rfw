@@ -29,8 +29,7 @@ export default class ServerEngine {
 
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[], zones: any) => {
             //   console.log('serverengine SERVER_CHARACTER_UPDATE')
-            //TODO only 
-            this.sendAndSaveCharacterUpdates(characters, zones)
+             this.sendAndSaveCharacterUpdates(characters, zones)
 
         })
 
@@ -97,10 +96,10 @@ export default class ServerEngine {
 
             //tell the client where all the character are
             socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
-                // TODO join the right zones/rooms
+                //   join the right zones/rooms
                 let oldZones = socket.rooms
                 let newZones = this.gameEngine.getZonesIn(viewPort)
-                console.log(newZones)
+                // console.log(newZones)
                 //get the list of oldZones that aren't in newZones
                 //leave zones we shouldn't be in
                 oldZones.forEach((zone) => {
