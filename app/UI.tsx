@@ -8,13 +8,13 @@ import Character from '@/Character';
 import CharacterUI from './CharacterUI';
 import CommunityCreation from './CommunityCreation';
 import { auth } from '../auth';
- //import steamworks from 'steamworks.js';
+//import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
 //const client = steamworks.init()
 //console.log(client.localplayer.getName())
 
-export default   function UI() {
+export default function UI() {
   //@ts-ignore
   const canvasRef: MutableRefObject<HTMLCanvasElement> = useRef(null)
 
@@ -51,7 +51,7 @@ export default   function UI() {
       disconnect()
       ce.stopped = true
     }
-  }, []) 
+  }, [])
 
   useEffect(() => {
     //connect automatically once the clientengine is setup
@@ -98,14 +98,12 @@ export default   function UI() {
     clientEngine?.claim(characterId)
   }
 
-  //const { data: session, status } = useSession()
-  // const session =    getServerSession(authOptions) 
-// session?.user?.name  {session?.user?.name}
+  //const session= await auth()
+
   return (
     <>
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
-        style={{ width: "800px", height: "800px" }}
         width="800px"
         height="800px"
         tabIndex={1}

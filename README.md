@@ -3,6 +3,12 @@ how to run
 npm install
 npm run dev
 
+## themes/principles/ideas
+perma death
+no static spawns
+play muliple characters but not at once
+able to give characters goals
+
 ## TODO
 ability to claim a character
 keep a list of only characters that need processed 

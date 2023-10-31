@@ -35,6 +35,15 @@ export default class ClientEngine {
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
+
+        const observer = new ResizeObserver(( ) => {
+            const canvas = getCanvas()
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        });
+        observer.observe(getCanvas())
+
+
         let renderLoop = () => {
             if (this.stopped) {
                 return
