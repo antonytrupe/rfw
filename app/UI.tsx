@@ -103,7 +103,6 @@ export default   function UI() {
 // session?.user?.name  {session?.user?.name}
   return (
     <>
-     <span>did it deploy</span>
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
         style={{ width: "800px", height: "800px" }}
