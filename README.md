@@ -4,7 +4,8 @@ npm install
 npm run dev
 
 ## TODO
-keep a list of characters that need
+ability to claim a character
+keep a list of only characters that need processed 
 random stats when spawning
 no moving while incapacitated/dying/dead
 collision
