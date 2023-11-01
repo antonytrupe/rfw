@@ -4,10 +4,12 @@ npm install
 npm run dev  
 
 ## themes/principles/ideas
-perma death
-no static spawns
-play muliple characters but not at once
-able to give characters goals
+perma death  
+no static spawns  
+cultures/cities/civilizations grow and die on their own  
+gods can intervene to bring back balance(repopulate/wipe out)  
+play muliple characters but not at once  
+able to give characters goals(move to a new location, focus on a career)  
 
 ## TODO
 1. touch controls
