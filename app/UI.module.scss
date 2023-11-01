@@ -13,6 +13,11 @@
     display: flex;
 }
 
+.flexRow {
+    flex-direction: row;
+    display: flex;
+}
+
 .hud {
     button {
         border: thin black solid;
@@ -23,7 +28,7 @@
 }
 
 .characterList {
-    overflow: scroll;
+    overflow: auto;
     button {
         border: thin black solid;
         border-radius: 5px;

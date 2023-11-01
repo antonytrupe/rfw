@@ -9,6 +9,7 @@ import CharacterUI from './CharacterUI';
 import CommunityCreation from './CommunityCreation';
 import SignInOut from './SignInOut';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
@@ -99,8 +100,8 @@ export default function ClientUI() {
     clientEngine?.claim(characterId)
   }
 
- // const session = useSession()
- const { data: session } = useSession();
+  // const session = useSession()
+  const { data: session } = useSession();
 
   return (
     <>
@@ -108,19 +109,21 @@ export default function ClientUI() {
         //header row
       }
       <div style={{}}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent:'space-between'}}>
-         
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: '128px', }}>
 
 
-          <div className={`${styles.hud} ${styles.flexColumn} `}>
-            {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
-            {connected && (<button onClick={createCharacter}>Create Character</button>)}
-            {connected && (
-              <CommunityCreation action={createCommunity}>
-              </CommunityCreation>
 
-            )}
-            {connected && (<button onClick={disconnect}>Disconnect</button>)}
+          <div className={`${styles.hud} ${styles.flexRow} `}>
+            <div>
+              {connected && (<button onClick={createCharacter}>Create Character</button>)}
+            </div>
+            <div>
+              {connected && (
+                <CommunityCreation action={createCommunity}>
+                </CommunityCreation>
+
+              )}
+            </div>
           </div>
 
 
@@ -134,7 +137,17 @@ export default function ClientUI() {
             })}
           </div>
 
-          <SignInOut />
+
+          {
+            //the right side stuff
+          }
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '4px' }}>
+            {!session?.user && <Link href={'/api/auth/signin'}>Sign In</Link>}
+            {!!session?.user && <><span style={{}}>{session.user.email}</span>
+              <Link href={'/api/auth/signout'} style={{ border: ' thin black solid', borderRadius: '6px' }}>Sign Out</Link></>}
+            {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
+            {connected && (<button onClick={disconnect}>Disconnect</button>)}
+          </div>
 
 
         </div>
