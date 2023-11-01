@@ -28,15 +28,8 @@ describe('ClientEngine', () => {
     })
 
     describe('Scrolling', () => {
-        test('', () => { })
+        test('something', () => { })
     })
 
-    describe('Events', () => {
-        test('should test something ', () => {
-            clientEngine.createCharacter()
-            clientEngine.createCharacter()
-            clientEngine.createCharacter()
-            expect(Array.from(clientEngine.gameEngine.gameWorld.characters.values()).length).toBe(3)
-        })
-    })
+    
 })

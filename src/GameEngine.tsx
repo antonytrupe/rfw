@@ -111,10 +111,11 @@ export default class GameEngine {
         const id = uuidv4();
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
-        //this is dumb
         const merged = { ...character, id: id, size: 5, maxHp: maxHp, hp: maxHp };
-        const p = new Character(merged)
+
         const [c, zones] = this.gameWorld.updateCharacter(merged)
+        //this is dumb
+        const p = new Character(c)
         return [p, zones]
     }
 
@@ -408,7 +409,7 @@ export default class GameEngine {
     }
 
     castSpell(casterId: string, spellName: string, targetIds: string[]) {
-         //console.log('spellName', spellName)
+        //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
                 // console.log('targetIds', targetIds) 
@@ -478,7 +479,7 @@ export default class GameEngine {
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
         }
         const finished = (new Date()).getTime()
-       // console.log('step duration', finished - started)
+        // console.log('step duration', finished - started)
         return updatedCharacters
     }
 

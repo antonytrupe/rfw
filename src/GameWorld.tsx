@@ -58,7 +58,7 @@ export default class GameWorld {
         const old: Character | undefined = this.characters.get(character.id)
         const merged = { ...new Character({}), ...old, ...character }
 
-        if (!merged.x || !merged.y) {
+        if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
             //bail if it doesn't have a location
             return [character, new Map()]
         }
@@ -130,9 +130,13 @@ export default class GameWorld {
 
     }
 
-    getCharacters(ids: string[]) {
-        return ids.map((id) => {
-            return this.characters.get(id)
+    getCharacters(ids: string[]): Character[] {
+        let l: Character[] = []
+        ids.forEach((id) => {
+            const c = this.characters.get(id);
+            if (c)
+                l.push(c)
         })
+        return l
     }
 }
