@@ -27,7 +27,7 @@ export default function ClientUI() {
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
-   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
+  const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
@@ -113,9 +113,6 @@ export default function ClientUI() {
       }
       <div style={{}}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: '128px', }}>
-
-
-
           <div className={`${styles.hud} ${styles.flexRow} `}>
             <div>
               {connected && (<button onClick={createCharacter}>Create Character</button>)}

@@ -85,6 +85,12 @@ export default class ServerEngine {
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters, updatedZones)
             })
 
+            //CONSTANTS.CLAIM_CHARACTER
+            socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
+                this.claimCharacter(characterId)
+
+            })
+
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 // ...
                 console.log(CONSTANTS.DISCONNECT, socket.id)
@@ -118,9 +124,21 @@ export default class ServerEngine {
             });
         })
     }
+    claimCharacter(characterId: string) {
+        //TODO serverengine CLAIM_CHARACTER
+        const c = this.gameEngine.gameWorld.getCharacter(characterId)
+        if (c) {
+            c.playerId = ''
+            this.sendAndSaveCharacterUpdates([c], undefined)
+        }
+
+        //  io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters, updatedZones)
+
+        throw new Error("Method not implemented.")
+    }
 
     private createCharacter() {
-        console.log('ServerEngine createCharacter')
+        //  console.log('ServerEngine createCharacter')
         let x = this.gameEngine.roll({ size: 30, modifier: -15 });
         let y = this.gameEngine.roll({ size: 30, modifier: -15 });
         const [c, zones] = this.gameEngine.createCharacter({ x: x, y: y });
@@ -151,7 +169,7 @@ export default class ServerEngine {
         }
     }
 
-    private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones) {
+    private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones | undefined) {
         //TODO only send character updates to the rooms they're in
         this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters);
 
@@ -161,7 +179,7 @@ export default class ServerEngine {
                 this.db.push(CONSTANTS.CHARACTER_PATH + character.id, character);
             }
             catch (e) {
-                console.log('failed to create character');
+                console.log('failed to save character', character);
             }
         });
 

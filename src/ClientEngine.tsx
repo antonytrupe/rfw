@@ -57,7 +57,7 @@ export default class ClientEngine {
 
     claim(characterId: string) {
         //TODO client claim
-        // this.socket.emit()
+        this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
     }
 
     focus(characterId: string) {
@@ -65,10 +65,10 @@ export default class ClientEngine {
         //change the zoom
         this.scale = 1
         //change the  offsets
-       // const center = this.getViewPortOrigin()
+        // const center = this.getViewPortOrigin()
         //console.log('center', center)
         const rect = this.getViewPort()
-       // console.log('rect', rect)
+        // console.log('rect', rect)
         this.translateX = c.x - (rect.right - rect.left) / 2
         this.translateY = c.y - (rect.bottom - rect.top) / 2
     }
@@ -315,8 +315,8 @@ export default class ClientEngine {
     clickHandler(e: MouseEvent) {
         //  const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
         // console.log(tzn)
-        const p = this.getMousePosition(e)
-        console.log(p)
+        //  const p = this.getMousePosition(e)
+        //  console.log(p)
         // const zivp = this.getZonesInViewPort()
         // console.log(zivp)
         //  const rect = this.getViewPort()
@@ -327,7 +327,8 @@ export default class ClientEngine {
         //  console.log(Array.from(d.values()).length) 
 
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
-        this.selectedCharacters = characters
+        //just the first character
+        this.selectedCharacters = [characters[0]]
         //tell the ui about the selected characters
         this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.getSelectedCharacters())
     }

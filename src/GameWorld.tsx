@@ -9,6 +9,7 @@ export type Zones = Map<string, Zone>;
 //doesn't know anything about client/server
 export default class GameWorld {
 
+
     //needs to be private to force going through a setter to keep the zones up to date
     private characters: Map<string, Character> = new Map<string, Character>()
     //a character is always in 1 tactical zone
@@ -36,6 +37,10 @@ export default class GameWorld {
         return Array.from(this.characters.values()).filter((character): boolean => {
             return top <= character.y && bottom >= character.y && left <= character.x && right >= character.x
         })
+    }
+
+    getCharacter(characterId: string): Character | undefined {
+        return this.characters.get(characterId)
     }
 
     getTacticalZoneName({ x, y }: { x: number, y: number }) {

@@ -1,6 +1,8 @@
 export default class Character {
+
     constructor({
         id = "undefined",
+        playerId = "undefined",
         size = 5,
         direction = 0,
         x = 0,
@@ -17,6 +19,7 @@ export default class Character {
         level = 1
     }: {
         id?: string
+        playerId?: string
         size?: number
         direction?: number
         x?: number
@@ -33,6 +36,7 @@ export default class Character {
         level?: number
     }) {
         this.id = id
+        this.playerId = playerId
         this.size = size
         this.maxSpeed = maxSpeed
         this.x = x
@@ -48,13 +52,14 @@ export default class Character {
         this.characterClass = characterClass
         this.level = level
     }
-    speedAcceleration: number
     id: string
+    playerId: string
     size: number
     maxSpeed: number
     x: number
     y: number
     speed: number
+    speedAcceleration: number
     mode: number //1 for run, 2 for double run, .5 for walk/stealth, .25 for crawl
     directionAcceleration: number
     direction: number

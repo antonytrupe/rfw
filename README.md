@@ -10,12 +10,12 @@ cultures/cities/civilizations grow and die on their own
 gods can intervene to bring back balance(repopulate/wipe out)  
 play muliple characters but not at once  
 able to give characters goals(move to a new location, focus on a career)  
+magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO
 1. touch controls
 1. ability to claim a character  
 1. ability to view claimed characters
-1. ability to zoom to a character
 2. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
 3. random stats when spawning  
 4. no moving while incapacitated/dying/dead  
@@ -36,6 +36,7 @@ https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of
 18. character health ui
 
 ## DONE
+ability to zoom to a character
 make the client only request what it can see
 reconnect automatically
 reconnect after disconnect
