@@ -108,9 +108,8 @@ export default function ClientUI() {
         //header row
       }
       <div style={{}}>
-        <div style={{ display: 'flex', flexDirection: 'row' }}>
-          <SignInOut />
-
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent:'space-between'}}>
+         
 
 
           <div className={`${styles.hud} ${styles.flexColumn} `}>
@@ -134,6 +133,10 @@ export default function ClientUI() {
               </CharacterUI>
             })}
           </div>
+
+          <SignInOut />
+
+
         </div>
       </div>
       {
