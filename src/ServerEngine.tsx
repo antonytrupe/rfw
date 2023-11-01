@@ -1,10 +1,10 @@
 import EventEmitter from "events"
 import GameEngine from "@/GameEngine"
-import * as CONSTANTS from "@/CONSTANTS";
-import Character from "@/Character";
-import { Config, JsonDB } from "node-json-db";
-import { Server } from "socket.io";
-import { Zones } from "./GameWorld";
+import * as CONSTANTS from "@/CONSTANTS"
+import Character from "@/Character"
+import { Config, JsonDB } from "node-json-db"
+import { Server } from "socket.io"
+import { Zones } from "./GameWorld"
 
 
 export default class ServerEngine {
@@ -29,7 +29,7 @@ export default class ServerEngine {
 
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[], zones: any) => {
             //   console.log('serverengine SERVER_CHARACTER_UPDATE')
-             this.sendAndSaveCharacterUpdates(characters, zones)
+            this.sendAndSaveCharacterUpdates(characters, zones)
 
         })
 

@@ -14,6 +14,8 @@ able to give characters goals(move to a new location, focus on a career)
 ## TODO
 1. touch controls
 1. ability to claim a character  
+1. ability to view claimed characters
+1. ability to zoom to a character
 2. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
 3. random stats when spawning  
 4. no moving while incapacitated/dying/dead  

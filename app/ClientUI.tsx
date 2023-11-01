@@ -27,8 +27,7 @@ export default function ClientUI() {
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
-  //const [world, setWorldState] = useState<GameWorld>()
-  const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
+   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
@@ -96,8 +95,12 @@ export default function ClientUI() {
     clientEngine?.castSpell(casterId, spellName, targets)
   }
 
-  const claim = (characterId: string) => {
+  const claimCharacter = (characterId: string) => {
     clientEngine?.claim(characterId)
+  }
+
+  const focusCharacter = (characterId: string) => {
+    clientEngine?.focus(characterId)
   }
 
   // const session = useSession()
@@ -132,7 +135,8 @@ export default function ClientUI() {
             {selectedCharacters && selectedCharacters.map((character: Character) => {
               return <CharacterUI character={character} key={character.id} >
                 <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                <button className={`btn`} onClick={() => claim(character.id)}>Claim</button>
+                <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>
+                <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>
               </CharacterUI>
             })}
           </div>

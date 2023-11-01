@@ -36,7 +36,7 @@ export default class ClientEngine {
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
 
-        const observer = new ResizeObserver(( ) => {
+        const observer = new ResizeObserver(() => {
             const canvas = getCanvas()
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
@@ -57,7 +57,22 @@ export default class ClientEngine {
 
     claim(characterId: string) {
         //TODO client claim
+        // this.socket.emit()
     }
+
+    focus(characterId: string) {
+        const c = this.gameEngine.gameWorld.getCharacters([characterId])[0]
+        //change the zoom
+        this.scale = 1
+        //change the  offsets
+       // const center = this.getViewPortOrigin()
+        //console.log('center', center)
+        const rect = this.getViewPort()
+       // console.log('rect', rect)
+        this.translateX = c.x - (rect.right - rect.left) / 2
+        this.translateY = c.y - (rect.bottom - rect.top) / 2
+    }
+
 
     wheelHandler(e: WheelEvent) {
         e.stopPropagation()
@@ -300,8 +315,8 @@ export default class ClientEngine {
     clickHandler(e: MouseEvent) {
         //  const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
         // console.log(tzn)
-
-
+        const p = this.getMousePosition(e)
+        console.log(p)
         // const zivp = this.getZonesInViewPort()
         // console.log(zivp)
         //  const rect = this.getViewPort()
@@ -449,14 +464,14 @@ export default class ClientEngine {
             })
 
             //disconnect handler
-            this.socket?.on(CONSTANTS.DISCONNECT, (reason) => {
+            this.socket?.on(CONSTANTS.DISCONNECT, (reason: any) => {
                 console.log('DISCONNECT', reason)
                 this.connected = false
                 this.emit(CONSTANTS.DISCONNECT)
             })
 
             //pc disconnect
-            this.socket?.on(CONSTANTS.PC_DISCONNECT, (playerId) => {
+            this.socket?.on(CONSTANTS.PC_DISCONNECT, (playerId: string) => {
                 console.log('PC_DISCONNECT', playerId)
                 //dispatch(removePlayer(playerId))
                 this.disconnect()

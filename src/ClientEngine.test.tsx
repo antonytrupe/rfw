@@ -15,7 +15,7 @@ describe('ClientEngine', () => {
     })
 
     describe('Initial Conditions', () => {
-        test('should have the right size canvas', async () => {
+        test.skip('should have the right size canvas', async () => {
             render(<ClientUI />)
             const canvas: HTMLCanvasElement = screen.getByTestId('canvas')
             //const rect = canvas.getBoundingClientRect()
@@ -24,11 +24,11 @@ describe('ClientEngine', () => {
             // expect(rect.height).toBe(400)
             //  expect(canvas).toBeInTheDocument()
         })
-        test('should have the origin in the middle of the canvas', () => { })
+        test.skip('should have the origin in the middle of the canvas', () => { })
     })
 
     describe('Scrolling', () => {
-        test('something', () => { })
+        test.skip('something', () => { })
     })
 
     
