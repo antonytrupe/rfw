@@ -10,6 +10,7 @@ play muliple characters but not at once
 able to give characters goals
 
 ## TODO
+1. touch controls
 1. ability to claim a character  
 2. keep a list of only characters that need processed  
 3. random stats when spawning  

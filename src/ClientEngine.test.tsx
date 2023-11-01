@@ -1,7 +1,7 @@
 import EventEmitter from "events"
 import * as CONSTANTS from "./CONSTANTS";
 import ClientEngine from "./ClientEngine";
-import UI from "../app/UI";
+import ClientUI from "../app/ClientUI";
 import { render, screen, } from '@testing-library/react'
 
 describe('ClientEngine', () => {
@@ -16,7 +16,7 @@ describe('ClientEngine', () => {
 
     describe('Initial Conditions', () => {
         test('should have the right size canvas', async () => {
-            render(<UI />)
+            render(<ClientUI />)
             const canvas: HTMLCanvasElement = screen.getByTestId('canvas')
             //const rect = canvas.getBoundingClientRect()
 

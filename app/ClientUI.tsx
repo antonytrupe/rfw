@@ -7,14 +7,15 @@ import * as CONSTANTS from '@/CONSTANTS';
 import Character from '@/Character';
 import CharacterUI from './CharacterUI';
 import CommunityCreation from './CommunityCreation';
-import { auth } from '../auth';
+import SignInOut from './SignInOut';
+import { useSession } from 'next-auth/react';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
 //const client = steamworks.init()
 //console.log(client.localplayer.getName())
 
-export default function UI() {
+export default function ClientUI() {
   //@ts-ignore
   const canvasRef: MutableRefObject<HTMLCanvasElement> = useRef(null)
 
@@ -98,10 +99,47 @@ export default function UI() {
     clientEngine?.claim(characterId)
   }
 
-  //const session= await auth()
+ // const session = useSession()
+ const { data: session } = useSession();
 
   return (
     <>
+      {
+        //header row
+      }
+      <div style={{}}>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <SignInOut />
+
+
+
+          <div className={`${styles.hud} ${styles.flexColumn} `}>
+            {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
+            {connected && (<button onClick={createCharacter}>Create Character</button>)}
+            {connected && (
+              <CommunityCreation action={createCommunity}>
+              </CommunityCreation>
+
+            )}
+            {connected && (<button onClick={disconnect}>Disconnect</button>)}
+          </div>
+
+
+
+          <div className={`${styles.characterList}`}>
+            {selectedCharacters && selectedCharacters.map((character: Character) => {
+              return <CharacterUI character={character} key={character.id} >
+                <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                <button className={`btn`} onClick={() => claim(character.id)}>Claim</button>
+              </CharacterUI>
+            })}
+          </div>
+        </div>
+      </div>
+      {
+        //canvas row
+      }
+
       <canvas ref={canvasRef}
         className={`${styles.canvas} canvas`}
         width="800px"
@@ -113,25 +151,7 @@ export default function UI() {
         onKeyUp={onKeyUp}
         data-testid="canvas" />
 
-      <div className={`${styles.hud} ${styles.flexColumn} `}>
-        {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
-        {connected && (<button onClick={createCharacter}>Create Character</button>)}
-        {connected && (
-          <CommunityCreation action={createCommunity}>
-          </CommunityCreation>
 
-        )}
-        {connected && (<button onClick={disconnect}>Disconnect</button>)}
-      </div>
-
-      <div className={`${styles.characterList}`}>
-        {selectedCharacters && selectedCharacters.map((character: Character) => {
-          return <CharacterUI character={character} key={character.id} >
-            <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-            <button className={`btn`} onClick={() => claim(character.id)}>Claim</button>
-          </CharacterUI>
-        })}
-      </div>
     </>
   )
 }
