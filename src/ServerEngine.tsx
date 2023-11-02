@@ -5,7 +5,8 @@ import Character from "@/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Server } from "socket.io"
 import { Zones } from "./GameWorld"
-
+import { getSession } from "next-auth/react"
+import { Session } from "next-auth"
 
 export default class ServerEngine {
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -33,8 +34,18 @@ export default class ServerEngine {
 
         })
 
-        io.on(CONSTANTS.CONNECTION, socket => {
+        io.on(CONSTANTS.CONNECTION, async socket => {
             //console.log(CONNECTION, socket.id) 
+
+
+            let session: Session | null
+            getSession({ req: socket.conn.request, }).then((s) => {
+
+                session = s
+                //TODO player profile setup stuff
+
+            })//works  
+
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
                 //  console.log('world CREATE_CHARACTER')
@@ -82,18 +93,22 @@ export default class ServerEngine {
                 //  console.log('targets',targets)
                 const [updatedCharacters, updatedZones] = this.gameEngine.createCommunity(options)
                 //  console.log(updatedCharacters)
-                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters, updatedZones)
+                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
             //CONSTANTS.CLAIM_CHARACTER
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
-                this.claimCharacter(characterId)
 
+                if (session?.user?.email) {
+                    this.claimCharacter(characterId, session.user.email)
+                }
+                else {
+                    console.log('no session')
+                }
             })
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
-                // ...
-                console.log(CONSTANTS.DISCONNECT, socket.id)
+                console.log('CONSTANTS.DISCONNECT', reason)
                 //remove the character from the database
                 //db.delete('/pc/' + socket.id)
                 //broadcast the removal
@@ -124,17 +139,14 @@ export default class ServerEngine {
             });
         })
     }
-    claimCharacter(characterId: string) {
+    claimCharacter(characterId: string, playerId: string) {
         //TODO serverengine CLAIM_CHARACTER
+        console.log(playerId)
         const c = this.gameEngine.gameWorld.getCharacter(characterId)
         if (c) {
-            c.playerId = ''
+            c.playerId = playerId
             this.sendAndSaveCharacterUpdates([c], undefined)
         }
-
-        //  io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters, updatedZones)
-
-        throw new Error("Method not implemented.")
     }
 
     private createCharacter() {

@@ -23,9 +23,10 @@ export default class GameWorld {
         let updatedZones = new Map<string, Set<string>>()
         characters.forEach((character) => {
             let [c, z] = this.updateCharacter(character)
-            updatedZones = new Map([...updatedZones, ...z])
+            updatedZones = new Map([...Array.from(updatedZones.entries()), ...Array.from(z.entries())])
         })
-        return [Array.from(characters.values()), updatedZones]
+        //console.log('updateCharacters', updatedZones)
+        return [characters, updatedZones]
     }
 
     getAllCharacters() {
@@ -75,7 +76,7 @@ export default class GameWorld {
         //if the new zone doesn't exist
         if (!newZone) {
             //create it and add them to it
-            newZone = new Set(character.id)
+            newZone = new Set([character.id])
             this.zones.set(newZoneName, newZone)
         }
 
@@ -105,13 +106,18 @@ export default class GameWorld {
         return [merged, updatedZones]
     }
 
+    getAdjacentTacticalZoneNames() {
+        //TODO getAdjacentTacticalZoneNames
+    }
+
     getCharactersAt(position: { x: number, y: number }): Character[] {
-        //  get the zone that includes this point
+        //TODO take into account characters that overlap into adjacent zones
+        // get the zone that includes this point
         const zoneName = this.getTacticalZoneName(position)
-        //  console.log(zoneName)
+        // console.log(zoneName)
         const zone = this.zones.get(zoneName)
-        //  console.log(zone)
-        //make sure we got a zone0
+        // console.log(zone)
+        //make sure we got a zone
         if (!!zone) {
             //create a list of characters out of the list of characterids
             const characters: Character[] = Array.from(zone).reduce((result: Character[], characterId: string) => {
@@ -132,7 +138,6 @@ export default class GameWorld {
             return characters
         }
         return []
-
     }
 
     getCharacters(ids: string[]): Character[] {

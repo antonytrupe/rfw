@@ -73,7 +73,6 @@ export default class ClientEngine {
         this.translateY = c.y - (rect.bottom - rect.top) / 2
     }
 
-
     wheelHandler(e: WheelEvent) {
         e.stopPropagation()
         // e.preventDefault()
@@ -315,25 +314,25 @@ export default class ClientEngine {
     clickHandler(e: MouseEvent) {
         //  const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
         // console.log(tzn)
-        //  const p = this.getMousePosition(e)
-        //  console.log(p)
+        //const mp = this.getMousePosition(e)
+        //console.log('mouse position', mp)
         // const zivp = this.getZonesInViewPort()
         // console.log(zivp)
-        //  const rect = this.getViewPort()
-        //  console.log(rect)
+        //const vp = this.getViewPort()
+        //console.log('viewport', vp)
         //  const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
         //  console.log(c.length)
         //  const d = this.gameEngine.gameWorld.getAllCharacters()
         //  console.log(Array.from(d.values()).length) 
 
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
-        //just the first character
-        this.selectedCharacters = [characters[0]]
+        //TODO just the first character
+        this.selectedCharacters = characters
         //tell the ui about the selected characters
         this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.getSelectedCharacters())
     }
 
-    getZonesInViewPort() {
+    private getZonesInViewPort() {
         return this.gameEngine.getZonesIn(this.getViewPort())
     }
 
@@ -459,8 +458,12 @@ export default class ClientEngine {
                 path: "/api/world/"
             })
             this.socket.on(CONSTANTS.CONNECT, () => {
+                //console.log('CONSTANTS.CONNECT')
                 this.connected = true
+                //tell the ui we connected
                 this.emit(CONSTANTS.CONNECT)
+                //ask the server for characters
+                //console.log(this.socket)
                 this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
             })
 
@@ -491,8 +494,8 @@ export default class ClientEngine {
             })
 
             //pc location data
-            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[], zones: Zones) => {
-                //console.log('socket on PC_LOCATION', character)
+            this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
+                // console.log('CONSTANTS.CLIENT_CHARACTER_UPDATE', characters)
                 //tell the gameengine we got an update 
                 // console.log(characters)
                 this.gameEngine.updateCharacters(characters)
@@ -520,10 +523,10 @@ export default class ClientEngine {
     private getViewPort(): { left: number, right: number, top: number, bottom: number } {
         const clientRect = this.getCanvas().getBoundingClientRect()
 
-        const left = (clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
-        const right = (clientRect.right) / this.PIXELS_PER_FOOT * this.scale + this.translateX
-        const top = (clientRect.top) / this.PIXELS_PER_FOOT * this.scale + this.translateY
-        const bottom = (clientRect.bottom) / this.PIXELS_PER_FOOT * this.scale + this.translateY
+        const left = (clientRect.left - clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
+        const right = (clientRect.right - clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
+        const top = (clientRect.top - clientRect.top) / this.PIXELS_PER_FOOT * this.scale + this.translateY
+        const bottom = (clientRect.bottom - clientRect.top) / this.PIXELS_PER_FOOT * this.scale + this.translateY
 
         const rect = { left: left, right: right, top: top, bottom: bottom };
         //console.log(rect)

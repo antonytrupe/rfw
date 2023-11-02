@@ -408,7 +408,7 @@ export default class GameEngine {
         return sum
     }
 
-    castSpell(casterId: string, spellName: string, targetIds: string[]) {
+    castSpell(casterId: string, spellName: string, targetIds: string[]): (Partial<Character> | undefined)[] {
         //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
@@ -417,7 +417,7 @@ export default class GameEngine {
                     const damage = this.roll({ size: 6, count: 2 })
                     if (character) {
                         character.hp = Math.max(-10, character.hp - damage)
-                        return this.gameWorld.updateCharacter(character)
+                        return this.gameWorld.updateCharacter(character)[0]
                     }
                 })
                 //TODO update the caster character too and return it

@@ -1,4 +1,5 @@
-import NextAuth from "next-auth"
+import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from "next"
+import { getServerSession } from "next-auth"
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
 export const authOptions = {
@@ -14,4 +15,9 @@ export const authOptions = {
       clientSecret: process.env.AUTH_GOOGLE_SECRET || ''
     }),
   ],
+}
+
+// Use it in server contexts
+export function auth(...args: [GetServerSidePropsContext["req"], GetServerSidePropsContext["res"]] | [NextApiRequest, NextApiResponse] | []) {
+  return getServerSession(...args, authOptions)
 }
