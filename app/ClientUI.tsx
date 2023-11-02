@@ -132,7 +132,7 @@ export default function ClientUI() {
             {selectedCharacters && selectedCharacters.map((character: Character) => {
               return <CharacterUI character={character} key={character.id} >
                 <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>
+                {!character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
                 <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>
               </CharacterUI>
             })}

@@ -4,8 +4,8 @@ import Character from "@/Character"
 
 export default function CharacterUI({ character, children }: { character: Character, children: any }) {
     return (
-        <div key={character.id} className={`${styles.card} ${styles.character}`}>
-            <div>
+        <div key={character.id} className={`${styles.card} ${styles.character}`} style={{ display: 'flex', flexDirection: 'row' }}>
+            <div className="stats" >
                 <div> level {character.level} {character.characterClass}</div>
                 <div> {character.hp} / {character.maxHp} HP</div>
                 <div> Speed:{character.maxSpeed}ft</div>
@@ -19,7 +19,9 @@ export default function CharacterUI({ character, children }: { character: Charac
                     */
                 }
             </div>
-            {children}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {children}
+            </div>
         </div>
     )
 }

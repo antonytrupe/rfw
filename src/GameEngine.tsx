@@ -6,10 +6,24 @@ import GameWorld, { Zones } from "./GameWorld";
 import { v4 as uuidv4 } from 'uuid';
 import isEqual from 'lodash.isequal';
 
+interface ClassPopulation {
+    className: string;
+    diceCount: number;
+    diceSize: number;
+    modifier: number;
+    origin: {
+        x: number;
+        y: number;
+    };
+    radius: number;
+}
+
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+
+
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
         let zones = []
         for (let i = left; i < right; i += 30) {
@@ -38,14 +52,17 @@ export default class GameEngine {
     //30ft/6seconds
     speedMultiplier: number = 6000
 
+    /**
+     * 
+     * @param param0 
+     * @param eventEmitter 
+     */
     constructor({ ticksPerSecond }: { ticksPerSecond: number }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
-
-
 
         this.on(CONSTANTS.TURN_RIGHT, (characters: Character[]) => {
             characters.forEach((character) => {
@@ -94,20 +111,61 @@ export default class GameEngine {
 
     }
 
-    turnLeft = (characters: Character[]) => {
-        characters.forEach((character) => {
-            this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
-        })
+    /**
+     * 
+     * @param characterId 
+     * @param playerId 
+     * @returns a tuple that contains a list that contains the claimed character if claimed, otherwise an empty list
+     */
+    claimCharacter(characterId: string, playerId: string) {
+        const c = this.gameWorld.getCharacter(characterId)
+        if (c && !c?.playerId) {
+            c.playerId = playerId
+            return this.gameWorld.updateCharacter(c)
+        }
+        return [[],]
     }
 
-    updateCharacters(characters: Character[]) {
+    /**
+     * 
+     * @param characters list of characters to turn left
+     * @returns updated characters. empty array if no characters updated
+     */
+    turnLeft(characters: Character[]): Character[] {
+        //  only return characters that were updated
+        const updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
+            updatedCharacters.concat(c)
+        })
+        return updatedCharacters
+    }
+
+    /**
+     * 
+     * @param characters 
+     * @returns a list of characters
+     */
+    turnRight(characters: Character[]): Character[] {
+        const updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
+            updatedCharacters.concat(c)
+        })
+        return updatedCharacters
+    }
+
+    updateCharacters(characters: Character[]): Character[] {
         // console.log(characters)
+        const updatedCharacters: Character[] = []
         characters.forEach((character) => {
-            this.gameWorld.updateCharacter(character)
+            const [c,] = this.gameWorld.updateCharacter(character)
+            updatedCharacters.concat(c)
         })
+        return updatedCharacters
     }
 
-    createCharacter(character: Partial<Character>): [Character, Zones] {
+    createCharacter(character: Partial<Character>): [Character[], Zones] {
         const id = uuidv4();
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
@@ -115,8 +173,8 @@ export default class GameEngine {
 
         const [c, zones] = this.gameWorld.updateCharacter(merged)
         //this is dumb
-        const p = new Character(c)
-        return [p, zones]
+        //const p = new Character(c)
+        return [c, zones]
     }
 
     private getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
@@ -127,11 +185,9 @@ export default class GameEngine {
         return { x, y }
     }
 
-    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }:
-        { className: string, diceCount: number, diceSize: number, modifier: number, origin: { x: number, y: number }, radius: number })
-        : [Character[], Zones] {
+    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [Character[], Zones] {
         let { x, y } = this.getRandomPoint({ origin, radius })
-        const updatedCharacters: Character[] = []
+        let updatedCharacters: Character[] = []
         let updatedZones = new Map<string, Set<string>>()
         const highestLevel = this.roll({ size: diceSize, count: diceCount, modifier: modifier })
         // work our way down from highest level
@@ -140,7 +196,7 @@ export default class GameEngine {
             //make the right amount of each level
             for (let i = 0; i < highestLevel / level; i++) {
                 const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
-                updatedCharacters.push(c)
+                updatedCharacters = [...updatedCharacters, ...c]
                 updatedZones = new Map([...updatedZones, ...zones])
             }
         }
@@ -363,7 +419,7 @@ export default class GameEngine {
         for (let i = 0; i < remaining * .005; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
             const [c, zones] = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
-            updatedCharacters.push(c)
+            updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
 
@@ -371,21 +427,21 @@ export default class GameEngine {
         for (let i = 0; i < remaining * .005; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
             const [c, zones] = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
-            updatedCharacters.push(c)
+            updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
             const [c, zones] = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
-            updatedCharacters.push(c)
+            updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
             const [c, zones] = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
-            updatedCharacters.push(c)
+            updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
 
@@ -393,7 +449,7 @@ export default class GameEngine {
         for (let i = 0; updatedCharacters.length < totalSize; i++) {
             let p = this.getRandomPoint({ origin: location, radius })
             const [c, zones] = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
-            updatedCharacters.push(c)
+            updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
 
@@ -408,7 +464,7 @@ export default class GameEngine {
         return sum
     }
 
-    castSpell(casterId: string, spellName: string, targetIds: string[]): (Partial<Character> | undefined)[] {
+    castSpell(casterId: string, spellName: string, targetIds: string[]): (Character | undefined)[] {
         //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
@@ -417,7 +473,8 @@ export default class GameEngine {
                     const damage = this.roll({ size: 6, count: 2 })
                     if (character) {
                         character.hp = Math.max(-10, character.hp - damage)
-                        return this.gameWorld.updateCharacter(character)[0]
+                        //this is dumb
+                        return this.gameWorld.updateCharacter(character)[0][0]
                     }
                 })
                 //TODO update the caster character too and return it

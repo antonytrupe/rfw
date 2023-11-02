@@ -12,17 +12,20 @@ export default class ServerEngine {
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     emit: (eventName: string | symbol, ...args: any[]) => boolean
     gameEngine: GameEngine
-    io: Server;
-    db: JsonDB;
+    io: Server
+    worldDB: JsonDB
+    playerDB: JsonDB
+
     constructor(io: Server) {
         this.io = io
-        const eventEmitter: EventEmitter = new EventEmitter();
+        const eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        this.db = new JsonDB(new Config("world", true, true, '/'));
-        this.loadWorld();
+        this.worldDB = new JsonDB(new Config("world", true, true, '/'))
+        this.playerDB = new JsonDB(new Config("player", true, true, '/'))
+        this.loadWorld()
 
         //don't do this until after the db loads maybe?
         //start the gameengines clock thingy
@@ -49,13 +52,19 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
                 //  console.log('world CREATE_CHARACTER')
-                this.createCharacter();
+                this.createCharacter()
             })
             socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
-                this.gameEngine.turnLeft(characters)
+
+                this.turnLeft(characters)
+
             })
             socket.on(CONSTANTS.TURN_RIGHT, async (characters: Character[]) => {
-                this.emit(CONSTANTS.TURN_RIGHT, characters)
+                this.turnRight(characters)
+
+
+
+                //this.emit(CONSTANTS.TURN_RIGHT, characters)
             })
             socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
                 this.emit(CONSTANTS.TURN_STOP, characters)
@@ -113,7 +122,7 @@ export default class ServerEngine {
                 //db.delete('/pc/' + socket.id)
                 //broadcast the removal
                 //socket.broadcast.emit(PC_DISCONNECT, socket.id)
-            });
+            })
 
             //tell the client where all the character are
             socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
@@ -136,32 +145,46 @@ export default class ServerEngine {
                 })
 
                 socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersWithin(viewPort))
-            });
+            })
         })
     }
+
+    turnRight(characters: Character[]) {
+        const c = this.gameEngine.turnRight(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
+    turnLeft(characters: Character[]) {
+        const c = this.gameEngine.turnLeft(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
     claimCharacter(characterId: string, playerId: string) {
         //TODO serverengine CLAIM_CHARACTER
         console.log(playerId)
-        const c = this.gameEngine.gameWorld.getCharacter(characterId)
-        if (c) {
-            c.playerId = playerId
-            this.sendAndSaveCharacterUpdates([c], undefined)
+        const [c,] = this.gameEngine.claimCharacter(characterId, playerId)
+        if (c?.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
     private createCharacter() {
         //  console.log('ServerEngine createCharacter')
-        let x = this.gameEngine.roll({ size: 30, modifier: -15 });
-        let y = this.gameEngine.roll({ size: 30, modifier: -15 });
-        const [c, zones] = this.gameEngine.createCharacter({ x: x, y: y });
-        this.sendAndSaveCharacterUpdates([c], zones)
+        let x = this.gameEngine.roll({ size: 30, modifier: -15 })
+        let y = this.gameEngine.roll({ size: 30, modifier: -15 })
+        const [c, zones] = this.gameEngine.createCharacter({ x: x, y: y })
+        this.sendAndSaveCharacterUpdates(c, zones)
     }
 
     private loadWorld() {
         try {
-            this.db.load().then(() => {
-                this.db.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                    //  console.log(c);
+            this.worldDB.load().then(() => {
+                this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
+                    //  console.log(c)
                     //  [index: string]: string
                     const characters: Character[] = []
 
@@ -169,12 +192,12 @@ export default class ServerEngine {
                     Object.entries(c).map(([id, character]: [id: string, character: any]) => {
                         characters.push(character)
 
-                    });
+                    })
                     this.gameEngine.gameWorld.updateCharacters(characters)
                 }).catch(err => {
                     //console.log('empty database')
-                });
-            });
+                })
+            })
         }
         catch (e) {
             //console.log('failed to load')
@@ -183,17 +206,17 @@ export default class ServerEngine {
 
     private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones | undefined) {
         //TODO only send character updates to the rooms they're in
-        this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters);
+        this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
 
         characters.forEach((character) => {
             try {
                 //array version
-                this.db.push(CONSTANTS.CHARACTER_PATH + character.id, character);
+                this.worldDB.push(CONSTANTS.CHARACTER_PATH + character.id, character)
             }
             catch (e) {
-                console.log('failed to save character', character);
+                console.log('failed to save character', character)
             }
-        });
+        })
 
     }
 }

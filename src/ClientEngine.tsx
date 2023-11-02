@@ -56,7 +56,7 @@ export default class ClientEngine {
     }
 
     claim(characterId: string) {
-        //TODO client claim
+        //  client claim
         this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
     }
 
@@ -366,15 +366,19 @@ export default class ClientEngine {
 
         if (code == 'KeyD') {
             if (this.selectedCharacters) {
-                this.emit(CONSTANTS.TURN_RIGHT, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.TURN_RIGHT, this.getSelectedCharacters())
+                const c = this.gameEngine.turnRight(this.getSelectedCharacters())
+                if (c.length > 0) {
+                    this.socket?.emit(CONSTANTS.TURN_RIGHT, this.getSelectedCharacters())
+                }
             }
         }
         else if (code == 'KeyA') {
             if (this.selectedCharacters) {
                 //this.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
-                this.gameEngine.turnLeft(this.selectedCharacters)
-                this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
+                const c = this.gameEngine.turnLeft(this.selectedCharacters)
+                if (c.length > 0) {
+                    this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
+                }
             }
         }
         else if (code == 'KeyS') {

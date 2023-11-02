@@ -2,7 +2,7 @@ export default class Character {
 
     constructor({
         id = "undefined",
-        playerId = "undefined",
+        playerId = "",
         size = 5,
         direction = 0,
         x = 0,

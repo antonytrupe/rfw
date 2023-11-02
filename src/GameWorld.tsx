@@ -1,3 +1,4 @@
+import isEqual from "lodash.isequal";
 import Character from "./Character";
 
 export type Zone = Set<string>;
@@ -55,10 +56,10 @@ export default class GameWorld {
         return 'T:' + fx + ':' + fy
     }
 
-    updateCharacter(character: Partial<Character>): [Character | Partial<Character>, Zones] {
+    updateCharacter(character: Partial<Character>): [ Character[], Zones] {
         //if we don't have a character id, give up
         if (!character.id) {
-            return [character, new Map()]
+            return [[], new Map()]
         }
 
         const old: Character | undefined = this.characters.get(character.id)
@@ -66,7 +67,12 @@ export default class GameWorld {
 
         if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
             //bail if it doesn't have a location
-            return [character, new Map()]
+            return [[], new Map()]
+        }
+
+        //TODO bail if nothing is changing
+        if (isEqual(old, merged)) {
+            return [[], new Map()]
         }
 
         const newZoneName = this.getTacticalZoneName({ x: merged.x, y: merged.y })
@@ -103,7 +109,7 @@ export default class GameWorld {
         }
 
         this.characters.set(merged.id, merged)
-        return [merged, updatedZones]
+        return [[merged], updatedZones]
     }
 
     getAdjacentTacticalZoneNames() {
