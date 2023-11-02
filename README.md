@@ -20,20 +20,21 @@ magical portals that let you fast travel but age you based on normal travel spee
 3. random stats when spawning  
 4. no moving while incapacitated/dying/dead  
 5. collision  
-6. combat  
-7. leveling up system  
-8. package as exe/etc with electron
-9. add steam support
-10. change the position calculation with respect to turning
+6. combat
+7. strafing  
+8. leveling up system  
+9. package as exe/etc with electron
+10. add steam support
+11. change the position calculation with respect to turning
 https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
-11. admin tool to interact with world
-12. stay centered on selected characters
-13. rightclick move the screen
-14. change selected character stats
-15. chat
-16. randomly spawn new characters
-17. randomly move characters
-18. character health ui
+12. admin tool to interact with world
+13. stay centered on selected characters
+14. rightclick move the screen
+15. change selected character stats
+16. chat
+17. randomly spawn new characters
+18. randomly move characters
+19. character health ui
 
 ## DONE
 ability to zoom to a character
