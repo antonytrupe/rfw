@@ -1,9 +1,9 @@
 import isEqual from "lodash.isequal";
 import Character from "./Character";
 
-export type Zone = Set<string>;
+export type Zone = Set<string>
 
-export type Zones = Map<string, Zone>;
+export type Zones = Map<string, Zone>
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
@@ -56,8 +56,9 @@ export default class GameWorld {
         return 'T:' + fx + ':' + fy
     }
 
-    updateCharacter(character: Partial<Character>): [ Character[], Zones] {
+    updateCharacter(character: Partial<Character>): [Character[], Zones] {
         //if we don't have a character id, give up
+        // console.log(character)
         if (!character.id) {
             return [[], new Map()]
         }
@@ -70,13 +71,15 @@ export default class GameWorld {
             return [[], new Map()]
         }
 
-        //TODO bail if nothing is changing
+        //  bail if nothing is changing
         if (isEqual(old, merged)) {
             return [[], new Map()]
         }
 
+        //  console.log('got past sanity checks')
+
         const newZoneName = this.getTacticalZoneName({ x: merged.x, y: merged.y })
-        let newZone = this.zones.get(newZoneName);
+        let newZone = this.zones.get(newZoneName)
         let updatedZones = new Map<string, Set<string>>()
 
         //if the new zone doesn't exist
@@ -99,7 +102,7 @@ export default class GameWorld {
             //if the oldzonename is different then the newzone name
             if (oldZoneName != newZoneName) {
                 //remove them from the old zone
-                let oldZone = this.zones.get(newZoneName);
+                let oldZone = this.zones.get(newZoneName)
                 if (oldZone) {
                     //let i = oldZone.indexOf(character.id)
                     oldZone.delete(character.id)
@@ -149,7 +152,7 @@ export default class GameWorld {
     getCharacters(ids: string[]): Character[] {
         let l: Character[] = []
         ids.forEach((id) => {
-            const c = this.characters.get(id);
+            const c = this.characters.get(id)
             if (c)
                 l.push(c)
         })

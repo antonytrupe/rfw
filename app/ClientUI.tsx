@@ -28,18 +28,25 @@ export default function ClientUI() {
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
+  const [claimedCharacters, setClaimedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
 
-    eventEmitter.on(CONSTANTS.CLIENT_SELECTED_CHARACTERS, (s: Character[]) => {
-      setSelectedCharacters(s);
+    eventEmitter.on(CONSTANTS.CLAIMED_CHARACTERS, (claimedCharacters: Character[]) => {
+      setClaimedCharacters(claimedCharacters)
     })
-    eventEmitter.on(CONSTANTS.DISCONNECT, (s: Character[]) => {
+
+    eventEmitter.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacters: Character[]) => {
+      setSelectedCharacters(selectedCharacters)
+    })
+
+    eventEmitter.on(CONSTANTS.DISCONNECT, () => {
       setConnected(false)
       setConnecting(false)
     })
-    eventEmitter.on(CONSTANTS.CONNECT, (s: Character[]) => {
+
+    eventEmitter.on(CONSTANTS.CONNECT, () => {
       setConnected(true)
       setConnecting(false)
     })
@@ -48,8 +55,8 @@ export default function ClientUI() {
     setClientEngine(ce)
 
     return () => {
-      //stop the current client engine's draw loop/flag
       disconnect()
+      //stop the current client engine's draw loop/flag
       ce.stopped = true
     }
   }, [])
@@ -100,10 +107,16 @@ export default function ClientUI() {
   }
 
   const focusCharacter = (characterId: string) => {
-    clientEngine?.focus(characterId)
+    if (clientEngine) {
+      const c = clientEngine.gameEngine.gameWorld.getCharacter(characterId)
+      if (c) {
+        clientEngine?.focus(characterId)
+        clientEngine.selectedCharacters = [c]
+        setSelectedCharacters([c])
+      }
+    }
   }
 
-  // const session = useSession()
   const { data: session } = useSession();
 
   return (
@@ -121,24 +134,9 @@ export default function ClientUI() {
               {connected && (
                 <CommunityCreation action={createCommunity}>
                 </CommunityCreation>
-
               )}
             </div>
           </div>
-
-
-
-          <div className={`${styles.characterList}`}>
-            {selectedCharacters && selectedCharacters.map((character: Character) => {
-              return <CharacterUI character={character} key={character.id} >
-                <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                {!character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
-                <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>
-              </CharacterUI>
-            })}
-          </div>
-
-
           {
             //the right side stuff
           }
@@ -149,26 +147,57 @@ export default function ClientUI() {
             {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
             {connected && (<button onClick={disconnect}>Disconnect</button>)}
           </div>
-
-
         </div>
       </div>
       {
         //canvas row
       }
-
-      <canvas ref={canvasRef}
-        className={`${styles.canvas} canvas`}
-        width="800px"
-        height="800px"
-        tabIndex={1}
-        onWheel={onWheel}
-        onClick={onClick}
-        onKeyDown={onKeyDown}
-        onKeyUp={onKeyUp}
-        data-testid="canvas" />
-
-
+      <div style={{ display: 'flex', flexDirection: 'row',flexGrow:'1' }}>
+        <canvas ref={canvasRef}
+          className={`${styles.canvas} canvas`}
+          width="800px"
+          height="800px"
+          tabIndex={1}
+          onWheel={onWheel}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
+          onKeyUp={onKeyUp}
+          data-testid="canvas" />
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth:'200px' }}>
+          {
+            // selected character
+          }
+          <div className={`${styles.characterList}`}>
+            {selectedCharacters && selectedCharacters.map((character: Character) => {
+              return <CharacterUI character={character} key={character.id} >
+                <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                {
+                  //only show the claim button if the character isn't claimed
+                  !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
+                {
+                  //only show the focus button if its not already selected
+                  !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+              </CharacterUI>
+            })}
+          </div>
+          {
+            //my claimed characters
+          }
+          <div className={`${styles.characterList}`}  >
+            {claimedCharacters && claimedCharacters.map((character: Character) => {
+              return <CharacterUI character={character} key={character.id} >
+                <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                {
+                  //only show the claim button if the character isn't claimed
+                  !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
+                {
+                  //only show the focus button if its not already selected
+                  !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+              </CharacterUI>
+            })}
+          </div>
+        </div>
+      </div>
     </>
   )
 }

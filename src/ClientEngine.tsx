@@ -4,8 +4,6 @@ import { Socket, io } from "socket.io-client";
 import GameEngine from "@/GameEngine";
 import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
-import { Zones } from "./GameWorld";
-
 
 export default class ClientEngine {
     //event things
@@ -17,6 +15,7 @@ export default class ClientEngine {
     stopped: boolean = false //control the draw loop
     connected: boolean = false
     selectedCharacters: Character[] = []
+    claimedCharacters: Character[] = []
     gameEngine: GameEngine
 
     //react/dom things
@@ -38,9 +37,9 @@ export default class ClientEngine {
 
         const observer = new ResizeObserver(() => {
             const canvas = getCanvas()
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-        });
+            canvas.width = canvas.clientWidth
+            canvas.height = canvas.clientHeight
+        })
         observer.observe(getCanvas())
 
 
@@ -90,7 +89,7 @@ export default class ClientEngine {
         let deltaX = (this.translateX - mouse.x) * zoom / this.scale
         let deltaY = (this.translateY - mouse.y) * zoom / this.scale
 
-        const newScale = Math.min(Math.max(1, this.scale + zoom), 100000);
+        const newScale = Math.min(Math.max(1, this.scale + zoom), 100000)
         if (newScale != this.scale) {
             this.scale = newScale
             this.translateX += deltaX
@@ -120,7 +119,7 @@ export default class ClientEngine {
         // only get the characters from the right zones, just in case we have more data then we need to draw
         this.gameEngine.gameWorld.getCharactersWithin(this.getViewPort())
             .forEach((character: Character) => {
-                this.drawCharacter(ctx, character);
+                this.drawCharacter(ctx, character)
             })
 
         //draw the scale
@@ -138,34 +137,34 @@ export default class ClientEngine {
     private drawCrossHair(ctx: CanvasRenderingContext2D) {
         let center = 0
         let length = 20
-        ctx.save();
+        ctx.save()
         ctx.fillStyle = '#000000'
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1 * this.scale;
+        ctx.strokeStyle = '#000000'
+        ctx.lineWidth = 1 * this.scale
         //vertical line
         ctx.moveTo(
             center * this.PIXELS_PER_FOOT / this.scale,
             (-length / 2 + center) * this.PIXELS_PER_FOOT / this.scale)
         ctx.lineTo(
             center * this.PIXELS_PER_FOOT / this.scale,
-            (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale);
+            (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale)
 
         //horizontal line
         ctx.moveTo(
             (-length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
-            center * this.PIXELS_PER_FOOT);
+            center * this.PIXELS_PER_FOOT)
         ctx.lineTo(
             (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
-            center * this.PIXELS_PER_FOOT / this.scale);
+            center * this.PIXELS_PER_FOOT / this.scale)
         ctx.stroke()
-        ctx.restore();
+        ctx.restore()
     }
 
     private scaleStyle(ctx: CanvasRenderingContext2D) {
-        ctx.font = 18 * this.scale + "px Arial";
+        ctx.font = 18 * this.scale + "px Arial"
         ctx.fillStyle = '#000000'
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1 * this.scale;
+        ctx.strokeStyle = '#000000'
+        ctx.lineWidth = 1 * this.scale
     }
 
     private drawTurnScale(ctx: CanvasRenderingContext2D) {
@@ -176,9 +175,9 @@ export default class ClientEngine {
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.translate(xOffset, yOffset)
-        ctx.scale(1 / this.scale, 1 / this.scale);
-        this.scaleStyle(ctx);
-        ctx.beginPath();
+        ctx.scale(1 / this.scale, 1 / this.scale)
+        this.scaleStyle(ctx)
+        ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
         ctx.lineTo(0 + ticks * tickSize * this.PIXELS_PER_FOOT, 0);
@@ -203,8 +202,8 @@ export default class ClientEngine {
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.translate(xOffset, yOffset)
-        ctx.scale(1 / this.scale, 1 / this.scale);
-        this.scaleStyle(ctx);
+        ctx.scale(1 / this.scale, 1 / this.scale)
+        this.scaleStyle(ctx)
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
@@ -230,8 +229,8 @@ export default class ClientEngine {
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.translate(xOffset, yOffset)
-        ctx.scale(1 / this.scale, 1 / this.scale);
-        this.scaleStyle(ctx);
+        ctx.scale(1 / this.scale, 1 / this.scale)
+        this.scaleStyle(ctx)
 
         ctx.beginPath()
         //horizontal line
@@ -274,13 +273,36 @@ export default class ClientEngine {
             ctx.stroke()
         }
 
-        ctx.save();
+        ctx.save()
         ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
         ctx.rotate(character.direction)
 
-        ctx.fillStyle = this.selectedCharacters.some((selectedCharacter) => {
-            return selectedCharacter.id == character.id
-        }) ? '#009900' : '#000000'
+        const claimed = this.claimedCharacters.some((claimedCharacter) => {
+            return claimedCharacter.id == character.id;
+        })
+
+        const selected = this.selectedCharacters.some((selectedCharacter) => {
+            return selectedCharacter.id == character.id;
+        })
+
+
+        if (selected && claimed) {
+            //purple
+        }
+        else if (selected) {
+            //green
+        }
+        else if (claimed) {
+            //blue
+        }
+        else {
+            //grey
+            ctx.fillStyle = "#F0F0F0"
+        }
+
+        ctx.fillStyle = claimed ? '#7777FF' :
+            selected ? '#009900' :
+                '#000000'
 
         ctx.beginPath()
         ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2, 0, 2 * Math.PI)
@@ -296,7 +318,7 @@ export default class ClientEngine {
         ctx.stroke()
         drawHealth()
 
-        ctx.restore();
+        ctx.restore()
     }
 
     createCharacter() {
@@ -329,7 +351,7 @@ export default class ClientEngine {
         //TODO just the first character
         this.selectedCharacters = characters
         //tell the ui about the selected characters
-        this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, this.getSelectedCharacters())
+        this.emit(CONSTANTS.SELECTED_CHARACTERS, this.getSelectedCharacters())
     }
 
     private getZonesInViewPort() {
@@ -365,21 +387,10 @@ export default class ClientEngine {
         const code = e.code
 
         if (code == 'KeyD') {
-            if (this.selectedCharacters) {
-                const c = this.gameEngine.turnRight(this.getSelectedCharacters())
-                if (c.length > 0) {
-                    this.socket?.emit(CONSTANTS.TURN_RIGHT, this.getSelectedCharacters())
-                }
-            }
+            this.turnRight(this.selectedCharacters)
         }
         else if (code == 'KeyA') {
-            if (this.selectedCharacters) {
-                //this.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
-                const c = this.gameEngine.turnLeft(this.selectedCharacters)
-                if (c.length > 0) {
-                    this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
-                }
-            }
+            this.turnLeft(this.selectedCharacters)
         }
         else if (code == 'KeyS') {
             if (this.selectedCharacters) {
@@ -403,40 +414,63 @@ export default class ClientEngine {
         }
     }
 
+    private turnLeft(characters: Character[]) {
+        if (characters) {
+            //this.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
+            const c = this.gameEngine.turnLeft(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters());
+            }
+        }
+    }
+
+    private turnRight(characters: Character[]) {
+        if (characters) {
+            const c = this.gameEngine.turnRight(characters)
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.TURN_RIGHT, c)
+            }
+        }
+    }
+
     keyUpHandler(e: KeyboardEvent) {
-        const code = e.code
-        //console.log(e)
 
-        if (code == 'KeyD') {
-            if (this.selectedCharacters) {
-                this.emit(CONSTANTS.TURN_STOP, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.TURN_STOP, this.getSelectedCharacters())
-            }
+        if (e.code == 'KeyD') {
+            this.turnStop(this.getSelectedCharacters())
         }
-        else if (code == 'KeyA') {
-            if (this.selectedCharacters) {
-                this.emit(CONSTANTS.TURN_STOP, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.TURN_STOP, this.getSelectedCharacters())
-            }
+        else if (e.code == 'KeyA') {
+            this.turnStop(this.getSelectedCharacters())
         }
-        else if (code == 'KeyS') {
-            if (this.selectedCharacters) {
-                this.emit(CONSTANTS.STOP_ACCELERATE, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, this.getSelectedCharacters())
-            }
+        else if (e.code == 'KeyS') {
+            this.accelerateStop(this.getSelectedCharacters())
         }
-        else if (code == 'KeyW') {
-            if (this.selectedCharacters) {
-                this.emit(CONSTANTS.STOP_ACCELERATE, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, this.getSelectedCharacters())
+        else if (e.code == 'KeyW') {
+            this.accelerateStop(this.getSelectedCharacters())
+        }
+        else if (e.code == "ShiftLeft") {
+            this.doubleAccelerateStop(this.getSelectedCharacters())
+        }
+    }
 
-            }
+    private doubleAccelerateStop(selectedCharacters: Character[]) {
+        if (selectedCharacters) {
+            this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, selectedCharacters)
+            this.gameEngine.doubleAccelerateStop(selectedCharacters)
+            this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, selectedCharacters)
         }
-        else if (code == "ShiftLeft") {
-            if (this.selectedCharacters) {
-                this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, this.getSelectedCharacters())
-            }
+    }
+
+    private accelerateStop(selectedCharacters: Character[]) {
+        if (selectedCharacters) {
+            this.emit(CONSTANTS.STOP_ACCELERATE, selectedCharacters)
+            this.socket?.emit(CONSTANTS.STOP_ACCELERATE, selectedCharacters)
+        }
+    }
+
+    private turnStop(selectedCharacters: Character[]) {
+        if (selectedCharacters) {
+            this.gameEngine.turnStop(selectedCharacters)
+            this.socket?.emit(CONSTANTS.TURN_STOP, selectedCharacters)
         }
     }
 
@@ -445,16 +479,12 @@ export default class ClientEngine {
         return this.gameEngine.gameWorld.getCharacters(ids)
     }
 
-    private stop() {
-        this.stopped = true;
-    }
-
     disconnect() {
         this.socket?.disconnect()
-        return true;
+        return true
     }
 
-    async connect() {
+    connect() {
         //console.log('Client Engine connect')
 
         try {
@@ -463,56 +493,55 @@ export default class ClientEngine {
             })
             this.socket.on(CONSTANTS.CONNECT, () => {
                 //console.log('CONSTANTS.CONNECT')
-                this.connected = true
-                //tell the ui we connected
-                this.emit(CONSTANTS.CONNECT)
-                //ask the server for characters
-                //console.log(this.socket)
-                this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
+                this.onConnect()
+            })
+
+            this.socket?.on(CONSTANTS.SERVER_INITIAL, (characters: Character[]) => {
+                this.onServerInitial(characters)
+            })
+
+            this.socket?.on(CONSTANTS.CLAIMED_CHARACTERS, (claimedCharacters: Character[]) => {
+                this.claimedCharacters = claimedCharacters
+                this.emit(CONSTANTS.CLAIMED_CHARACTERS, claimedCharacters)
+            })
+
+            this.socket?.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacters: Character[]) => {
+                this.selectedCharacters = selectedCharacters
+                this.emit(CONSTANTS.SELECTED_CHARACTERS, selectedCharacters)
+
             })
 
             //disconnect handler
             this.socket?.on(CONSTANTS.DISCONNECT, (reason: any) => {
-                console.log('DISCONNECT', reason)
-                this.connected = false
-                this.emit(CONSTANTS.DISCONNECT)
-            })
-
-            //pc disconnect
-            this.socket?.on(CONSTANTS.PC_DISCONNECT, (playerId: string) => {
-                console.log('PC_DISCONNECT', playerId)
-                //dispatch(removePlayer(playerId))
-                this.disconnect()
-            })
-
-            //pc join
-            this.socket?.on(CONSTANTS.PC_JOIN, (character: Character) => {
-                console.log('PC_JOIN', character)
-                //dispatch(addPlayer(player))
-            })
-
-            //pc current
-            this.socket?.on(CONSTANTS.PC_CURRENT, (character: Character) => {
-                console.log('PC_CURRENT', character)
-                //dispatch(setCurrentPlayer(player))
+                this.onDisconnect(reason)
             })
 
             //pc location data
             this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
-                // console.log('CONSTANTS.CLIENT_CHARACTER_UPDATE', characters)
                 //tell the gameengine we got an update 
-                // console.log(characters)
                 this.gameEngine.updateCharacters(characters)
-                const merged = this.selectedCharacters.map((selected) => {
-                    //looping over all selected charecters
+
+                //tell the ui about any updates to this player's selected characters
+                const mergedSelected = this.selectedCharacters.map((selected) => {
                     //look for each selected character in the list of characters
-                    const u = characters.find((c) => { return c.id == selected.id; });
+                    const u = characters.find((c) => { return c.id == selected.id })
                     //if we didn't find it in the list of updated characters, then just use the current value
-                    return { ...selected, ...u };
-                });
+                    return { ...selected, ...u }
+                })
                 //tell the ui about the updates to the selected characters
-                //  console.log(merged)
-                this.emit(CONSTANTS.CLIENT_SELECTED_CHARACTERS, merged)
+                this.emit(CONSTANTS.SELECTED_CHARACTERS, mergedSelected)
+
+
+
+                //tell the ui about any updates to this player's selected characters
+                const mergedClaimed = this.claimedCharacters.map((claimed) => {
+                    //look for each selected character in the list of characters
+                    const u = characters.find((c) => { return c.id == claimed.id })
+                    //if we didn't find it in the list of updated characters, then just use the current value
+                    return { ...claimed, ...u }
+                })
+                //tell the ui about the updates to the selected characters
+                this.emit(CONSTANTS.CLAIMED_CHARACTERS, mergedClaimed)
             })
         }
         catch (e) {
@@ -524,15 +553,32 @@ export default class ClientEngine {
         return true
     }
 
-    private getViewPort(): { left: number, right: number, top: number, bottom: number } {
-        const clientRect = this.getCanvas().getBoundingClientRect()
+    private onDisconnect(reason: any) {
+        console.log('DISCONNECT', reason)
+        this.connected = false
+        this.emit(CONSTANTS.DISCONNECT)
+    }
 
+    private onServerInitial(characters: Character[]) {
+        this.gameEngine.updateCharacters(characters)
+    }
+
+    private onConnect() {
+        this.connected = true
+        //tell the ui we connected
+        this.emit(CONSTANTS.CONNECT)
+        //ask the server for characters
+        this.socket?.emit(CONSTANTS.CLIENT_INITIAL, this.getViewPort() as CONSTANTS.CLIENT_INITIAL_INTERFACE)
+    }
+
+    private getViewPort() {
+        const clientRect = this.getCanvas().getBoundingClientRect()
         const left = (clientRect.left - clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
         const right = (clientRect.right - clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
         const top = (clientRect.top - clientRect.top) / this.PIXELS_PER_FOOT * this.scale + this.translateY
         const bottom = (clientRect.bottom - clientRect.top) / this.PIXELS_PER_FOOT * this.scale + this.translateY
 
-        const rect = { left: left, right: right, top: top, bottom: bottom };
+        const rect = { left: left, right: right, top: top, bottom: bottom }
         //console.log(rect)
         return rect
     }

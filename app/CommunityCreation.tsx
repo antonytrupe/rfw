@@ -4,18 +4,18 @@ import styles from './CommunityCreation.module.scss'
 
 export default function CommunityCreation({ children, action }: { children: any, action: any }) {
 
-    const [communitySize, setCommunitySize] = useState('THORP')
+    const [size, setSize] = useState('THORP')
     const [race, setRace] = useState('HUMAN')
 
     return (
         <div className={`${styles.card}`}>
             <button onClick={() => {
-                action({ size: communitySize, race: race })
+                action({ size: size, race: race })
             }}>Create Community</button>
             <label>Size :
                 <select
-                    value={communitySize}
-                    onChange={e => setCommunitySize(e.target.value)} >
+                    value={size}
+                    onChange={e => setSize(e.target.value)} >
                     <option value="THORP">Thorp</option>
                     <option value="HAMLET">Hamlet</option>
                     <option value="VILLAGE">Village</option>
@@ -27,7 +27,7 @@ export default function CommunityCreation({ children, action }: { children: any,
             <label> Race :
                 <select
                     value={race}
-                    onChange={e => setCommunitySize(e.target.value)} >
+                    onChange={e => setRace(e.target.value)} >
                     <option value="HUMAN">Human</option>
                     <option value="HALFLING">Halfling</option>
                     <option value="ELF">Elf</option>

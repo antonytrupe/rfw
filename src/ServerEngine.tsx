@@ -4,9 +4,11 @@ import * as CONSTANTS from "@/CONSTANTS"
 import Character from "@/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Server } from "socket.io"
-import { Zones } from "./GameWorld"
+import { Zone, Zones } from "./GameWorld"
 import { getSession } from "next-auth/react"
 import { Session } from "next-auth"
+import Player from "./Player"
+import { v4 as uuidv4 } from 'uuid';
 
 export default class ServerEngine {
     on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -26,67 +28,85 @@ export default class ServerEngine {
         this.worldDB = new JsonDB(new Config("world", true, true, '/'))
         this.playerDB = new JsonDB(new Config("player", true, true, '/'))
         this.loadWorld()
+        // this.loadPlayers()
 
-        //don't do this until after the db loads maybe?
         //start the gameengines clock thingy
         this.gameEngine.start()
 
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[], zones: any) => {
             //   console.log('serverengine SERVER_CHARACTER_UPDATE')
             this.sendAndSaveCharacterUpdates(characters, zones)
-
         })
 
         io.on(CONSTANTS.CONNECTION, async socket => {
             //console.log(CONNECTION, socket.id) 
+            let playerInfo: Player | undefined
+            // let session: Session | null
+            getSession({ req: socket.conn.request, }).then(async (session) => {
+                //  session = s
 
+                if (session?.user?.email) {
+                    playerInfo = await this.getPlayerByEmail(session?.user?.email)
+                    if (!playerInfo) {
+                        playerInfo = await this.savePlayer({ email: session.user.email })
 
-            let session: Session | null
-            getSession({ req: socket.conn.request, }).then((s) => {
+                    }
+                    socket.emit(CONSTANTS.SELECTED_CHARACTERS,
+                        this.gameEngine.gameWorld.getCharacters(playerInfo?.selectedCharacters)
+                    )
+                    socket.emit(CONSTANTS.CLAIMED_CHARACTERS,
+                        this.gameEngine.gameWorld.getCharacters(playerInfo?.claimedCharacters)
+                    )
+                }
+            })
 
-                session = s
-                //TODO player profile setup stuff
-
-            })//works  
-
+            //CONSTANTS.CLIENT_INITIAL
+            socket.on(CONSTANTS.CLIENT_INITIAL, async (viewPort: CONSTANTS.CLIENT_INITIAL_INTERFACE) => {
+                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE,
+                    this.gameEngine.gameWorld.getCharactersWithin(viewPort)
+                )
+            })
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                //  console.log('world CREATE_CHARACTER')
                 this.createCharacter()
             })
+
             socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
-
                 this.turnLeft(characters)
-
             })
+
             socket.on(CONSTANTS.TURN_RIGHT, async (characters: Character[]) => {
                 this.turnRight(characters)
-
-
-
-                //this.emit(CONSTANTS.TURN_RIGHT, characters)
             })
+
             socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
-                this.emit(CONSTANTS.TURN_STOP, characters)
+                this.gameEngine.turnStop(characters)
             })
+
             socket.on(CONSTANTS.STOP_ACCELERATE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.STOP_ACCELERATE, characters)
             })
+
             socket.on(CONSTANTS.ACCELERATE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.ACCELERATE, characters)
             })
+
             socket.on(CONSTANTS.DECELERATE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.DECELERATE, characters)
             })
+
             socket.on(CONSTANTS.DECELERATE_DOUBLE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.DECELERATE_DOUBLE, characters)
             })
+
             socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.ACCELERATE_DOUBLE, characters)
             })
+
             socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characters: Character[]) => {
                 this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, characters)
             })
+
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
                 //   console.log('spellName',spellName)
                 //  console.log('casterId',casterId)
@@ -108,8 +128,8 @@ export default class ServerEngine {
             //CONSTANTS.CLAIM_CHARACTER
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
 
-                if (session?.user?.email) {
-                    this.claimCharacter(characterId, session.user.email)
+                if (!!playerInfo) {
+                    this.claimCharacter(characterId, playerInfo.email)
                 }
                 else {
                     console.log('no session')
@@ -146,7 +166,31 @@ export default class ServerEngine {
 
                 socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersWithin(viewPort))
             })
+
         })
+    }
+
+    async savePlayer(player: Partial<Player>): Promise<Player> {
+        //TODO look up the player first and then merge
+        let old
+        try {
+            old = await this.playerDB.getObject<Player>('/PLAYER/' + player.email)
+        }
+        catch (error) { }
+        const merged = { ...new Player({}), ...old, ...player }
+        this.playerDB.push('/PLAYER/' + player.email, merged)
+        return merged
+    }
+
+    async getPlayerByEmail(email: string): Promise<Player | undefined> {
+        //  console.log('getPlayerByEmail')
+        let player: Player
+        try {
+            player = await this.playerDB.getObject<Player>('/PLAYER/' + email)
+            return player
+        } catch (error) {
+        }
+        return undefined
     }
 
     turnRight(characters: Character[]) {
@@ -163,11 +207,32 @@ export default class ServerEngine {
         }
     }
 
-    claimCharacter(characterId: string, playerId: string) {
-        //TODO serverengine CLAIM_CHARACTER
-        console.log(playerId)
-        const [c,] = this.gameEngine.claimCharacter(characterId, playerId)
+    async claimCharacter(characterId: string, playerEmail: string) {
+
+        const character = this.gameEngine.gameWorld.getCharacter(characterId)
+        if (!character) {
+            return
+        }
+
+        //find or create the player
+        let player = await this.getPlayerByEmail(playerEmail)
+        //  console.log(player)
+        if (!player) {
+            // console.log('make a new player')
+            const id = uuidv4();
+            player = await this.savePlayer({ email: playerEmail, id: id })
+            // console.log(player)
+        }
+
+        const [c,] = this.gameEngine.claimCharacter(characterId, player.id)
+        // console.log('claimed character', c)
         if (c?.length > 0) {
+
+            player.claimedCharacters.push(c[0].id)
+            this.savePlayer(player)
+
+            //tell the client it got worked
+
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
@@ -176,7 +241,8 @@ export default class ServerEngine {
         //  console.log('ServerEngine createCharacter')
         let x = this.gameEngine.roll({ size: 30, modifier: -15 })
         let y = this.gameEngine.roll({ size: 30, modifier: -15 })
-        const [c, zones] = this.gameEngine.createCharacter({ x: x, y: y })
+        const id = uuidv4();
+        const [c, zones] = this.gameEngine.createCharacter({ id: id, x: x, y: y })
         this.sendAndSaveCharacterUpdates(c, zones)
     }
 

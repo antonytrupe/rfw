@@ -1,3 +1,6 @@
+import Character from "./Character"
+import { Zones } from "./GameWorld"
+
 //client connect
 export const CONNECT = 'connect'
 //server connect
@@ -11,21 +14,48 @@ export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 //db constants
 export const CHARACTER_PATH = '/CHARACTER/'
 
+export interface ViewPort {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+}
+
+export const CLIENT_INITIAL = 'client.initial'
+export interface CLIENT_INITIAL_INTERFACE extends ViewPort { }
+
+export const SERVER_INITIAL = 'server.initial'
+export interface SERVER_INITIAL_INTERFACE {
+    characters: Character[]
+    claimedCharacters: Character[]
+    selectedCharacters: Character[]
+    scale: number
+    translateX: number
+    translateY: number
+}
+
+export const SELECTED_CHARACTERS = 'client.characters.selected'
+export const CLAIMED_CHARACTERS = 'client.characters.claimed'
+
 //serverengine to clientengine
 //clientengine to gameengine
 export const CLIENT_CHARACTER_UPDATE = 'world.character.location.client'
 //gameengine to serverengine
 export const SERVER_CHARACTER_UPDATE = 'world.character.location.server'
-export const PC_DISCONNECT = 'world.character.disconnect'
-export const PC_JOIN = 'world.character.join'
 //tell the server to create a character
 export const CREATE_CHARACTER = 'world.character.create'
 
-export const CREATE_COMMUNITY='world.create_community'
-//tell the client which character it is controlling(not implemented)
-export const PC_CURRENT = 'world.character.current'
- //clientengine notify UI
-export const CLIENT_SELECTED_CHARACTERS = 'client.selected_characters.update'
+export const CREATE_COMMUNITY = 'world.create_community'
+//clientengine notify UI
+//list of claimed characters, last selected character, last viewport
+export const CLIENT_INFO = 'client.selected_characters.update'
+export interface CLIENT_INFO_INTERFACE {
+    claimedCharacters: Character[]
+    selectedCharacters: Character[]
+    scale: number,
+    translateX: number,
+    translateY: number
+}
 
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'
