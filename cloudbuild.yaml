@@ -55,7 +55,7 @@ availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_NUMBER/secrets/NEXTAUTH_SECRET/versions/latest
     env: 'NEXTAUTH_SECRET'
-  - versionName: projects/114788698192/secrets/AUTH_GITHUB_SECRET/versions/latest
+  - versionName: projects/$PROJECT_NUMBER/secrets/AUTH_GITHUB_SECRET/versions/latest
     env: 'AUTH_GITHUB_SECRET'
   - versionName: projects/$PROJECT_NUMBER/secrets/AUTH_GOOGLE_SECRET/versions/latest
     env: 'AUTH_GOOGLE_SECRET'
