@@ -29,8 +29,10 @@ steps:
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID
       - '--region=$_DEPLOY_REGION'
       - --set-env-vars=NEXTAUTH_SECRET=$$NEXTAUTH_SECRET
+      - --set-env-vars=AUTH_GITHUB_SECRET=$$AUTH_GITHUB_SECRET
+      - --set-env-vars=AUTH_GOOGLE_SECRET=$$AUTH_GOOGLE_SECRET
       - '--quiet'
-    secretEnv: ['NEXTAUTH_SECRET']
+    secretEnv: ['NEXTAUTH_SECRET',AUTH_GITHUB_SECRET,AUTH_GOOGLE_SECRET]
     id: Deploy
     entrypoint: gcloud
 images:
@@ -53,3 +55,7 @@ availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_NUMBER/secrets/NEXTAUTH_SECRET/versions/latest
     env: 'NEXTAUTH_SECRET'
+  - versionName: projects/114788698192/secrets/AUTH_GITHUB_SECRET/versions/latest
+    env: 'AUTH_GITHUB_SECRET'
+  - versionName: projects/$PROJECT_NUMBER/secrets/AUTH_GOOGLE_SECRET/versions/latest
+    env: 'AUTH_GOOGLE_SECRET'
