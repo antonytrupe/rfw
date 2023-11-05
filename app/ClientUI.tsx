@@ -7,7 +7,6 @@ import * as CONSTANTS from '@/CONSTANTS';
 import Character from '@/Character';
 import CharacterUI from './CharacterUI';
 import CommunityCreation from './CommunityCreation';
-import SignInOut from './SignInOut';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 //import steamworks from 'steamworks.js';
@@ -27,6 +26,7 @@ export default function ClientUI() {
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
+  const [controlledCharacter, setControlledCharacter] = useState<Character>()
   const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
   const [claimedCharacters, setClaimedCharacters] = useState<Character[]>([])
 
@@ -138,7 +138,7 @@ export default function ClientUI() {
             </div>
           </div>
           {
-            //the right side stuff
+            //the right side header stuff
           }
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '4px' }}>
             {!session?.user && <Link href={'/api/auth/signin'}>Sign In</Link>}
@@ -150,9 +150,9 @@ export default function ClientUI() {
         </div>
       </div>
       {
-        //canvas row
+        //middle row
       }
-      <div style={{ display: 'flex', flexDirection: 'row',flexGrow:'1' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', flexGrow: '1' }}>
         <canvas ref={canvasRef}
           className={`${styles.canvas} canvas`}
           width="800px"
@@ -163,38 +163,69 @@ export default function ClientUI() {
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
           data-testid="canvas" />
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth:'200px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '200px' }}>
           {
-            // selected character
+            // characters
           }
           <div className={`${styles.characterList}`}>
-            {selectedCharacters && selectedCharacters.map((character: Character) => {
-              return <CharacterUI character={character} key={character.id} >
-                <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+            {
+              // controlled character
+              controlledCharacter &&
+              <CharacterUI character={controlledCharacter} key={controlledCharacter.id}
+                isControlled={true}
+                isSelected={selectedCharacters.some(c => c.id == controlledCharacter.id)}
+                isClaimed={claimedCharacters.some(c => c.id == controlledCharacter.id)} >
+                <button className={`btn`} onClick={() => castSpell(controlledCharacter.id, 'DISINTEGRATE', [controlledCharacter.id])}>Disintegrate</button>
                 {
                   //only show the claim button if the character isn't claimed
-                  !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
+                  !controlledCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(controlledCharacter.id)}>Claim</button>}
                 {
                   //only show the focus button if its not already selected
-                  !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                  !selectedCharacters.some(c => c.id == controlledCharacter.id) && <button className={`btn`} onClick={() => focusCharacter(controlledCharacter.id)}>Focus</button>}
               </CharacterUI>
-            })}
-          </div>
-          {
-            //my claimed characters
-          }
-          <div className={`${styles.characterList}`}  >
-            {claimedCharacters && claimedCharacters.map((character: Character) => {
-              return <CharacterUI character={character} key={character.id} >
-                <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                {
-                  //only show the claim button if the character isn't claimed
-                  !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
-                {
-                  //only show the focus button if its not already selected
-                  !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
-              </CharacterUI>
-            })}
+            }
+            {
+
+              // selected characters
+              selectedCharacters && selectedCharacters.map((character: Character) => {
+                if (character.id != controlledCharacter?.id) {
+                  return <CharacterUI character={character} key={character.id}
+
+                    isControlled={controlledCharacter?.id == character.id}
+                    isSelected={selectedCharacters.some(c => c.id == character.id)}
+                    isClaimed={claimedCharacters.some(c => c.id == character.id)}
+                  >
+                    <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                    {
+                      //only show the claim button if the character isn't claimed
+                      !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
+                    {
+                      //only show the focus button if its not already selected
+                      !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                  </CharacterUI>
+                }
+              })
+            }
+            {
+              //my claimed characters
+              claimedCharacters && claimedCharacters.map((character: Character) => {
+                //make sure we didn't already show it as a controlled or selected character
+                if (character.id != controlledCharacter?.id && !selectedCharacters.some((c) => { return c.id == character.id })) {
+                  // console.log(character.id)
+                  return <CharacterUI character={character} key={character.id}
+                    isControlled={controlledCharacter?.id == character.id}
+                    isSelected={selectedCharacters.some(c => c.id == character.id)}
+                    isClaimed={claimedCharacters.some(c => c.id == character.id)}>
+                    <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                    {
+                      //only show the claim button if the character isn't claimed
+                      !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
+                    {
+                      //only show the focus button if its not already selected
+                      !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                  </CharacterUI>
+                }
+              })}
           </div>
         </div>
       </div>

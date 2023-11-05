@@ -1,0 +1,40 @@
+.character {
+    border: thin black solid;
+
+    &.selected {
+        border: thin #3b9f46 solid;
+        box-shadow: inset 0px 0px 22px #3b9f46;
+    }
+
+    &.selectedControlled {
+        border: thin #50d3d8 solid;
+        box-shadow: inset 0px 0px 22px #50d3d8;
+    }
+
+    &.controlled {
+        border: thin #3d3b9f solid;
+        box-shadow: inset 0px 0px 22px #3d3b9f;
+    }
+
+    &.selectedClaimed {
+        border: thin #f94de4 solid;
+        box-shadow: inset 0px 0px 22px #f94de4;
+    }
+
+    &.claimed {
+        border: thin #0e59d0 solid;
+        box-shadow: inset 0px 0px 22px #0e59d0;
+    }
+}
+
+.card {
+    display: flex;
+    border-radius: 6px;
+    margin: 3px;
+    padding: 3px;
+}
+
+.column {
+    flex-direction: column;
+
+}

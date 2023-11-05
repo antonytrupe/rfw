@@ -56,11 +56,15 @@ export default class GameWorld {
         return 'T:' + fx + ':' + fy
     }
 
-    updateCharacter(character: Partial<Character>): [Character[], Zones] {
+    /**
+     * ONLY send updated values, don't update the whole character and send it
+     * @param character the values that we want to change 
+     * @returns 
+     */
+    updateCharacter(character: Partial<Character>): [Character | undefined, Zones] {
         //if we don't have a character id, give up
-        // console.log(character)
         if (!character.id) {
-            return [[], new Map()]
+            return [undefined, new Map()]
         }
 
         const old: Character | undefined = this.characters.get(character.id)
@@ -68,12 +72,12 @@ export default class GameWorld {
 
         if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
             //bail if it doesn't have a location
-            return [[], new Map()]
+            return [undefined, new Map()]
         }
 
         //  bail if nothing is changing
         if (isEqual(old, merged)) {
-            return [[], new Map()]
+            return [undefined, new Map()]
         }
 
         //  console.log('got past sanity checks')
@@ -112,7 +116,7 @@ export default class GameWorld {
         }
 
         this.characters.set(merged.id, merged)
-        return [[merged], updatedZones]
+        return [merged, updatedZones]
     }
 
     getAdjacentTacticalZoneNames() {
@@ -125,13 +129,12 @@ export default class GameWorld {
         const zoneName = this.getTacticalZoneName(position)
         // console.log(zoneName)
         const zone = this.zones.get(zoneName)
-        // console.log(zone)
         //make sure we got a zone
         if (!!zone) {
             //create a list of characters out of the list of characterids
             const characters: Character[] = Array.from(zone).reduce((result: Character[], characterId: string) => {
                 //get the character object
-                let character = this.characters.get(characterId)
+                const character = this.characters.get(characterId)
 
                 if (character) {
                     const distance = Math.sqrt(

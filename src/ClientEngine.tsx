@@ -14,6 +14,7 @@ export default class ClientEngine {
     //state things
     stopped: boolean = false //control the draw loop
     connected: boolean = false
+    controlledCharacter: Character | undefined
     selectedCharacters: Character[] = []
     claimedCharacters: Character[] = []
     gameEngine: GameEngine
@@ -256,9 +257,27 @@ export default class ClientEngine {
 
         const drawHealth = () => {
             ctx.beginPath()
+
+            if (selected && claimed) {
+                //purple
+                ctx.strokeStyle = "#f94de4"
+            }
+            else if (selected) {
+                //green
+                ctx.strokeStyle = "#3b9f46"
+            }
+            else if (claimed) {
+                //blue
+                ctx.strokeStyle = "#0e59d0"
+            }
+            else {
+                //grey
+                ctx.strokeStyle = "#cacaca"
+            }
+
             ctx.lineWidth = 3
             if (character.hp > 0) {
-                ctx.strokeStyle = "#008000"
+                //ctx.strokeStyle = "#008000"
                 ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
                     (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
                     (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
@@ -288,21 +307,24 @@ export default class ClientEngine {
 
         if (selected && claimed) {
             //purple
+            ctx.fillStyle = '#fb86ed'
+            ctx.strokeStyle = "#f94de4"
         }
         else if (selected) {
             //green
+            ctx.fillStyle = '#4fbd5b'
+            ctx.strokeStyle = "#3b9f46"
         }
         else if (claimed) {
             //blue
+            ctx.fillStyle = '#2070f0'
+            ctx.strokeStyle = "#0e59d0"
         }
         else {
             //grey
             ctx.fillStyle = "#F0F0F0"
+            ctx.strokeStyle = "#cacaca"
         }
-
-        ctx.fillStyle = claimed ? '#7777FF' :
-            selected ? '#009900' :
-                '#000000'
 
         ctx.beginPath()
         ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2, 0, 2 * Math.PI)
@@ -500,9 +522,9 @@ export default class ClientEngine {
                 this.onServerInitial(characters)
             })
 
-            this.socket?.on(CONSTANTS.CLAIMED_CHARACTERS, (claimedCharacters: Character[]) => {
-                this.claimedCharacters = claimedCharacters
-                this.emit(CONSTANTS.CLAIMED_CHARACTERS, claimedCharacters)
+            this.socket?.on(CONSTANTS.CLAIMED_CHARACTERS, (c: Character[]) => {
+                this.claimedCharacters = c
+                this.emit(CONSTANTS.CLAIMED_CHARACTERS, c)
             })
 
             this.socket?.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacters: Character[]) => {
@@ -530,8 +552,6 @@ export default class ClientEngine {
                 })
                 //tell the ui about the updates to the selected characters
                 this.emit(CONSTANTS.SELECTED_CHARACTERS, mergedSelected)
-
-
 
                 //tell the ui about any updates to this player's selected characters
                 const mergedClaimed = this.claimedCharacters.map((claimed) => {

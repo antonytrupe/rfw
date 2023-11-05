@@ -52,7 +52,7 @@ export default class Character {
         this.characterClass = characterClass
         this.level = level
     }
-    id: string
+   id: string
     playerId: string
     size: number
     maxSpeed: number

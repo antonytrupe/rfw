@@ -119,7 +119,11 @@ export default class GameEngine {
      * @returns a tuple who's first item is a list that contains the claimed character if claimed, otherwise an empty list
      */
     claimCharacter(characterId: string, playerId: string): [Character[], Zones] {
-        return this.gameWorld.updateCharacter({ id: characterId, playerId: playerId })
+        const [character, zones] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
+        if (character) {
+            return [[character], zones]
+        }
+        return [[], new Map()]
     }
 
     /**
@@ -132,7 +136,9 @@ export default class GameEngine {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
-            updatedCharacters = updatedCharacters.concat(c)
+            if (c) {
+                updatedCharacters.push(c)
+            }
         })
         return updatedCharacters
     }
@@ -146,7 +152,9 @@ export default class GameEngine {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
-            updatedCharacters = updatedCharacters.concat(c)
+            if (c) {
+                updatedCharacters.push(c)
+            }
         })
         return updatedCharacters
     }
@@ -156,7 +164,9 @@ export default class GameEngine {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
             const [c,] = this.gameWorld.updateCharacter(character)
-            updatedCharacters = updatedCharacters.concat(c)
+            if (c) {
+                updatedCharacters.push(c)
+            }
         })
         return updatedCharacters
     }
@@ -168,9 +178,10 @@ export default class GameEngine {
         const merged = { ...character, size: 5, maxHp: maxHp, hp: maxHp };
 
         const [c, zones] = this.gameWorld.updateCharacter(merged)
-        //this is dumb
-        //const p = new Character(c)
-        return [c, zones]
+        if (c) {
+            return [[c], zones]
+        }
+        return [[], zones]
     }
 
     private getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
@@ -468,13 +479,14 @@ export default class GameEngine {
                 const damagedTargets = this.gameWorld.getCharacters(targetIds).map((character) => {
                     const damage = this.roll({ size: 6, count: 2 })
                     if (character) {
-                        character.hp = Math.max(-10, character.hp - damage)
-                        //this is dumb
-                        return this.gameWorld.updateCharacter(character)[0][0]
+                        const hp = Math.max(-10, character.hp - damage)
+                         const newLocal = this.gameWorld.updateCharacter({ id: character.id, hp: hp });
+                         //this is dumb
+                        return newLocal
                     }
                 })
                 //TODO update the caster character too and return it
-                return damagedTargets
+                 return []
             default:
                 return []
         }
