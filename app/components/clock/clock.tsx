@@ -1,25 +1,35 @@
 import React, { Component } from "react";
-import "./style.css"
+import "./style.css";
 
-export default class Clock extends Component {
-    constructor(props) {
+interface ClockState {
+    time: Date;
+}
+
+export default class Clock extends Component<{}, ClockState> {
+    private timerId: NodeJS.Timeout | null = null;
+
+    constructor(props: {}) {
         super(props);
         this.state = {
-            time: new Date()
+            time: new Date(),
         };
     }
 
     componentDidMount() {
-        this.timerId = setInterval(() => {
-            this.setState({
-                time: new Date()
-            });
-        }, 1000);
+        this.timerId = setInterval(this.updateTime, 1000);
     }
 
-    componentWillMount() {
-        clearInterval(this.timerId);
+    componentWillUnmount() {
+        if (this.timerId) {
+            clearInterval(this.timerId);
+        }
     }
+
+    updateTime = () => {
+        this.setState({
+            time: new Date(),
+        });
+    };
 
     render() {
         return (
@@ -27,7 +37,7 @@ export default class Clock extends Component {
                 <div
                     className="sec_hand"
                     style={{
-                        transform: `rotateZ(${this.state.time.getSeconds() * 60}deg)`
+                        transform: `rotateZ(${this.state.time.getSeconds() * 60}deg)`,
                     }}
                 />
                 <span className="six">6</span>

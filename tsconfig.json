@@ -36,7 +36,7 @@
     "pages/api/auth/[...nextauth].ts",
     "pages/_app.jsx",
     "auth.ts",
-    "app/components/clock/clock.jsx"
+    "app/components/clock/clock.tsx"
   ],
   "exclude": [
     "node_modules"
