@@ -1,0 +1,13 @@
+{
+    "verbose": true,
+    "ignore": [
+        "node_modules",
+        ".next"
+    ],
+    "watch": [
+        "src/GameEngine.tsx","src/ServerEngine.tsx" 
+    ],
+    "ext": "js json ts tsx jsx",
+    "exec": "npm run dev"
+
+}

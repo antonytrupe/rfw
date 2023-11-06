@@ -13,9 +13,8 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO
-2. turn clock/timer
-6. combat
-1. unclaim character
+1. combat
+2. unclaim character
 3. touch controls
 4. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
 4. random stats when spawning  
@@ -37,6 +36,7 @@ https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of
 19. character health ui
 
 ## DONE
+turn clock/timer
 ability to claim a character  
 ability to view claimed characters
 ability to zoom to a character
