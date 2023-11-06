@@ -4,6 +4,7 @@ import { Socket, io } from "socket.io-client";
 import GameEngine from "@/GameEngine";
 import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
+import Player from "./Player";
 
 export default class ClientEngine {
 
@@ -19,6 +20,7 @@ export default class ClientEngine {
     private selectedCharacters: Character[] = []
     private claimedCharacters: Character[] = []
     private gameEngine: GameEngine
+    private player: Player | undefined
 
     //react/dom things
     private getCanvas: (() => HTMLCanvasElement)
@@ -431,6 +433,7 @@ export default class ClientEngine {
             this.decelarate(this.selectedCharacters)
         }
         else if (code == 'KeyW') {
+            console.log('W')
             this.accelerate(this.selectedCharacters)
         }
         else if (code == "ShiftLeft") {
@@ -440,7 +443,7 @@ export default class ClientEngine {
 
     private accelerateDouble(characters: Character[]) {
         if (characters) {
-            const c = this.gameEngine.accelerateDouble(characters);
+            const c = this.gameEngine.accelerateDouble(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, c);
             }
@@ -449,7 +452,7 @@ export default class ClientEngine {
 
     private accelerate(characters: Character[]) {
         if (characters) {
-            const c = this.gameEngine.accelerate(characters);
+            const c = this.gameEngine.accelerate(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.ACCELERATE, c);
             }
@@ -458,7 +461,7 @@ export default class ClientEngine {
 
     private decelarate(characters: Character[]) {
         if (characters) {
-            const c = this.gameEngine.decelerate(characters);
+            const c = this.gameEngine.decelerate(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.DECELERATE, c);
             }
@@ -467,7 +470,7 @@ export default class ClientEngine {
 
     private turnLeft(characters: Character[]) {
         if (characters) {
-            const c = this.gameEngine.turnLeft(characters);
+            const c = this.gameEngine.turnLeft(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.TURN_LEFT, c);
             }
@@ -476,7 +479,7 @@ export default class ClientEngine {
 
     private turnRight(characters: Character[]) {
         if (characters) {
-            const c = this.gameEngine.turnRight(characters)
+            const c = this.gameEngine.turnRight(characters, this.player?.id)
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.TURN_RIGHT, c)
             }
@@ -504,7 +507,7 @@ export default class ClientEngine {
 
     private accelerateDoubleStop(characters: Character[]) {
         if (characters) {
-            const c = this.gameEngine.accelerateDoubleStop(characters);
+            const c = this.gameEngine.accelerateDoubleStop(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, c);
             }
@@ -512,11 +515,8 @@ export default class ClientEngine {
     }
 
     private accelerateStop(characters: Character[]) {
-
-       
-
         if (characters) {
-            const c = this.gameEngine.accelerateStop(characters);
+            const c = this.gameEngine.accelerateStop(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.STOP_ACCELERATE, c);
             }
@@ -524,13 +524,11 @@ export default class ClientEngine {
     }
 
     private turnStop(characters: Character[]) {
-
         if (characters) {
-            const c = this.gameEngine.turnStop(characters);
+            const c = this.gameEngine.turnStop(characters, this.player?.id);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.TURN_STOP, c);
             }
-
         }
     }
 
@@ -550,10 +548,10 @@ export default class ClientEngine {
                 //console.log('CONSTANTS.CONNECT')
                 this.onConnect()
             })
-
-            this.socket?.on(CONSTANTS.SERVER_INITIAL, (characters: Character[]) => {
-                this.onServerInitial(characters)
-            })
+ 
+            this.socket?.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
+                this.player = player
+             })
 
             this.socket?.on(CONSTANTS.CLAIMED_CHARACTERS, (c: Character[]) => {
                 this.claimedCharacters = c
@@ -613,6 +611,7 @@ export default class ClientEngine {
     }
 
     private onServerInitial(characters: Character[]) {
+        console.log(characters)
         this.gameEngine.updateCharacters(characters)
     }
 

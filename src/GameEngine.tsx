@@ -4,11 +4,12 @@ import * as CONSTANTS from "./CONSTANTS";
 import GameWorld, { Zone, Zones } from "./GameWorld";
 import isEqual from 'lodash.isequal';
 import { roll } from "./utility";
+import Player from "./Player";
 
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
-export default class GameEngine {  
+export default class GameEngine {
     //EventEmitter function
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
     private emit: (eventName: string | symbol, ...args: any[]) => boolean;
@@ -44,9 +45,12 @@ export default class GameEngine {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    accelerateDoubleStop(characters: Character[]) {
+    accelerateDoubleStop(characters: Character[], playerId: string | undefined) {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
             if (c) {
                 updatedCharacters.push(c)
@@ -55,9 +59,12 @@ export default class GameEngine {
         return updatedCharacters
     }
 
-    accelerateStop(characters: Character[]) {
+    accelerateStop(characters: Character[], playerId: string | undefined) {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
             if (c) {
                 updatedCharacters.push(c)
@@ -66,9 +73,12 @@ export default class GameEngine {
         return updatedCharacters
     }
 
-    accelerateDouble(characters: Character[]) {
+    accelerateDouble(characters: Character[], playerId: string | undefined) {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
             if (c) {
                 updatedCharacters.push(c)
@@ -87,9 +97,12 @@ export default class GameEngine {
         return zones
     }
 
-    turnStop(characters: Character[]) {
+    turnStop(characters: Character[], playerId: string | undefined) {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
             if (c) {
                 updatedCharacters.push(c)
@@ -104,17 +117,20 @@ export default class GameEngine {
      * @param playerId 
      * @returns a tuple who's first item is a list that contains the claimed character if claimed, otherwise an empty list
      */
-    claimCharacter(characterId: string, playerId: string): [Character[], Zones] {
-        const [character, zones] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
+    claimCharacter(characterId: string, playerId: string | undefined): Character | undefined {
+        const [character, ] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
         if (character) {
-            return [[character], zones]
+            return character
         }
-        return [[], new Map()]
+        return undefined
     }
 
-    decelerate(characters: Character[]) {
+    decelerate(characters: Character[], playerId: string | undefined) {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
             if (c) {
                 updatedCharacters.push(c)
@@ -123,9 +139,12 @@ export default class GameEngine {
         return updatedCharacters
     }
 
-    accelerate(characters: Character[]) {
+    accelerate(characters: Character[], playerId: string | undefined) {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
             if (c) {
                 updatedCharacters.push(c)
@@ -139,11 +158,12 @@ export default class GameEngine {
      * @param characters list of characters to turn left
      * @returns updated characters. empty array if no characters updated
      */
-    turnLeft(characters: Character[]): Character[] {
-        //TODO only allowed to control claimed characters
-        //  only return characters that were updated
+    turnLeft(characters: Character[], playerId: string | undefined): Character[] {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
             if (c) {
                 updatedCharacters.push(c)
@@ -157,9 +177,12 @@ export default class GameEngine {
      * @param characters 
      * @returns a list of characters
      */
-    turnRight(characters: Character[]): Character[] {
+    turnRight(characters: Character[], playerId: string | undefined): Character[] {
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
+            if (character.playerId != playerId) {
+                return
+            }
             const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
             if (c) {
                 updatedCharacters.push(c)

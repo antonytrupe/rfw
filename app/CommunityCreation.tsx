@@ -16,12 +16,12 @@ export default function CommunityCreation({ children, action }: { children: any,
                 <select
                     value={size}
                     onChange={e => setSize(e.target.value)} >
-                    <option value="THORP">Thorp</option>
-                    <option value="HAMLET">Hamlet</option>
-                    <option value="VILLAGE">Village</option>
-                    <option value="SMALL_TOWN">Small Town</option>
-                    <option value="LARGE_TOWN">Large Town</option>
-                    <option value="SMALL_CITY">Small City</option>
+                    <option value="THORP">Thorp(~50)</option>
+                    <option value="HAMLET">Hamlet(~240)</option>
+                    <option value="VILLAGE">Village(~650)</option>
+                    <option value="SMALL_TOWN">Small Town(~1450)</option>
+                    <option value="LARGE_TOWN">Large Town(~3500)</option>
+                    <option value="SMALL_CITY">Small City(~8500)</option>
                 </select>
             </label>
             <label> Race :

@@ -220,8 +220,9 @@ export default function ClientUI() {
                       //only show the claim button if the character isn't claimed
                       !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
                     {
-                      //only show the focus button if its not already selected
-                      !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                      //show the focus button
+                      <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>
+                    }
                     {
                       //  show the control button for claimed characters
                       claimedCharacters.some(c => c.id == character.id) &&

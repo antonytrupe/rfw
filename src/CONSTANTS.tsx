@@ -24,15 +24,7 @@ export interface ViewPort {
 export const CLIENT_INITIAL = 'client.initial'
 export interface CLIENT_INITIAL_INTERFACE extends ViewPort { }
 
-export const SERVER_INITIAL = 'server.initial'
-export interface SERVER_INITIAL_INTERFACE {
-    characters: Character[]
-    claimedCharacters: Character[]
-    selectedCharacters: Character[]
-    scale: number
-    translateX: number
-    translateY: number
-}
+export const CURRENT_PLAYER = 'current_player'
 
 export const SELECTED_CHARACTERS = 'client.characters.selected'
 export const CLAIMED_CHARACTERS = 'client.characters.claimed'

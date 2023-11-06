@@ -41,22 +41,25 @@ export default class ServerEngine {
 
         io.on(CONSTANTS.CONNECTION, async socket => {
             //console.log(CONNECTION, socket.id) 
-            let playerInfo: Player | undefined
+            let player: Player | undefined
             // let session: Session | null
             getSession({ req: socket.conn.request, }).then(async (session) => {
                 //  session = s
 
                 if (session?.user?.email) {
-                    playerInfo = await this.getPlayerByEmail(session?.user?.email)
-                    if (!playerInfo) {
-                        playerInfo = await this.savePlayer({ email: session.user.email })
-
+                    player = await this.getPlayerByEmail(session?.user?.email)
+                    if (!player) {
+                        player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
                     }
+                    socket.join(player.id)
+
+                    socket.emit(CONSTANTS.CURRENT_PLAYER, player)
+
                     socket.emit(CONSTANTS.SELECTED_CHARACTERS,
-                        this.gameEngine.gameWorld.getCharacters(playerInfo?.selectedCharacters)
+                        this.gameEngine.gameWorld.getCharacters(player?.selectedCharacters)
                     )
                     socket.emit(CONSTANTS.CLAIMED_CHARACTERS,
-                        this.gameEngine.gameWorld.getCharacters(playerInfo?.claimedCharacters)
+                        this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
                     )
                 }
             })
@@ -71,8 +74,8 @@ export default class ServerEngine {
             //CONSTANTS.CONTROL_CHARACTER
             //don't think the server cares
             socket.on(CONSTANTS.CONTROL_CHARACTER, (characterId: string) => {
-                if (!!playerInfo) {
-                    this.controlCharacter(characterId, playerInfo?.email)
+                if (!!player) {
+                    this.controlCharacter(characterId, player?.email)
                 }
                 else {
                     console.log('no session')
@@ -85,63 +88,57 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
-                this.turnLeft(characters)
+                this.turnLeft(characters, player)
             })
 
             socket.on(CONSTANTS.TURN_RIGHT, async (characters: Character[]) => {
-                this.turnRight(characters)
+                this.turnRight(characters, player)
             })
 
             socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
-                this.turnStop(characters)
+                this.turnStop(characters, player)
             })
 
             socket.on(CONSTANTS.STOP_ACCELERATE, async (characters: Character[]) => {
-                this.accelerateStop(characters)
+                this.accelerateStop(characters, player)
             })
 
             socket.on(CONSTANTS.ACCELERATE, async (characters: Character[]) => {
-                this.accelerate(characters)
+                this.accelerate(characters, player)
             })
 
             socket.on(CONSTANTS.DECELERATE, async (characters: Character[]) => {
-                this.decelerate(characters)
+                this.decelerate(characters, player)
             })
 
             socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (characters: Character[]) => {
-                this.accelerateDouble(characters)
-                this.emit(CONSTANTS.ACCELERATE_DOUBLE, characters)
+                this.accelerateDouble(characters, player)
             })
 
             socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characters: Character[]) => {
-                this.accelerateDoubleStop(characters)
-                this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, characters)
+                this.accelerateDoubleStop(characters, player)
             })
 
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
-                //   console.log('spellName',spellName)
-                //  console.log('casterId',casterId)
-                //  console.log('targets',targets)
+                // console.log('spellName',spellName)
+                // console.log('casterId',casterId)
+                // console.log('targets',targets)
                 const updatedCharacters = this.gameEngine.castSpell(casterId, spellName, targets)
-                //  console.log(updatedCharacters)
+                // console.log(updatedCharacters)
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
             socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: { x: number, y: number } }) => {
-                console.log('options', options)
-                //console.log('location', location)
-                //  console.log('targets',targets)
-
-                const [updatedCharacters, updatedZones] = this.createCommunity(options)
-                console.log(updatedCharacters)
-                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+                // console.log('options', options)
+                // console.log('location', location)
+                // console.log('targets',targets) 
+                this.createCommunity(options)
             })
 
             //CONSTANTS.CLAIM_CHARACTER
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
-
-                if (!!playerInfo) {
-                    this.claimCharacter(characterId, playerInfo.email)
+                if (!!player) {
+                    this.claimCharacter(characterId, player.email)
                 }
                 else {
                     console.log('no session')
@@ -158,7 +155,7 @@ export default class ServerEngine {
 
             //tell the client where all the character are
             socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
-                //   join the right zones/rooms
+                // join the right zones/rooms
                 let oldZones = socket.rooms
                 let newZones = this.gameEngine.getZonesIn(viewPort)
                 // console.log(newZones)
@@ -175,10 +172,8 @@ export default class ServerEngine {
                         socket.join(zone)
                     }
                 })
-
                 socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersWithin(viewPort))
             })
-
         })
     }
 
@@ -205,57 +200,57 @@ export default class ServerEngine {
         return undefined
     }
 
-    accelerateDoubleStop(characters: Character[]) {
-        const c = this.gameEngine.accelerateDoubleStop(characters)
+    accelerateDoubleStop(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.accelerateDoubleStop(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    accelerateDouble(characters: Character[]) {
-        const c = this.gameEngine.accelerateDouble(characters)
+    accelerateDouble(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.accelerateDouble(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    decelerate(characters: Character[]) {
-        const c = this.gameEngine.decelerate(characters)
+    decelerate(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.decelerate(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    accelerate(characters: Character[]) {
-        const c = this.gameEngine.accelerate(characters)
+    accelerate(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.accelerate(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    accelerateStop(characters: Character[]) {
-        const c = this.gameEngine.accelerateStop(characters)
+    accelerateStop(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.accelerateStop(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    turnStop(characters: Character[]) {
-        const c = this.gameEngine.turnStop(characters)
+    turnStop(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.turnStop(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    turnRight(characters: Character[]) {
-        const c = this.gameEngine.turnRight(characters)
+    turnRight(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.turnRight(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
     }
 
-    turnLeft(characters: Character[]) {
-        const c = this.gameEngine.turnLeft(characters)
+    turnLeft(characters: Character[], player: Player | undefined) {
+        const c = this.gameEngine.turnLeft(characters, player?.id)
         if (c.length > 0) {
             this.sendAndSaveCharacterUpdates(c, undefined)
         }
@@ -263,8 +258,14 @@ export default class ServerEngine {
 
     async claimCharacter(characterId: string, playerEmail: string) {
 
+        if (!playerEmail) {
+            console.log('bailing on claim character: no email')
+            return
+        }
+
         const character = this.gameEngine.gameWorld.getCharacter(characterId)
         if (!character) {
+            console.log('bailing on claim character: no character')
             return
         }
 
@@ -278,16 +279,20 @@ export default class ServerEngine {
             // console.log(player)
         }
 
-        const [c,] = this.gameEngine.claimCharacter(characterId, player.id)
+        //we've got a player now
+        const c = this.gameEngine.claimCharacter(characterId, player.id)
         // console.log('claimed character', c)
-        if (c?.length > 0) {
+        if (c) {
 
-            player.claimedCharacters.push(c[0].id)
-            this.savePlayer(player)
+            player.claimedCharacters.push(c.id)
+            this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
 
             //tell the client it got worked
+            this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
+                this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
+            )
 
-            this.sendAndSaveCharacterUpdates(c, undefined)
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
@@ -362,11 +367,10 @@ export default class ServerEngine {
                 console.log('failed to save character', character)
             }
         })
-
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [Character[], Zones] {
-        let { x, y } = getRandomPoint({ origin, radius })
+
         let updatedCharacters: Character[] = []
         let updatedZones = new Map<string, Set<string>>()
         const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
@@ -376,6 +380,7 @@ export default class ServerEngine {
             //console.log('level', level);
             //make the right amount of each level
             for (let i = 0; i < highestLevel / level; i++) {
+                let { x, y } = getRandomPoint({ origin, radius })
                 const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
                 console.log('c', c)
                 updatedCharacters = [...updatedCharacters, ...c]
@@ -386,7 +391,7 @@ export default class ServerEngine {
         return [updatedCharacters, updatedZones]
     }
 
-    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }): [Character[], Zones] {
+    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
         console.log('createCommunity')
         console.log(size)
         let updatedCharacters: Character[] = []
@@ -640,8 +645,12 @@ export default class ServerEngine {
             updatedCharacters = updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
-        console.log(updatedCharacters)
+        // console.log(updatedCharacters)
 
-        return [updatedCharacters, updatedZones]
+        // console.log(updatedCharacters)
+        // this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+        this.sendAndSaveCharacterUpdates(updatedCharacters, updatedZones)
+
+        // return [updatedCharacters, updatedZones]
     }
 }
