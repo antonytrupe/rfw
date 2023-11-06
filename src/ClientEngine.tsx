@@ -14,7 +14,7 @@ export default class ClientEngine {
     private emit: (eventName: string | symbol, ...args: any[]) => boolean
 
     //state things
-    stopped: boolean = false //control the draw loop
+    private stopped: boolean = false //control the draw loop
     private connected: boolean = false
     private controlledCharacter: Character | undefined
     private selectedCharacters: Character[] = []
@@ -56,6 +56,11 @@ export default class ClientEngine {
         }
         this.gameEngine.start()
         window.requestAnimationFrame(renderLoop.bind(this))
+    }
+
+    stop() {
+        this.stopped = true;
+        this.gameEngine.stop()
     }
 
     getCharacter(characterId: string) {
@@ -548,10 +553,10 @@ export default class ClientEngine {
                 //console.log('CONSTANTS.CONNECT')
                 this.onConnect()
             })
- 
+
             this.socket?.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
                 this.player = player
-             })
+            })
 
             this.socket?.on(CONSTANTS.CLAIMED_CHARACTERS, (c: Character[]) => {
                 this.claimedCharacters = c

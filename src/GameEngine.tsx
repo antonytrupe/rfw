@@ -27,7 +27,8 @@ export default class GameEngine {
     //5ft/s*1000ms/s
     //30ft/6seconds
     private speedMultiplier: number = 6000
-
+    timeoutID: NodeJS.Timeout | undefined;
+ 
     /**
      * 
      * @param param0 
@@ -118,7 +119,7 @@ export default class GameEngine {
      * @returns a tuple who's first item is a list that contains the claimed character if claimed, otherwise an empty list
      */
     claimCharacter(characterId: string, playerId: string | undefined): Character | undefined {
-        const [character, ] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
+        const [character,] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
         if (character) {
             return character
         }
@@ -242,14 +243,22 @@ export default class GameEngine {
         this.lastTimestamp = this.lastTimestamp || now
         const dt = now - this.lastTimestamp
         this.lastTimestamp = now
-        this.step(dt)
+        this.step(dt, now)
 
         //60 frames per second is one frame every ~17 milliseconds
         //30 frames per second is one frame every ~33 milliseconds
-        setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
+        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
     }
 
-    step(dt: number) {
+    //leave it public for testing
+    step(dt: number, now: number) {
+        //TODO figure out if this is the first step of a new turn
+        const lastTurn = Math.floor((now - dt) / 1000 / 6)
+        const currentTurn = Math.floor(now / 1000 / 6)
+        if (lastTurn != currentTurn) {
+            console.log('lastTurn', lastTurn)
+            console.log('currentTurn', currentTurn)
+        }
         const started = (new Date()).getTime()
         //console.log('GameEngine.step')
 
@@ -424,10 +433,14 @@ export default class GameEngine {
 
     start() {
         //console.log('GameEngine.start')
-        setTimeout(this.tick.bind(this));
+        this.timeoutID = setTimeout(this.tick.bind(this));
         if (typeof window === 'object' && typeof window.requestAnimationFrame === 'function') {
             //   window.requestAnimationFrame(this.nextTickChecker.bind(this));
         }
         return this;
+    }
+
+    stop() {
+        clearTimeout(this.timeoutID)
     }
 }

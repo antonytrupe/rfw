@@ -64,7 +64,8 @@ export default function ClientUI() {
       disconnect()
 
       //stop the current client engine's draw loop/flag
-      ce.stopped = true
+      //ce.stopped = true
+      ce.stop()
     }
   }, [])
 
@@ -150,9 +151,7 @@ export default function ClientUI() {
             <div>
               {connected && (<button onClick={createCharacter}>Create Character</button>)}
             </div>
-            
             <div>
-              
               {connected && (
                 <CommunityCreation action={createCommunity}>
                 </CommunityCreation>
