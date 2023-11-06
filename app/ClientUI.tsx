@@ -9,6 +9,7 @@ import CharacterUI from './CharacterUI';
 import CommunityCreation from './CommunityCreation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Clock from './components/clock/clock';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
@@ -149,12 +150,15 @@ export default function ClientUI() {
             <div>
               {connected && (<button onClick={createCharacter}>Create Character</button>)}
             </div>
+            
             <div>
+              
               {connected && (
                 <CommunityCreation action={createCommunity}>
                 </CommunityCreation>
               )}
             </div>
+            <Clock />
           </div>
           {
             //the right side header stuff
