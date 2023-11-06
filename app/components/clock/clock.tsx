@@ -1,27 +1,36 @@
 import React, { useState, useEffect } from "react";
 import "./style.css";
 
-export default () => {
-    const [time, setTime] = useState(new Date());
+const Clock = ({ initialTime }: { initialTime?: Date }) => {
+    const [time, setTime] = useState(initialTime);
 
     useEffect(() => {
-        const timerId = setInterval(() => {
-            setTime(new Date());
-        }, 1000);
+        let isMounted = true; // Flag to track component mount status
+
+        const updateClock = () => {
+            if (isMounted) {
+                setTime(new Date());
+            }
+        };
+
+        const timerId = setInterval(updateClock, 1000);
 
         return () => {
+            isMounted = false; // Mark the component as unmounted
             clearInterval(timerId);
         };
     }, []);
 
     return (
         <div className="clock">
-            <div
-                className="sec_hand"
-                style={{
-                    transform: `rotateZ(${time.getSeconds() * 60 + 60}deg)`
-                }}
-            />
+            {!!time &&
+                <div
+                    className="sec_hand"
+                    style={{
+                        transform: `rotateZ(${time.getSeconds() * 60}deg)`
+                    }}
+                />
+            }
             <span className="six">6</span>
             <span className="one">1</span>
             <span className="two">2</span>
@@ -31,3 +40,5 @@ export default () => {
         </div>
     );
 };
+
+export default Clock;

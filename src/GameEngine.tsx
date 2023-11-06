@@ -28,7 +28,7 @@ export default class GameEngine {
     //30ft/6seconds
     private speedMultiplier: number = 6000
     timeoutID: NodeJS.Timeout | undefined;
- 
+
     /**
      * 
      * @param param0 
@@ -256,8 +256,7 @@ export default class GameEngine {
         const lastTurn = Math.floor((now - dt) / 1000 / 6)
         const currentTurn = Math.floor(now / 1000 / 6)
         if (lastTurn != currentTurn) {
-            console.log('lastTurn', lastTurn)
-            console.log('currentTurn', currentTurn)
+            //console.log('new turn', currentTurn)
         }
         const started = (new Date()).getTime()
         //console.log('GameEngine.step')
