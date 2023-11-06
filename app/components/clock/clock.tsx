@@ -1,52 +1,33 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import "./style.css";
 
-interface ClockState {
-    time: Date;
-}
+export default () => {
+  const [time, setTime] = useState(new Date());
 
-export default class Clock extends Component<{}, ClockState> {
-    private timerId: NodeJS.Timeout | null = null;
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
 
-    constructor(props: {}) {
-        super(props);
-        this.state = {
-            time: new Date(),
-        };
-    }
-
-    componentDidMount() {
-        this.timerId = setInterval(this.updateTime, 1000);
-    }
-
-    componentWillUnmount() {
-        if (this.timerId) {
-            clearInterval(this.timerId);
-        }
-    }
-
-    updateTime = () => {
-        this.setState({
-            time: new Date(),
-        });
+    return () => {
+      clearInterval(timerId);
     };
+  }, []);
 
-    render() {
-        return (
-            <div className="clock">
-                <div
-                    className="sec_hand"
-                    style={{
-                        transform: `rotateZ(${this.state.time.getSeconds() * 60}deg)`,
-                    }}
-                />
-                <span className="six">6</span>
-                <span className="one">1</span>
-                <span className="two">2</span>
-                <span className="three">3</span>
-                <span className="four">4</span>
-                <span className="five">5</span>
-            </div>
-        );
-    }
-}
+  return (
+    <div className="clock">
+      <div
+        className="sec_hand"
+        style={{
+          transform: `rotateZ(${time.getSeconds() * 60}deg)`
+        }}
+      />
+      <span className="six">6</span>
+      <span className="one">1</span>
+      <span className="two">2</span>
+      <span className="three">3</span>
+      <span className="four">4</span>
+      <span className="five">5</span>
+    </div>
+  );
+};
