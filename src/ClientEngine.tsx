@@ -6,7 +6,7 @@ import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
 
 export default class ClientEngine {
-   
+
     //event things
     private socket: Socket | undefined
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -386,7 +386,7 @@ export default class ClientEngine {
         //TODO just the first character
         this.selectedCharacters = characters
         //tell the ui about the selected characters
-        this.emit(CONSTANTS.SELECTED_CHARACTERS, this.getSelectedCharacters())
+        this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacters)
     }
 
     private getZonesInViewPort() {
@@ -428,23 +428,39 @@ export default class ClientEngine {
             this.turnLeft(this.selectedCharacters)
         }
         else if (code == 'KeyS') {
-            if (this.selectedCharacters) {
-                //if holding shift then double fast goer
-                this.emit(CONSTANTS.DECELERATE, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.DECELERATE, this.getSelectedCharacters())
-            }
+            this.decelarate(this.selectedCharacters)
         }
         else if (code == 'KeyW') {
-            if (this.selectedCharacters) {
-                //if holding shift then double fast goer
-                this.emit(CONSTANTS.ACCELERATE, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.ACCELERATE, this.getSelectedCharacters())
-            }
+            this.accelerate(this.selectedCharacters)
         }
         else if (code == "ShiftLeft") {
-            if (this.selectedCharacters) {
-                this.emit(CONSTANTS.ACCELERATE_DOUBLE, this.getSelectedCharacters())
-                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, this.getSelectedCharacters())
+            this.accelerateDouble(this.selectedCharacters)
+        }
+    }
+
+    private accelerateDouble(characters: Character[]) {
+        if (characters) {
+            const c = this.gameEngine.accelerateDouble(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, c);
+            }
+        }
+    }
+
+    private accelerate(characters: Character[]) {
+        if (characters) {
+            const c = this.gameEngine.accelerate(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.ACCELERATE, c);
+            }
+        }
+    }
+
+    private decelarate(characters: Character[]) {
+        if (characters) {
+            const c = this.gameEngine.decelerate(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.DECELERATE, c);
             }
         }
     }
@@ -453,7 +469,7 @@ export default class ClientEngine {
         if (characters) {
             const c = this.gameEngine.turnLeft(characters);
             if (c.length > 0) {
-                this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters());
+                this.socket?.emit(CONSTANTS.TURN_LEFT, c);
             }
         }
     }
@@ -470,47 +486,52 @@ export default class ClientEngine {
     keyUpHandler(e: KeyboardEvent) {
 
         if (e.code == 'KeyD') {
-            this.turnStop(this.getSelectedCharacters())
+            this.turnStop(this.selectedCharacters)
         }
         else if (e.code == 'KeyA') {
-            this.turnStop(this.getSelectedCharacters())
+            this.turnStop(this.selectedCharacters)
         }
         else if (e.code == 'KeyS') {
-            this.accelerateStop(this.getSelectedCharacters())
+            this.accelerateStop(this.selectedCharacters)
         }
         else if (e.code == 'KeyW') {
-            this.accelerateStop(this.getSelectedCharacters())
+            this.accelerateStop(this.selectedCharacters)
         }
         else if (e.code == "ShiftLeft") {
-            this.doubleAccelerateStop(this.getSelectedCharacters())
+            this.accelerateDoubleStop(this.selectedCharacters)
         }
     }
 
-    private doubleAccelerateStop(selectedCharacters: Character[]) {
-        if (selectedCharacters) {
-            this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, selectedCharacters)
-            this.gameEngine.doubleAccelerateStop(selectedCharacters)
-            this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, selectedCharacters)
+    private accelerateDoubleStop(characters: Character[]) {
+        if (characters) {
+            const c = this.gameEngine.accelerateDoubleStop(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, c);
+            }
         }
     }
 
-    private accelerateStop(selectedCharacters: Character[]) {
-        if (selectedCharacters) {
-            this.emit(CONSTANTS.STOP_ACCELERATE, selectedCharacters)
-            this.socket?.emit(CONSTANTS.STOP_ACCELERATE, selectedCharacters)
+    private accelerateStop(characters: Character[]) {
+
+       
+
+        if (characters) {
+            const c = this.gameEngine.accelerateStop(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, c);
+            }
         }
     }
 
-    private turnStop(selectedCharacters: Character[]) {
-        if (selectedCharacters) {
-            this.gameEngine.turnStop(selectedCharacters)
-            this.socket?.emit(CONSTANTS.TURN_STOP, selectedCharacters)
-        }
-    }
+    private turnStop(characters: Character[]) {
 
-    private getSelectedCharacters() {
-        const ids: string[] = this.selectedCharacters.map((c) => { return c.id })
-        return this.gameEngine.gameWorld.getCharacters(ids)
+        if (characters) {
+            const c = this.gameEngine.turnStop(characters);
+            if (c.length > 0) {
+                this.socket?.emit(CONSTANTS.TURN_STOP, c);
+            }
+
+        }
     }
 
     disconnect() {

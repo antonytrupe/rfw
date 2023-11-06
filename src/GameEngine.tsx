@@ -1,4 +1,3 @@
-"use client"
 import EventEmitter from "events";
 import Character from "./Character";
 import * as CONSTANTS from "./CONSTANTS";
@@ -6,23 +5,10 @@ import GameWorld, { Zone, Zones } from "./GameWorld";
 import isEqual from 'lodash.isequal';
 import { roll } from "./utility";
 
-export interface ClassPopulation {
-    className: string;
-    diceCount: number;
-    diceSize: number;
-    modifier: number;
-    origin: {
-        x: number;
-        y: number;
-    };
-    radius: number;
-}
-
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
-export default class GameEngine {
-
+export default class GameEngine {  
     //EventEmitter function
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
     private emit: (eventName: string | symbol, ...args: any[]) => boolean;
@@ -52,52 +38,43 @@ export default class GameEngine {
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
-
-        this.on(CONSTANTS.TURN_STOP, (characters: Character[]) => {
-            this.turnStop(characters);
-        })
-        this.on(CONSTANTS.DECELERATE_DOUBLE, (characters: Character[]) => {
-            characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
-            })
-        })
-        this.on(CONSTANTS.ACCELERATE_DOUBLE, (characters: Character[]) => {
-            characters.forEach((character: Character) => {
-                this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
-            })
-        })
-        this.on(CONSTANTS.DECELERATE, (characters: Character[]) => {
-            characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
-            })
-        })
-        this.on(CONSTANTS.ACCELERATE, (characters: Character[]) => {
-            characters.forEach((character: Character) => {
-                this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
-            })
-        })
-        this.on(CONSTANTS.STOP_ACCELERATE, (characters: Character[]) => {
-            //console.log('GameEngine on', 'STOP_ACCELERATE')
-            characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
-            })
-        })
-        this.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, (characters: Character[]) => {
-            //console.log('GameEngine on', 'STOP_ACCELERATE')
-            characters.forEach((character) => {
-                this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
-            })
-        })
     }
 
     getCharacter(characterId: string) {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    doubleAccelerateStop(characters: Character[]) {
-        characters.forEach((character: Character) => {
-            this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
+    accelerateDoubleStop(characters: Character[]) {
+        let updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
+            if (c) {
+                updatedCharacters.push(c)
+            }
         })
+        return updatedCharacters
+    }
+
+    accelerateStop(characters: Character[]) {
+        let updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
+            if (c) {
+                updatedCharacters.push(c)
+            }
+        })
+        return updatedCharacters
+    }
+
+    accelerateDouble(characters: Character[]) {
+        let updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
+            if (c) {
+                updatedCharacters.push(c)
+            }
+        })
+        return updatedCharacters
     }
 
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
@@ -105,16 +82,20 @@ export default class GameEngine {
         for (let i = left; i < right; i += 30) {
             for (let j = top; j < bottom; j += 30) {
                 zones.push(this.gameWorld.getTacticalZoneName({ x: i, y: j }))
-
             }
         }
         return zones
     }
 
     turnStop(characters: Character[]) {
+        let updatedCharacters: Character[] = []
         characters.forEach((character) => {
-            this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 });
-        });
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
+            if (c) {
+                updatedCharacters.push(c)
+            }
+        })
+        return updatedCharacters
     }
 
     /**
@@ -129,6 +110,28 @@ export default class GameEngine {
             return [[character], zones]
         }
         return [[], new Map()]
+    }
+
+    decelerate(characters: Character[]) {
+        let updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
+            if (c) {
+                updatedCharacters.push(c)
+            }
+        })
+        return updatedCharacters
+    }
+
+    accelerate(characters: Character[]) {
+        let updatedCharacters: Character[] = []
+        characters.forEach((character) => {
+            const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
+            if (c) {
+                updatedCharacters.push(c)
+            }
+        })
+        return updatedCharacters
     }
 
     /**
@@ -178,8 +181,6 @@ export default class GameEngine {
     }
 
     createCharacter(character: Partial<Character>): [Character[], Zones] {
-
-        //TODO id!?
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
         const merged = { ...character, size: 5, maxHp: maxHp, hp: maxHp };

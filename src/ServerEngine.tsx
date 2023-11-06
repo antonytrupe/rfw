@@ -1,12 +1,12 @@
 import EventEmitter from "events"
-import GameEngine, { ClassPopulation } from "@/GameEngine"
+import GameEngine from "@/GameEngine"
+import { ClassPopulation } from "./ClassPopulation"
 import * as CONSTANTS from "@/CONSTANTS"
 import Character from "@/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Server } from "socket.io"
-import { Zone, Zones } from "./GameWorld"
+import { Zones } from "./GameWorld"
 import { getSession } from "next-auth/react"
-import { Session } from "next-auth"
 import Player from "./Player"
 import { v4 as uuidv4 } from 'uuid';
 import { getRandomPoint, roll } from "./utility"
@@ -93,30 +93,28 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
-                this.gameEngine.turnStop(characters)
+                this.turnStop(characters)
             })
 
             socket.on(CONSTANTS.STOP_ACCELERATE, async (characters: Character[]) => {
-                this.emit(CONSTANTS.STOP_ACCELERATE, characters)
+                this.accelerateStop(characters)
             })
 
             socket.on(CONSTANTS.ACCELERATE, async (characters: Character[]) => {
-                this.emit(CONSTANTS.ACCELERATE, characters)
+                this.accelerate(characters)
             })
 
             socket.on(CONSTANTS.DECELERATE, async (characters: Character[]) => {
-                this.emit(CONSTANTS.DECELERATE, characters)
-            })
-
-            socket.on(CONSTANTS.DECELERATE_DOUBLE, async (characters: Character[]) => {
-                this.emit(CONSTANTS.DECELERATE_DOUBLE, characters)
+                this.decelerate(characters)
             })
 
             socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (characters: Character[]) => {
+                this.accelerateDouble(characters)
                 this.emit(CONSTANTS.ACCELERATE_DOUBLE, characters)
             })
 
             socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characters: Character[]) => {
+                this.accelerateDoubleStop(characters)
                 this.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, characters)
             })
 
@@ -205,6 +203,48 @@ export default class ServerEngine {
         } catch (error) {
         }
         return undefined
+    }
+
+    accelerateDoubleStop(characters: Character[]) {
+        const c = this.gameEngine.accelerateDoubleStop(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
+    accelerateDouble(characters: Character[]) {
+        const c = this.gameEngine.accelerateDouble(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
+    decelerate(characters: Character[]) {
+        const c = this.gameEngine.decelerate(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
+    accelerate(characters: Character[]) {
+        const c = this.gameEngine.accelerate(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
+    accelerateStop(characters: Character[]) {
+        const c = this.gameEngine.accelerateStop(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
+    }
+
+    turnStop(characters: Character[]) {
+        const c = this.gameEngine.turnStop(characters)
+        if (c.length > 0) {
+            this.sendAndSaveCharacterUpdates(c, undefined)
+        }
     }
 
     turnRight(characters: Character[]) {
