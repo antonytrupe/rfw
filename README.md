@@ -13,14 +13,14 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO
+2. turn clock/timer
+6. combat
 1. unclaim character
-1. turn clock/timer
-1. touch controls
-2. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
-3. random stats when spawning  
+3. touch controls
+4. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
+4. random stats when spawning  
 4. no moving while incapacitated/dying/dead  
 5. collision  
-6. combat
 7. strafing  
 8. leveling up system  
 9. package as exe/etc with electron
