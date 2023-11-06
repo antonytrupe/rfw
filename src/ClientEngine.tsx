@@ -6,27 +6,28 @@ import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
 
 export default class ClientEngine {
+   
     //event things
-    socket: Socket | undefined
-    on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
-    emit: (eventName: string | symbol, ...args: any[]) => boolean
+    private socket: Socket | undefined
+    private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
+    private emit: (eventName: string | symbol, ...args: any[]) => boolean
 
     //state things
     stopped: boolean = false //control the draw loop
-    connected: boolean = false
-    controlledCharacter: Character | undefined
-    selectedCharacters: Character[] = []
-    claimedCharacters: Character[] = []
-    gameEngine: GameEngine
+    private connected: boolean = false
+    private controlledCharacter: Character | undefined
+    private selectedCharacters: Character[] = []
+    private claimedCharacters: Character[] = []
+    private gameEngine: GameEngine
 
     //react/dom things
-    getCanvas: (() => HTMLCanvasElement)
+    private getCanvas: (() => HTMLCanvasElement)
 
     //drawing things
-    PIXELS_PER_FOOT = 20
-    scale: number = 1
-    translateX = -20 * this.scale
-    translateY = -20 * this.scale
+    private PIXELS_PER_FOOT = 20
+    private scale: number = 1
+    private translateX = -20 * this.scale
+    private translateY = -20 * this.scale
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
@@ -55,9 +56,21 @@ export default class ClientEngine {
         window.requestAnimationFrame(renderLoop.bind(this))
     }
 
+    getCharacter(characterId: string) {
+        return this.gameEngine.getCharacter(characterId)
+    }
+
     claim(characterId: string) {
         //  client claim
         this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
+    }
+
+    control(characterId: string) {
+        //don't think the server cares
+        //this.socket?.emit(CONSTANTS.CONTROL_CHARACTER, characterId)
+        this.controlledCharacter = this.gameEngine.gameWorld.getCharacter(characterId)
+        //tell the ui
+        this.emit(CONSTANTS.CONTROL_CHARACTER, this.controlledCharacter)
     }
 
     focus(characterId: string) {
@@ -438,7 +451,6 @@ export default class ClientEngine {
 
     private turnLeft(characters: Character[]) {
         if (characters) {
-            //this.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters())
             const c = this.gameEngine.turnLeft(characters);
             if (c.length > 0) {
                 this.socket?.emit(CONSTANTS.TURN_LEFT, this.getSelectedCharacters());

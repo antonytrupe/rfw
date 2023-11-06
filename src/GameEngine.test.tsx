@@ -11,15 +11,15 @@ describe('GameEngine', () => {
         gameEngine = new GameEngine({ ticksPerSecond }, eventEmitter)
     })
 
-    describe('Events', () => {
+   
         test('should add a new chararacter ', () => {
-            gameEngine.createCharacter({ id: '0', x: 0, y: 0 })
-            gameEngine.createCharacter({ id: '0', x: 0, y: 0 })
-            gameEngine.createCharacter({ id: '0', x: 0, y: 0 })
+            gameEngine.createCharacter({ id: '1', x: 0, y: 0 })
+            gameEngine.createCharacter({ id: '2', x: 0, y: 0 })
+            gameEngine.createCharacter({ id: '3', x: 0, y: 0 })
             console.log(gameEngine.gameWorld.getAllCharacters())
             expect(Array.from(gameEngine.gameWorld.getAllCharacters().values()).length).toBe(3)
         })
-    })
+   
 
     describe('movement', () => {
 

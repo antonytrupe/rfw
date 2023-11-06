@@ -4,8 +4,9 @@ import Character from "./Character";
 import * as CONSTANTS from "./CONSTANTS";
 import GameWorld, { Zone, Zones } from "./GameWorld";
 import isEqual from 'lodash.isequal';
+import { roll } from "./utility";
 
-interface ClassPopulation {
+export interface ClassPopulation {
     className: string;
     diceCount: number;
     diceSize: number;
@@ -21,39 +22,24 @@ interface ClassPopulation {
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
-    doubleAccelerateStop(characters: Character[]) {
-        characters.forEach((character: Character) => {
-            this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
-        })
-    }
 
-    getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
-        let zones = []
-        for (let i = left; i < right; i += 30) {
-            for (let j = top; j < bottom; j += 30) {
-                zones.push(this.gameWorld.getTacticalZoneName({ x: i, y: j }))
-
-            }
-        }
-        return zones
-    }
     //EventEmitter function
-    on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
-    emit: (eventName: string | symbol, ...args: any[]) => boolean;
-    eventNames: () => (string | symbol)[];
+    private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
+    private emit: (eventName: string | symbol, ...args: any[]) => boolean;
+    private eventNames: () => (string | symbol)[];
     //data object
     gameWorld: GameWorld
 
-    ticksPerSecond: number
+    private ticksPerSecond: number
 
-    lastTimestamp: DOMHighResTimeStamp | undefined
+    private lastTimestamp: DOMHighResTimeStamp | undefined
     //lower number means faster, higher means slower
-    accelerationMultiplier: number = 20
-    turnMultiplier: number = 1000 / Math.PI
+    private accelerationMultiplier: number = 20
+    private turnMultiplier: number = 1000 / Math.PI
     //1px/ft
     //5ft/s*1000ms/s
     //30ft/6seconds
-    speedMultiplier: number = 6000
+    private speedMultiplier: number = 6000
 
     /**
      * 
@@ -102,8 +88,27 @@ export default class GameEngine {
                 this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
             })
         })
+    }
 
+    getCharacter(characterId: string) {
+        return this.gameWorld.getCharacter(characterId)
+    }
 
+    doubleAccelerateStop(characters: Character[]) {
+        characters.forEach((character: Character) => {
+            this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
+        })
+    }
+
+    getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
+        let zones = []
+        for (let i = left; i < right; i += 30) {
+            for (let j = top; j < bottom; j += 30) {
+                zones.push(this.gameWorld.getTacticalZoneName({ x: i, y: j }))
+
+            }
+        }
+        return zones
     }
 
     turnStop(characters: Character[]) {
@@ -132,6 +137,7 @@ export default class GameEngine {
      * @returns updated characters. empty array if no characters updated
      */
     turnLeft(characters: Character[]): Character[] {
+        //TODO only allowed to control claimed characters
         //  only return characters that were updated
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
@@ -173,6 +179,7 @@ export default class GameEngine {
 
     createCharacter(character: Partial<Character>): [Character[], Zones] {
 
+        //TODO id!?
         let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
 
         const merged = { ...character, size: 5, maxHp: maxHp, hp: maxHp };
@@ -184,309 +191,22 @@ export default class GameEngine {
         return [[], zones]
     }
 
-    private getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
-        const direction = Math.random() * Math.PI * 2
-        const r = Math.random() * radius
-        x = r * Math.cos(direction) + x
-        y = r * Math.sin(direction) + y
-        return { x, y }
-    }
-
-    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [Character[], Zones] {
-        let { x, y } = this.getRandomPoint({ origin, radius })
-        let updatedCharacters: Character[] = []
-        let updatedZones = new Map<string, Set<string>>()
-        const highestLevel = this.roll({ size: diceSize, count: diceCount, modifier: modifier })
-        // work our way down from highest level
-        for (let level = highestLevel; level >= 1; level /= 2) {
-            //console.log('level', level);
-            //make the right amount of each level
-            for (let i = 0; i < highestLevel / level; i++) {
-                const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
-                updatedCharacters = [...updatedCharacters, ...c]
-                updatedZones = new Map([...updatedZones, ...zones])
-            }
-        }
-        return [updatedCharacters, updatedZones]
-    }
-
-    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }): [Character[], Zones] {
-        // console.log('createCommunity')
-        let updatedCharacters: Character[] = []
-        let updatedZones: Zones = new Map<string, Set<string>>()
-        let modifier = -16
-        let totalSize = 0
-
-        let radius = 90
-
-        switch (size) {
-            case "THORP":
-                modifier = -3
-                totalSize = this.roll({ size: 60, modifier: 20 })
-                break
-            case "HAMLET":
-                modifier = -2
-                totalSize = this.roll({ size: 320, modifier: 80 })
-                radius = 200
-                break
-            case "VILLAGE":
-                modifier = -1
-                totalSize = this.roll({ size: 500, modifier: 400 })
-                radius = 300
-                break
-            case "SMALL_TOWN":
-                modifier = 0
-                totalSize = this.roll({ size: 1100, modifier: 900 })
-                radius = 500
-                break
-            case "LARGE_TOWN":
-                modifier = 3
-                totalSize = this.roll({ size: 3000, modifier: 2000 })
-                radius = 800
-                break
-            case "SMALL_CITY":
-                modifier = 6
-                totalSize = this.roll({ size: 7000, modifier: 5000 })
-                radius = 1100
-                break
-            case "LARGE_CITY":
-                modifier = 9
-                totalSize = this.roll({ size: 13000, modifier: 12000 })
-                radius = 1600
-                break
-            case "METROPOLIS":
-                modifier = 12
-                totalSize = this.roll({ size: 75000, modifier: 25000 })
-                radius = 3200
-                break
-        }
-
-        //pc classes
-        //barbarians
-
-        let [characters, zones] = this.populateClass({
-            className: 'BARBARIAN',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //bards
-        [characters, zones] = this.populateClass({
-            className: 'BARD',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //clerics
-
-        [characters, zones] = this.populateClass({
-            className: 'BARD',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //druid
-
-        [characters, zones] = this.populateClass({
-            className: 'DRUID',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //fighter 
-        [characters, zones] = this.populateClass({
-            className: 'FIGHTER',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //monk 
-        [characters, zones] = this.populateClass({
-            className: 'MONK',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //paladin 
-        [characters, zones] = this.populateClass({
-            className: 'PALADIN',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //ranger 
-        [characters, zones] = this.populateClass({
-            className: 'RANGER',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //rogue 
-        [characters, zones] = this.populateClass({
-            className: 'ROGUE',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //sorcerer 
-        [characters, zones] = this.populateClass({
-            className: 'SORCERER',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //warrior 
-        [characters, zones] = this.populateClass({
-            className: 'WARRIOR',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //wizard 
-        [characters, zones] = this.populateClass({
-            className: 'WIZARD',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-
-        //npc classes
-        //adepts  
-        [characters, zones] = this.populateClass({
-            className: 'ADEPT',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //aristocrats 
-        [characters, zones] = this.populateClass({
-            className: 'ARISTOCRAT',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //commoner 
-        [characters, zones] = this.populateClass({
-            className: 'COMMONER',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //expert 
-        [characters, zones] = this.populateClass({
-            className: 'EXPERT',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        });
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        //warrior
-        [characters, zones] = this.populateClass({
-            className: 'WARRIOR',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        });
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
-
-        let remaining = totalSize - updatedCharacters.length
-        //make more level 1 characters
-        //create .5% aristocrats
-        for (let i = 0; i < remaining * .005; i++) {
-            let p = this.getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
-        }
-
-        //create .5% adepts
-        for (let i = 0; i < remaining * .005; i++) {
-            let p = this.getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
-        }
-        //create 3% experts
-        for (let i = 0; i < remaining * .03; i++) {
-            let p = this.getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
-        }
-        //create 5% warriors
-        for (let i = 0; i < remaining * .05; i++) {
-            let p = this.getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
-        }
-
-        //create the rest as commoners
-        for (let i = 0; updatedCharacters.length < totalSize; i++) {
-            let p = this.getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
-        }
-
-        return [updatedCharacters, updatedZones]
-    }
-
-    roll({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }) {
-        let sum = modifier
-        for (let i = 0; i < count; i++) {
-            sum += Math.floor(Math.random() * (size + 1))
-        }
-        return sum
-    }
-
     castSpell(casterId: string, spellName: string, targetIds: string[]): (Character | undefined)[] {
         //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
                 // console.log('targetIds', targetIds) 
                 const damagedTargets = this.gameWorld.getCharacters(targetIds).map((character) => {
-                    const damage = this.roll({ size: 6, count: 2 })
+                    const damage = roll({ size: 6, count: 2 })
                     if (character) {
                         const hp = Math.max(-10, character.hp - damage)
-                         const newLocal = this.gameWorld.updateCharacter({ id: character.id, hp: hp });
-                         //this is dumb
+                        const newLocal = this.gameWorld.updateCharacter({ id: character.id, hp: hp });
+                        //this is dumb
                         return newLocal
                     }
                 })
                 //TODO update the caster character too and return it
-                 return []
+                return []
             default:
                 return []
         }

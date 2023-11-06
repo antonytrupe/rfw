@@ -52,9 +52,10 @@ export default function CharacterUI({ character, children, isControlled, isSelec
                 <div> level {character.level} {character.characterClass}</div>
                 <div> {character.hp} / {character.maxHp} HP</div>
                 <div> Speed:{character.maxSpeed}ft</div>
-                <div> ID:{character.id}</div>
+              
                 {
                     /*
+                    <div> ID:{character.id}</div>
                     <div> size:{character.size}</div>
                     <div> direction:{character.direction.toFixed(2)}</div>
                     <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>

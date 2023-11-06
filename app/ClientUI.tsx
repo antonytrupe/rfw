@@ -41,6 +41,11 @@ export default function ClientUI() {
       setSelectedCharacters(selectedCharacters)
     })
 
+    //CONSTANTS.CONTROL_CHARACTER
+    eventEmitter.on(CONSTANTS.CONTROL_CHARACTER, (controlledCharacter: Character) => {
+      setControlledCharacter(controlledCharacter)
+    })
+
     eventEmitter.on(CONSTANTS.DISCONNECT, () => {
       setConnected(false)
       setConnecting(false)
@@ -56,6 +61,7 @@ export default function ClientUI() {
 
     return () => {
       disconnect()
+
       //stop the current client engine's draw loop/flag
       ce.stopped = true
     }
@@ -66,7 +72,7 @@ export default function ClientUI() {
     connect()
   }, [clientEngine])
 
-  const connect = async () => {
+  function connect() {
     setConnecting(true)
     clientEngine?.connect()
   }
@@ -78,14 +84,16 @@ export default function ClientUI() {
   const onKeyDown = (e: any) => {
     clientEngine?.keyDownHandler(e)
   }
+
   const onKeyUp = (e: any) => {
     clientEngine?.keyUpHandler(e)
   }
+
   const onWheel = (e: any) => {
     clientEngine?.wheelHandler(e)
   }
 
-  const disconnect = async () => {
+  function disconnect() {
     clientEngine?.disconnect()
     setConnected(false)
   }
@@ -103,18 +111,29 @@ export default function ClientUI() {
   }
 
   const claimCharacter = (characterId: string) => {
+
     clientEngine?.claim(characterId)
+    const c = clientEngine?.getCharacter(characterId)
+    if (c) {
+      setClaimedCharacters([...claimedCharacters, c])
+    }
   }
 
   const focusCharacter = (characterId: string) => {
     if (clientEngine) {
-      const c = clientEngine.gameEngine.gameWorld.getCharacter(characterId)
+      const c = clientEngine.getCharacter(characterId)
+      // clientEngine.gameEngine.gameWorld.getCharacter(characterId)
       if (c) {
-        clientEngine?.focus(characterId)
-        clientEngine.selectedCharacters = [c]
-        setSelectedCharacters([c])
+        clientEngine.focus(characterId)
+        //clientEngine.selectedCharacters = [c]
+        //setSelectedCharacters([c])
       }
     }
+  }
+
+  function controlCharacter(characterId: string) {
+    clientEngine?.control(characterId)
+    setControlledCharacter(clientEngine?.getCharacter(characterId))
   }
 
   const { data: session } = useSession();
@@ -175,7 +194,9 @@ export default function ClientUI() {
                 isControlled={true}
                 isSelected={selectedCharacters.some(c => c.id == controlledCharacter.id)}
                 isClaimed={claimedCharacters.some(c => c.id == controlledCharacter.id)} >
-                <button className={`btn`} onClick={() => castSpell(controlledCharacter.id, 'DISINTEGRATE', [controlledCharacter.id])}>Disintegrate</button>
+                {
+                  //<button className={`btn`} onClick={() => castSpell(controlledCharacter.id, 'DISINTEGRATE', [controlledCharacter.id])}>Disintegrate</button>
+                }
                 {
                   //only show the claim button if the character isn't claimed
                   !controlledCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(controlledCharacter.id)}>Claim</button>}
@@ -185,24 +206,26 @@ export default function ClientUI() {
               </CharacterUI>
             }
             {
-
               // selected characters
               selectedCharacters && selectedCharacters.map((character: Character) => {
                 if (character.id != controlledCharacter?.id) {
                   return <CharacterUI character={character} key={character.id}
-
                     isControlled={controlledCharacter?.id == character.id}
                     isSelected={selectedCharacters.some(c => c.id == character.id)}
                     isClaimed={claimedCharacters.some(c => c.id == character.id)}
-                  >
-                    <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                  >{
+                      //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                    }
                     {
                       //only show the claim button if the character isn't claimed
                       !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
                     {
                       //only show the focus button if its not already selected
                       !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
-                  </CharacterUI>
+                    {
+                      //  show the control button for claimed characters
+                      claimedCharacters.some(c => c.id == character.id) &&
+                      <button className={`btn`} onClick={() => controlCharacter(character.id)}>Control</button>} </CharacterUI>
                 }
               })
             }
@@ -216,13 +239,18 @@ export default function ClientUI() {
                     isControlled={controlledCharacter?.id == character.id}
                     isSelected={selectedCharacters.some(c => c.id == character.id)}
                     isClaimed={claimedCharacters.some(c => c.id == character.id)}>
-                    <button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                    {
+                      //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                    }
                     {
                       //only show the claim button if the character isn't claimed
                       !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
                     {
                       //only show the focus button if its not already selected
                       !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                    {
+                      //always show the control button for claimed characters
+                      <button className={`btn`} onClick={() => controlCharacter(character.id)}>Control</button>}
                   </CharacterUI>
                 }
               })}
