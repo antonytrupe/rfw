@@ -17,7 +17,7 @@ export default class ClientEngine {
     private stopped: boolean = false //control the draw loop
     private connected: boolean = false
     private controlledCharacter: Character | undefined
-    private selectedCharacters: Character[] = []
+    private selectedCharacter: Character | undefined
     private claimedCharacters: Character[] = []
     private gameEngine: GameEngine
     private player: Player | undefined
@@ -320,10 +320,7 @@ export default class ClientEngine {
             return claimedCharacter.id == character.id;
         })
 
-        const selected = this.selectedCharacters.some((selectedCharacter) => {
-            return selectedCharacter.id == character.id;
-        })
-
+        const selected = this.selectedCharacter?.id == character.id;
 
         if (selected && claimed) {
             //purple
@@ -391,9 +388,9 @@ export default class ClientEngine {
 
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
         //TODO just the first character
-        this.selectedCharacters = characters
+        this.selectedCharacter = characters[0]
         //tell the ui about the selected characters
-        this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacters)
+        this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacter)
     }
 
     private getZonesInViewPort() {
@@ -428,110 +425,113 @@ export default class ClientEngine {
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
 
-        if (code == 'KeyD') {
-            this.turnRight(this.selectedCharacters)
-        }
-        else if (code == 'KeyA') {
-            this.turnLeft(this.selectedCharacters)
-        }
-        else if (code == 'KeyS') {
-            this.decelarate(this.selectedCharacters)
-        }
-        else if (code == 'KeyW') {
-            console.log('W')
-            this.accelerate(this.selectedCharacters)
-        }
-        else if (code == "ShiftLeft") {
-            this.accelerateDouble(this.selectedCharacters)
+        if (this.selectedCharacter) {
+            if (code == 'KeyD') {
+                this.turnRight(this.selectedCharacter)
+            }
+            else if (code == 'KeyA') {
+                this.turnLeft(this.selectedCharacter)
+            }
+            else if (code == 'KeyS') {
+                this.decelarate(this.selectedCharacter)
+            }
+            else if (code == 'KeyW') {
+                console.log('W')
+                this.accelerate(this.selectedCharacter)
+            }
+            else if (code == "ShiftLeft") {
+                this.accelerateDouble(this.selectedCharacter)
+            }
         }
     }
 
-    private accelerateDouble(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.accelerateDouble(characters, this.player?.id);
-            if (c.length > 0) {
+    private accelerateDouble(character: Character) {
+        if (character) {
+            const c = this.gameEngine.accelerateDouble(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, c);
             }
         }
     }
 
-    private accelerate(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.accelerate(characters, this.player?.id);
-            if (c.length > 0) {
+    private accelerate(character: Character) {
+        if (character) {
+            const c = this.gameEngine.accelerate(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.ACCELERATE, c);
             }
         }
     }
 
-    private decelarate(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.decelerate(characters, this.player?.id);
-            if (c.length > 0) {
+    private decelarate(character: Character) {
+        if (character) {
+            const c = this.gameEngine.decelerate(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.DECELERATE, c);
             }
         }
     }
 
-    private turnLeft(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.turnLeft(characters, this.player?.id);
-            if (c.length > 0) {
+    private turnLeft(character: Character) {
+        if (character) {
+            const c = this.gameEngine.turnLeft(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.TURN_LEFT, c);
             }
         }
     }
 
-    private turnRight(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.turnRight(characters, this.player?.id)
-            if (c.length > 0) {
+    private turnRight(character: Character) {
+        if (character) {
+            const c = this.gameEngine.turnRight(character, this.player?.id)
+            if (c) {
                 this.socket?.emit(CONSTANTS.TURN_RIGHT, c)
             }
         }
     }
 
     keyUpHandler(e: KeyboardEvent) {
-
-        if (e.code == 'KeyD') {
-            this.turnStop(this.selectedCharacters)
-        }
-        else if (e.code == 'KeyA') {
-            this.turnStop(this.selectedCharacters)
-        }
-        else if (e.code == 'KeyS') {
-            this.accelerateStop(this.selectedCharacters)
-        }
-        else if (e.code == 'KeyW') {
-            this.accelerateStop(this.selectedCharacters)
-        }
-        else if (e.code == "ShiftLeft") {
-            this.accelerateDoubleStop(this.selectedCharacters)
+        if (this.selectedCharacter) {
+            if (e.code == 'KeyD') {
+                this.turnStop(this.selectedCharacter)
+            }
+            else if (e.code == 'KeyA') {
+                this.turnStop(this.selectedCharacter)
+            }
+            else if (e.code == 'KeyS') {
+                this.accelerateStop(this.selectedCharacter)
+            }
+            else if (e.code == 'KeyW') {
+                this.accelerateStop(this.selectedCharacter)
+            }
+            else if (e.code == "ShiftLeft") {
+                this.accelerateDoubleStop(this.selectedCharacter)
+            }
         }
     }
 
-    private accelerateDoubleStop(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.accelerateDoubleStop(characters, this.player?.id);
-            if (c.length > 0) {
+    private accelerateDoubleStop(character: Character) {
+        if (character) {
+            const c = this.gameEngine.accelerateDoubleStop(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, c);
             }
         }
     }
 
-    private accelerateStop(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.accelerateStop(characters, this.player?.id);
-            if (c.length > 0) {
+    private accelerateStop(character: Character) {
+        if (character) {
+            const c = this.gameEngine.accelerateStop(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.STOP_ACCELERATE, c);
             }
         }
     }
 
-    private turnStop(characters: Character[]) {
-        if (characters) {
-            const c = this.gameEngine.turnStop(characters, this.player?.id);
-            if (c.length > 0) {
+    private turnStop(character: Character) {
+        if (character) {
+            const c = this.gameEngine.turnStop(character, this.player?.id);
+            if (c) {
                 this.socket?.emit(CONSTANTS.TURN_STOP, c);
             }
         }
@@ -563,9 +563,9 @@ export default class ClientEngine {
                 this.emit(CONSTANTS.CLAIMED_CHARACTERS, c)
             })
 
-            this.socket?.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacters: Character[]) => {
-                this.selectedCharacters = selectedCharacters
-                this.emit(CONSTANTS.SELECTED_CHARACTERS, selectedCharacters)
+            this.socket?.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacter: Character) => {
+                this.selectedCharacter = selectedCharacter
+                this.emit(CONSTANTS.SELECTED_CHARACTERS, selectedCharacter)
 
             })
 
@@ -579,13 +579,11 @@ export default class ClientEngine {
                 //tell the gameengine we got an update 
                 this.gameEngine.updateCharacters(characters)
 
-                //tell the ui about any updates to this player's selected characters
-                const mergedSelected = this.selectedCharacters.map((selected) => {
-                    //look for each selected character in the list of characters
-                    const u = characters.find((c) => { return c.id == selected.id })
-                    //if we didn't find it in the list of updated characters, then just use the current value
-                    return { ...selected, ...u }
-                })
+                //look for a new version of the selected character
+                const u = characters.find((c) => { return c.id == this.selectedCharacter?.id })
+                //if we didn't find it in the list of updated characters, then just use the current value
+                const mergedSelected = { ...this.selectedCharacter, ...u }
+
                 //tell the ui about the updates to the selected characters
                 this.emit(CONSTANTS.SELECTED_CHARACTERS, mergedSelected)
 

@@ -28,7 +28,7 @@ export default function ClientUI() {
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [controlledCharacter, setControlledCharacter] = useState<Character>()
-  const [selectedCharacters, setSelectedCharacters] = useState<Character[]>([])
+  const [selectedCharacter, setSelectedCharacter] = useState<Character>()
   const [claimedCharacters, setClaimedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
@@ -38,8 +38,8 @@ export default function ClientUI() {
       setClaimedCharacters(claimedCharacters)
     })
 
-    eventEmitter.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacters: Character[]) => {
-      setSelectedCharacters(selectedCharacters)
+    eventEmitter.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacter: Character) => {
+      setSelectedCharacter(selectedCharacter)
     })
 
     //CONSTANTS.CONTROL_CHARACTER
@@ -195,7 +195,7 @@ export default function ClientUI() {
               controlledCharacter &&
               <CharacterUI character={controlledCharacter} key={controlledCharacter.id}
                 isControlled={true}
-                isSelected={selectedCharacters.some(c => c.id == controlledCharacter.id)}
+                isSelected={selectedCharacter?.id == controlledCharacter.id}
                 isClaimed={claimedCharacters.some(c => c.id == controlledCharacter.id)} >
                 {
                   //<button className={`btn`} onClick={() => castSpell(controlledCharacter.id, 'DISINTEGRATE', [controlledCharacter.id])}>Disintegrate</button>
@@ -205,43 +205,41 @@ export default function ClientUI() {
                   !controlledCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(controlledCharacter.id)}>Claim</button>}
                 {
                   //only show the focus button if its not already selected
-                  !selectedCharacters.some(c => c.id == controlledCharacter.id) && <button className={`btn`} onClick={() => focusCharacter(controlledCharacter.id)}>Focus</button>}
+                  !(selectedCharacter?.id == controlledCharacter?.id) && <button className={`btn`} onClick={() => focusCharacter(controlledCharacter.id)}>Focus</button>}
               </CharacterUI>
             }
             {
               // selected characters
-              selectedCharacters && selectedCharacters.map((character: Character) => {
-                if (character.id != controlledCharacter?.id) {
-                  return <CharacterUI character={character} key={character.id}
-                    isControlled={controlledCharacter?.id == character.id}
-                    isSelected={selectedCharacters.some(c => c.id == character.id)}
-                    isClaimed={claimedCharacters.some(c => c.id == character.id)}
-                  >{
-                      //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                    }
-                    {
-                      //only show the claim button if the character isn't claimed
-                      !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
-                    {
-                      //show the focus button
-                      <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>
-                    }
-                    {
-                      //  show the control button for claimed characters
-                      claimedCharacters.some(c => c.id == character.id) &&
-                      <button className={`btn`} onClick={() => controlCharacter(character.id)}>Control</button>} </CharacterUI>
+              selectedCharacter && selectedCharacter.id != controlledCharacter?.id && <CharacterUI character={selectedCharacter} key={selectedCharacter.id}
+                isControlled={controlledCharacter?.id == selectedCharacter.id}
+                isSelected={true}
+                isClaimed={claimedCharacters.some(c => c.id == selectedCharacter.id)}
+              >{
+                  //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
                 }
-              })
+                {
+                  //only show the claim button if the character isn't claimed
+                  !selectedCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(selectedCharacter.id)}>Claim</button>}
+                {
+                  //show the focus button
+                  <button className={`btn`} onClick={() => focusCharacter(selectedCharacter.id)}>Focus</button>
+                }
+                {
+                  //  show the control button for claimed characters
+                  claimedCharacters.some(c => c.id == selectedCharacter.id) &&
+                  <button className={`btn`} onClick={() => controlCharacter(selectedCharacter.id)}>Control</button>
+                }
+              </CharacterUI>
             }
             {
               //my claimed characters
               claimedCharacters && claimedCharacters.map((character: Character) => {
                 //make sure we didn't already show it as a controlled or selected character
-                if (character.id != controlledCharacter?.id && !selectedCharacters.some((c) => { return c.id == character.id })) {
+                if (character.id != controlledCharacter?.id && character.id != selectedCharacter?.id) {
                   // console.log(character.id)
                   return <CharacterUI character={character} key={character.id}
                     isControlled={controlledCharacter?.id == character.id}
-                    isSelected={selectedCharacters.some(c => c.id == character.id)}
+                    isSelected={selectedCharacter?.id == character.id}
                     isClaimed={claimedCharacters.some(c => c.id == character.id)}>
                     {
                       //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
@@ -251,7 +249,7 @@ export default function ClientUI() {
                       !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
                     {
                       //only show the focus button if its not already selected
-                      !selectedCharacters.some(c => c.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                      !(selectedCharacter?.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
                     {
                       //always show the control button for claimed characters
                       <button className={`btn`} onClick={() => controlCharacter(character.id)}>Control</button>}
@@ -260,7 +258,7 @@ export default function ClientUI() {
               })}
           </div>
         </div>
-      </div>
+      </div >
     </>
   )
 }

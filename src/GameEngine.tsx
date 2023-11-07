@@ -46,46 +46,28 @@ export default class GameEngine {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    accelerateDoubleStop(characters: Character[], playerId: string | undefined) {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    accelerateDoubleStop(character: Character, playerId: string | undefined) {
+        if (character.playerId != playerId) {
+            return
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
+        return c
     }
 
-    accelerateStop(characters: Character[], playerId: string | undefined) {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    accelerateStop(character: Character, playerId: string | undefined) {
+        if (character.playerId != playerId) {
+            return
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
+        return c
     }
 
-    accelerateDouble(characters: Character[], playerId: string | undefined) {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    accelerateDouble(character: Character, playerId: string | undefined) {
+        if (character.playerId != playerId) {
+            return
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
+        return c
     }
 
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
@@ -98,18 +80,12 @@ export default class GameEngine {
         return zones
     }
 
-    turnStop(characters: Character[], playerId: string | undefined) {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    turnStop(character: Character, playerId: string | undefined) {
+        if (character.playerId != playerId) {
+            return
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
+        return c
     }
 
     /**
@@ -126,32 +102,20 @@ export default class GameEngine {
         return undefined
     }
 
-    decelerate(characters: Character[], playerId: string | undefined) {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    decelerate(character: Character, playerId: string | undefined) {
+        if (character.playerId != playerId) {
+            return
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
+        return c
     }
 
-    accelerate(characters: Character[], playerId: string | undefined) {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    accelerate(character: Character, playerId: string | undefined) {
+        if (character.playerId != playerId) {
+            return
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
+        return c
     }
 
     /**
@@ -159,18 +123,12 @@ export default class GameEngine {
      * @param characters list of characters to turn left
      * @returns updated characters. empty array if no characters updated
      */
-    turnLeft(characters: Character[], playerId: string | undefined): Character[] {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    turnLeft(character: Character, playerId: string | undefined): Character | undefined {
+        if (character.playerId != playerId) {
+            return undefined
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
+        return c
     }
 
     /**
@@ -178,18 +136,12 @@ export default class GameEngine {
      * @param characters 
      * @returns a list of characters
      */
-    turnRight(characters: Character[], playerId: string | undefined): Character[] {
-        let updatedCharacters: Character[] = []
-        characters.forEach((character) => {
-            if (character.playerId != playerId) {
-                return
-            }
-            const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
-            if (c) {
-                updatedCharacters.push(c)
-            }
-        })
-        return updatedCharacters
+    turnRight(character: Character, playerId: string | undefined): Character | undefined {
+        if (character.playerId != playerId) {
+            return undefined
+        }
+        const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
+        return c
     }
 
     updateCharacters(characters: Character[]): Character[] {

@@ -56,7 +56,7 @@ export default class ServerEngine {
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
 
                     socket.emit(CONSTANTS.SELECTED_CHARACTERS,
-                        this.gameEngine.gameWorld.getCharacters(player?.selectedCharacters)
+                        this.gameEngine.gameWorld.getCharacter(player?.selectedCharacter)
                     )
                     socket.emit(CONSTANTS.CLAIMED_CHARACTERS,
                         this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
@@ -87,36 +87,36 @@ export default class ServerEngine {
                 this.sendAndSaveCharacterUpdates(characters, zones)
             })
 
-            socket.on(CONSTANTS.TURN_LEFT, async (characters: Character[]) => {
-                this.turnLeft(characters, player)
+            socket.on(CONSTANTS.TURN_LEFT, async (character: Character) => {
+                this.turnLeft(character, player)
             })
 
-            socket.on(CONSTANTS.TURN_RIGHT, async (characters: Character[]) => {
-                this.turnRight(characters, player)
+            socket.on(CONSTANTS.TURN_RIGHT, async (character: Character) => {
+                this.turnRight(character, player)
             })
 
-            socket.on(CONSTANTS.TURN_STOP, async (characters: Character[]) => {
-                this.turnStop(characters, player)
+            socket.on(CONSTANTS.TURN_STOP, async (character: Character) => {
+                this.turnStop(character, player)
             })
 
-            socket.on(CONSTANTS.STOP_ACCELERATE, async (characters: Character[]) => {
-                this.accelerateStop(characters, player)
+            socket.on(CONSTANTS.STOP_ACCELERATE, async (character: Character) => {
+                this.accelerateStop(character, player)
             })
 
-            socket.on(CONSTANTS.ACCELERATE, async (characters: Character[]) => {
-                this.accelerate(characters, player)
+            socket.on(CONSTANTS.ACCELERATE, async (character: Character) => {
+                this.accelerate(character, player)
             })
 
-            socket.on(CONSTANTS.DECELERATE, async (characters: Character[]) => {
-                this.decelerate(characters, player)
+            socket.on(CONSTANTS.DECELERATE, async (character: Character) => {
+                this.decelerate(character, player)
             })
 
-            socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (characters: Character[]) => {
-                this.accelerateDouble(characters, player)
+            socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (character: Character) => {
+                this.accelerateDouble(character, player)
             })
 
-            socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characters: Character[]) => {
-                this.accelerateDoubleStop(characters, player)
+            socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (character: Character) => {
+                this.accelerateDoubleStop(character, player)
             })
 
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
@@ -200,59 +200,59 @@ export default class ServerEngine {
         return undefined
     }
 
-    accelerateDoubleStop(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.accelerateDoubleStop(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    accelerateDoubleStop(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.accelerateDoubleStop(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    accelerateDouble(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.accelerateDouble(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    accelerateDouble(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.accelerateDouble(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    decelerate(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.decelerate(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    decelerate(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.decelerate(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    accelerate(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.accelerate(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    accelerate(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.accelerate(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    accelerateStop(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.accelerateStop(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    accelerateStop(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.accelerateStop(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    turnStop(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.turnStop(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    turnStop(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.turnStop(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    turnRight(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.turnRight(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    turnRight(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.turnRight(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
-    turnLeft(characters: Character[], player: Player | undefined) {
-        const c = this.gameEngine.turnLeft(characters, player?.id)
-        if (c.length > 0) {
-            this.sendAndSaveCharacterUpdates(c, undefined)
+    turnLeft(character: Character, player: Player | undefined) {
+        const c = this.gameEngine.turnLeft(character, player?.id)
+        if (c) {
+            this.sendAndSaveCharacterUpdates([c], undefined)
         }
     }
 
