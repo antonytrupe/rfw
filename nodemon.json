@@ -5,9 +5,10 @@
         ".next"
     ],
     "watch": [
-        "src/GameEngine.tsx","src/ServerEngine.tsx" 
+        "src/GameEngine.tsx",
+        "src/ServerEngine.tsx"
     ],
     "ext": "js json ts tsx jsx",
-    "exec": "npm run dev"
-
+    "exec": "npm run dev",
+    "delay": "2000"
 }

@@ -87,6 +87,10 @@ export default class ServerEngine {
                 this.sendAndSaveCharacterUpdates(characters, zones)
             })
 
+            socket.on(CONSTANTS.ATTACK, async (attacker: string, attackee: string) => {
+                this.attack(attacker, attackee)
+            })
+
             socket.on(CONSTANTS.TURN_LEFT, async (character: Character) => {
                 this.turnLeft(character, player)
             })
@@ -198,6 +202,14 @@ export default class ServerEngine {
         } catch (error) {
         }
         return undefined
+    }
+
+    attack(attacker: string, attackee: string) {
+        this.gameEngine.attack(attacker, attackee)
+    }
+
+    getCharacter(id: string) {
+        return this.gameEngine.getCharacter(id)
     }
 
     accelerateDoubleStop(character: Character, player: Player | undefined) {

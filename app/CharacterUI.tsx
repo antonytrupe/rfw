@@ -52,7 +52,8 @@ export default function CharacterUI({ character, children, isControlled, isSelec
                 <div> level {character.level} {character.characterClass}</div>
                 <div> {character.hp} / {character.maxHp} HP</div>
                 <div> Speed:{character.maxSpeed}ft</div>
-              
+                <div> Actions:{character.actionsRemaining}</div>
+
                 {
                     /*
                     <div> ID:{character.id}</div>

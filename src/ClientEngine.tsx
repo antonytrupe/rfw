@@ -64,7 +64,7 @@ export default class ClientEngine {
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
         this.getCanvas = getCanvas
-        this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
+        this.gameEngine = new GameEngine({ ticksPerSecond: 30, doGameLogic: false }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
@@ -376,7 +376,7 @@ export default class ClientEngine {
             //blue
             ctx.fillStyle = controlledColors.fill
             ctx.strokeStyle = controlledColors.stroke
-        } 
+        }
         else if (selected) {
             //green
             ctx.fillStyle = selectedColors.fill
@@ -423,6 +423,7 @@ export default class ClientEngine {
     }
 
     clickHandler(e: MouseEvent) {
+        // console.log('click')
         //  const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
         // console.log(tzn)
         //const mp = this.getMousePosition(e)
@@ -437,10 +438,28 @@ export default class ClientEngine {
         //  console.log(Array.from(d.values()).length) 
 
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
-        //TODO just the first character
+        //  just the first character
         this.selectedCharacter = characters[0]
-        //tell the ui about the selected characters
+        //tell the ui about the selected character
         this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacter)
+    }
+
+    doubleClickHandler(e: MouseEvent) {
+        //  console.log('doubleclick')
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
+        //  just the first character
+        if (characters.length >= 1) {
+            this.selectedCharacter = characters[0]
+            //tell the ui about the selected character
+            this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacter)
+
+            //if there's a controlled character, then double click means attack
+            if (this.controlledCharacter) {
+                this.gameEngine.attack(this.controlledCharacter.id, this.selectedCharacter.id)
+                //tell the server
+                this.socket?.emit(CONSTANTS.ATTACK, this.controlledCharacter.id, this.selectedCharacter.id)
+            }
+        }
     }
 
     private getZonesInViewPort() {
@@ -486,7 +505,7 @@ export default class ClientEngine {
                 this.decelarate(this.selectedCharacter)
             }
             else if (code == 'KeyW') {
-                console.log('W')
+                // console.log('W')
                 this.accelerate(this.selectedCharacter)
             }
             else if (code == "ShiftLeft") {

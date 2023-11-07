@@ -10,6 +10,7 @@ import Player from "./Player";
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+
     //EventEmitter function
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
     private emit: (eventName: string | symbol, ...args: any[]) => boolean;
@@ -27,19 +28,26 @@ export default class GameEngine {
     //5ft/s*1000ms/s
     //30ft/6seconds
     private speedMultiplier: number = 6000
-    timeoutID: NodeJS.Timeout | undefined;
+    timeoutID: NodeJS.Timeout | undefined
+    doGameLogic: boolean
 
     /**
      * 
      * @param param0 
      * @param eventEmitter 
      */
-    constructor({ ticksPerSecond }: { ticksPerSecond: number }, eventEmitter: EventEmitter) {
+    constructor({ ticksPerSecond, doGameLogic = true }: { ticksPerSecond: number, doGameLogic?: boolean }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
+        this.doGameLogic = doGameLogic
+    }
+
+    attack(attacker: string, attackee: string) {
+        //TODO attacker owner check
+        this.updateCharacter({ id: attacker, actions: [{ action: 'attack', target: attackee }] })
     }
 
     getCharacter(characterId: string) {
@@ -156,8 +164,12 @@ export default class GameEngine {
         return updatedCharacters
     }
 
+    updateCharacter(character: Partial<Character>) {
+        return this.gameWorld.updateCharacter(character)
+    }
+
     createCharacter(character: Partial<Character>): [Character[], Zones] {
-        let maxHp = Math.max(1, Math.floor(Math.random() * 5) - 1)
+        let maxHp = roll({ modifier: 1000 })
 
         const merged = { ...character, size: 5, maxHp: maxHp, hp: maxHp };
 
@@ -207,8 +219,10 @@ export default class GameEngine {
         //TODO figure out if this is the first step of a new turn
         const lastTurn = Math.floor((now - dt) / 1000 / 6)
         const currentTurn = Math.floor(now / 1000 / 6)
+        let newTurn = false
         if (lastTurn != currentTurn) {
-            //console.log('new turn', currentTurn)
+            // console.log('new turn', currentTurn)
+            newTurn = true
         }
         const started = (new Date()).getTime()
         //console.log('GameEngine.step')
@@ -218,8 +232,11 @@ export default class GameEngine {
         const updatedCharacters: Character[] = []
 
         Array.from(this.gameWorld.getAllCharacters().values())
-            .map((character: Character): Character => {
-
+            .forEach((character: Character) => {
+                if (newTurn) {
+                    character.actionsRemaining = 1
+                }
+                //TODO calculate position and angle all at once
                 //calculate the new angle
                 let newDirection = this.calculateDirection(character, dt);
 
@@ -229,12 +246,52 @@ export default class GameEngine {
                 let newPosition: { x: number, y: number } = this.calculatePosition(character, dt);
 
                 const updates = { ...character, ...newPosition, speed: newSpeed, direction: newDirection }
-                //  compare the values and see if they are different at all
-                if (!isEqual(updates, character)) {
-                    updatedCharacters.push({ ...character, ...newPosition, speed: newSpeed, direction: newDirection })
+
+                //TODO actions
+                if (character.actions.length > 0 && character.actionsRemaining > 0 && this.doGameLogic) {
+                    const action = character.actions[0]
+                    //combat
+                    if (action.action == 'attack' && action.target) {
+                        //get the target
+                        const target = this.getCharacter(action.target)
+                        if (target) {
+                            //TODO check range
+                            const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
+                            if (distance <= 5 + 0.5) {
+                                // console.log('distance', distance)
+                                //always spend an action
+                                updates.actionsRemaining = character.actionsRemaining - 1
+                                //roll for attack
+                                const attack = roll({ size: 20 })
+                                if (attack > 10) {
+                                    //console.log('hit', attack)
+                                    //roll for damage
+                                    const damage = roll({ size: 6 })
+
+                                    //update the target
+                                    //TODO don't do this on the client
+                                    const [c,] = this.updateCharacter({ id: target.id, hp: target.hp - damage })
+                                    if (c) {
+                                        updatedCharacters.push(c)
+                                    }
+                                }
+                                else {
+                                    //console.log('miss', attack)
+                                }
+                            }
+                            else {
+                                //  console.log('too far away', distance)
+                            }
+                        }
+                    }
                 }
 
-                return updates
+                //  compare the values and see if they are different at all
+                if (!isEqual(updates, character)) {
+                    updatedCharacters.push({ ...character, ...updates })
+                }
+
+                //return updates
             })
 
         if (updatedCharacters.length > 0) {
@@ -250,6 +307,13 @@ export default class GameEngine {
         const finished = (new Date()).getTime()
         // console.log('step duration', finished - started)
         return updatedCharacters
+    }
+
+    getDistance(p1: { x: number; y: number; }, p2: { x: number; y: number; }) {
+        const deltaX = p2.x - p1.x;
+        const deltaY = p2.y - p1.y;
+        const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+        return distance;
     }
 
     private calculateDirection(character: Character, dt: number) {

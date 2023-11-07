@@ -27,7 +27,7 @@ const Clock = ({ initialTime }: { initialTime?: Date }) => {
                 <div
                     className="sec_hand"
                     style={{
-                        transform: `rotateZ(${time.getSeconds() * 60}deg)`
+                        transform: `rotateZ(${time.getSeconds() * 60 + 60}deg)`
                     }}
                 />
             }

@@ -83,6 +83,10 @@ export default function ClientUI() {
     clientEngine?.clickHandler(event)
   }
 
+  const onDoubleClick = (event: any) => {
+    clientEngine?.doubleClickHandler(event)
+  }
+
   const onKeyDown = (e: any) => {
     clientEngine?.keyDownHandler(e)
   }
@@ -182,6 +186,7 @@ export default function ClientUI() {
           tabIndex={1}
           onWheel={onWheel}
           onClick={onClick}
+          onDoubleClick={onDoubleClick}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
           data-testid="canvas" />

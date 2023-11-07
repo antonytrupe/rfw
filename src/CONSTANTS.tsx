@@ -29,6 +29,8 @@ export const CURRENT_PLAYER = 'current_player'
 export const SELECTED_CHARACTERS = 'client.characters.selected'
 export const CLAIMED_CHARACTERS = 'client.characters.claimed'
 
+export const ATTACK = 'attack'
+
 //serverengine to clientengine
 //clientengine to gameengine
 export const CLIENT_CHARACTER_UPDATE = 'world.character.location.client'

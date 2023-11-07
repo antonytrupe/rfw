@@ -16,7 +16,9 @@ export default class Character {
         tmpHp = 0,
         maxHp = 1,
         characterClass = 'COMMONER',
-        level = 1
+        level = 1,
+        actions = [],
+        actionsRemaining = 1,
     }: {
         id?: string
         playerId?: string
@@ -34,6 +36,8 @@ export default class Character {
         maxHp?: number
         characterClass?: string
         level?: number
+        actions?: []
+        actionsRemaining?: number
     }) {
         this.id = id
         this.playerId = playerId
@@ -51,8 +55,10 @@ export default class Character {
         this.maxHp = maxHp
         this.characterClass = characterClass
         this.level = level
+        this.actions = actions
+        this.actionsRemaining = actionsRemaining
     }
-   id: string
+    id: string
     playerId: string
     size: number
     maxSpeed: number
@@ -68,5 +74,11 @@ export default class Character {
     maxHp: number
     characterClass: string
     level: number
+    actions: Action[]
+    actionsRemaining: number
 }
 
+export class Action {
+    action: string = ''
+    target: string = ''
+}
