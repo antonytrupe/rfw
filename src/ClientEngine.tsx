@@ -6,6 +6,36 @@ import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
 import Player from "./Player";
 
+const selectedColors = {
+    stroke: "#3b9f47",
+    fill: '#59d467'
+}
+
+const controlledColors = {
+    stroke: "#bb3eac",
+    fill: '#fa66e9'
+}
+
+const claimedColors = {
+    stroke: "#0e59d0",
+    fill: '#2070f0'
+}
+
+const selectedControlledColors = {
+    stroke: "#9130b8",
+    fill: '#b150d8'
+}
+
+const selectedClaimedColors = {
+    stroke: "#24d6d6",
+    fill: '#66fafa'
+}
+
+const none = {
+    stroke: "#cacaca",
+    fill: "#F0F0F0"
+}
+
 export default class ClientEngine {
 
     //event things
@@ -278,21 +308,28 @@ export default class ClientEngine {
         const drawHealth = () => {
             ctx.beginPath()
 
-            if (selected && claimed) {
+            if (selected && controlled) {
                 //purple
-                ctx.strokeStyle = "#f94de4"
+                ctx.strokeStyle = selectedControlledColors.stroke
+            }
+            else if (selected && claimed) {
+                //purple
+                ctx.strokeStyle = selectedClaimedColors.stroke
+            }
+            else if (controlled) {
+                ctx.strokeStyle = controlledColors.stroke
             }
             else if (selected) {
                 //green
-                ctx.strokeStyle = "#3b9f46"
+                ctx.strokeStyle = selectedColors.stroke
             }
             else if (claimed) {
                 //blue
-                ctx.strokeStyle = "#0e59d0"
+                ctx.strokeStyle = claimedColors.stroke
             }
             else {
                 //grey
-                ctx.strokeStyle = "#cacaca"
+                ctx.strokeStyle = none.stroke
             }
 
             ctx.lineWidth = 3
@@ -322,25 +359,38 @@ export default class ClientEngine {
 
         const selected = this.selectedCharacter?.id == character.id;
 
-        if (selected && claimed) {
+        const controlled = this.controlledCharacter?.id == character.id
+
+
+        if (selected && controlled) {
             //purple
-            ctx.fillStyle = '#fb86ed'
-            ctx.strokeStyle = "#f94de4"
+            ctx.fillStyle = selectedControlledColors.fill
+            ctx.strokeStyle = selectedControlledColors.stroke
         }
+        else if (selected && claimed) {
+            //purple
+            ctx.fillStyle = selectedClaimedColors.fill
+            ctx.strokeStyle = selectedClaimedColors.stroke
+        }
+        else if (controlled) {
+            //blue
+            ctx.fillStyle = controlledColors.fill
+            ctx.strokeStyle = controlledColors.stroke
+        } 
         else if (selected) {
             //green
-            ctx.fillStyle = '#4fbd5b'
-            ctx.strokeStyle = "#3b9f46"
+            ctx.fillStyle = selectedColors.fill
+            ctx.strokeStyle = selectedColors.stroke
         }
         else if (claimed) {
             //blue
-            ctx.fillStyle = '#2070f0'
-            ctx.strokeStyle = "#0e59d0"
+            ctx.fillStyle = claimedColors.fill
+            ctx.strokeStyle = claimedColors.stroke
         }
         else {
             //grey
-            ctx.fillStyle = "#F0F0F0"
-            ctx.strokeStyle = "#cacaca"
+            ctx.fillStyle = none.fill
+            ctx.strokeStyle = none.stroke
         }
 
         ctx.beginPath()

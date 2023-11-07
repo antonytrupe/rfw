@@ -1,29 +1,30 @@
 .character {
     border: thin black solid;
 
-    &.selected {
-        border: thin #3b9f46 solid;
-        box-shadow: inset 0px 0px 22px #3b9f46;
-    }
-
     &.selectedControlled {
-        border: thin #50d3d8 solid;
-        box-shadow: inset 0px 0px 22px #50d3d8;
-    }
-
-    &.controlled {
-        border: thin #3d3b9f solid;
-        box-shadow: inset 0px 0px 22px #3d3b9f;
+        border: thin #9130b8 solid;
+        box-shadow: inset 0px 0px 22px #b150d8;
     }
 
     &.selectedClaimed {
-        border: thin #f94de4 solid;
-        box-shadow: inset 0px 0px 22px #f94de4;
+        border: thin #24d6d6 solid;
+        box-shadow: inset 0px 0px 22px #66fafa;
+    }
+ 
+    &.selected {
+        border: thin #3b9f47 solid;
+        box-shadow: inset 0px 0px 22px #59d467;
+    }
+ 
+    &.controlled {
+        border: thin #bb3eac solid;
+        box-shadow: inset 0px 0px 22px #fa66e9;
     }
 
+    
     &.claimed {
-        border: thin #0e59d0 solid;
-        box-shadow: inset 0px 0px 22px #0e59d0;
+        border: thin #1e67db solid;
+        box-shadow: inset 0px 0px 22px #1e67db;
     }
 }
 
