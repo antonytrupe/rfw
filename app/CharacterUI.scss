@@ -1,29 +1,19 @@
 .character {
     border: thin black solid;
+    box-shadow: inset 0px 0px 22px #ffffff;
 
-    &.selectedControlled {
-        border: thin #9130b8 solid;
-        box-shadow: inset 0px 0px 22px #b150d8;
+    &.targeted {
+        border: medium #c02020 solid;
+        box-shadow: inset 0px 0px 22px #f05757;
     }
 
-    &.selectedClaimed {
-        border: thin #24d6d6 solid;
-        box-shadow: inset 0px 0px 22px #66fafa;
-    }
- 
     &.selected {
-        border: thin #3b9f47 solid;
-        box-shadow: inset 0px 0px 22px #59d467;
-    }
- 
-    &.controlled {
-        border: thin #bb3eac solid;
-        box-shadow: inset 0px 0px 22px #fa66e9;
+        border: medium #d33333 solid;
+        box-shadow: inset 0px 0px 22px #d34040;
     }
 
-    
-    &.claimed {
-        border: thin #1e67db solid;
+    &.controlled {
+        border: medium #1e67db solid;
         box-shadow: inset 0px 0px 22px #1e67db;
     }
 }

@@ -6,7 +6,8 @@
     ],
     "watch": [
         "src/GameEngine.tsx",
-        "src/ServerEngine.tsx"
+        "src/ServerEngine.tsx",
+        "src/GameWorld.tsx"
     ],
     "ext": "js json ts tsx jsx",
     "exec": "npm run dev",

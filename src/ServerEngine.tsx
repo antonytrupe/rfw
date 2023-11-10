@@ -55,17 +55,19 @@ export default class ServerEngine {
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
 
-                    socket.emit(CONSTANTS.SELECTED_CHARACTERS,
-                        this.gameEngine.gameWorld.getCharacter(player?.selectedCharacter)
-                    )
                     socket.emit(CONSTANTS.CLAIMED_CHARACTERS,
                         this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
+                    )
+
+                    socket.emit(CONSTANTS.CONTROL_CHARACTER,
+                        this.gameEngine.gameWorld.getCharacter(player?.controlledCharacter)
                     )
                 }
             })
 
             //CONSTANTS.CLIENT_INITIAL
             socket.on(CONSTANTS.CLIENT_INITIAL, async (viewPort: CONSTANTS.CLIENT_INITIAL_INTERFACE) => {
+                //TODO join the right zone channels given the viewPort
                 socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE,
                     this.gameEngine.gameWorld.getCharactersWithin(viewPort)
                 )
@@ -187,7 +189,9 @@ export default class ServerEngine {
         try {
             old = await this.playerDB.getObject<Player>('/PLAYER/' + player.email)
         }
-        catch (error) { }
+        catch (error) {
+
+        }
         const merged = { ...new Player({}), ...old, ...player }
         this.playerDB.push('/PLAYER/' + player.email, merged)
         return merged
@@ -205,7 +209,11 @@ export default class ServerEngine {
     }
 
     attack(attacker: string, attackee: string) {
-        this.gameEngine.attack(attacker, attackee)
+        console.log('serverengine.attack')
+        const c = this.gameEngine.attack(attacker, attackee)
+        if (c) {
+             this.sendAndSaveCharacterUpdates([c])
+        }
     }
 
     getCharacter(id: string) {
@@ -328,7 +336,7 @@ export default class ServerEngine {
         //claim it if possible
         this.claimCharacter(characterId, playerEmail)
 
-        this.savePlayer({ ...player, ...{ controlledCharacter: characterId } })
+        this.savePlayer({ ...player, controlledCharacter: characterId })
 
     }
 
@@ -366,7 +374,7 @@ export default class ServerEngine {
         }
     }
 
-    private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones | undefined) {
+    private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones | undefined = undefined) {
         //TODO only send character updates to the rooms they're in
         this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
 

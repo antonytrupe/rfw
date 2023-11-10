@@ -26,7 +26,7 @@ export interface CLIENT_INITIAL_INTERFACE extends ViewPort { }
 
 export const CURRENT_PLAYER = 'current_player'
 
-export const SELECTED_CHARACTERS = 'client.characters.selected'
+export const SELECTED_CHARACTER = 'client.characters.selected'
 export const CLAIMED_CHARACTERS = 'client.characters.claimed'
 
 export const ATTACK = 'attack'
@@ -64,3 +64,4 @@ export const STOP_DOUBLE_ACCELERATE = 'world.character.stop_double_accelerate'
 export const CAST_SPELL = 'world.character.cast_spell'
 export const CLAIM_CHARACTER = 'world.character.claim'
 export const CONTROL_CHARACTER = 'world.character.control'
+export const TARGET_CHARACTER = 'world.character.targeted'

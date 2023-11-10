@@ -1,7 +1,7 @@
 ## INFO
 how to run  
 npm install  
-npm run dev  
+npm run dev, or npm run nodemon to pick up changes to the server 
 
 ## themes/principles/ideas
 perma death  
@@ -12,8 +12,12 @@ play muliple characters but not at once
 able to give characters goals(move to a new location, focus on a career)  
 magical portals that let you fast travel but age you based on normal travel speed
 
-## TODO
+## TODO LIST
+1. show the targeted character
+1. some sort of animation for attacking
 1. combat
+2. character age
+2. teleport
 2. unclaim character
 3. touch controls
 4. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)

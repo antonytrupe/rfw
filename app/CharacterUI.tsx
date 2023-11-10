@@ -3,45 +3,23 @@ import './CharacterUI.scss'
 
 import Character from "@/Character"
 
-export default function CharacterUI({ character, children, isControlled, isSelected, isClaimed }: {
-    character: Character, children: any, isControlled: boolean, isSelected: boolean, isClaimed: boolean
+export default function CharacterUI({ character, children, isControlled = false, isSelected = false, isClaimed = false, isTargeted = false }: {
+    character: Character, children: any, isControlled?: boolean, isSelected?: boolean, isClaimed?: boolean, isTargeted?: boolean
 }) {
 
     const statusStyle = useMemo(() => {
-        if (isSelected && isControlled) {
-            //green
-            //ctx.fillStyle = '#4fbd5b'
-            //ctx.strokeStyle = "#3b9f46"
-            return 'selectedControlled'
-        }
-        else if (isControlled) {
-            //green
-            //ctx.fillStyle = '#4fbd5b'
-            //ctx.strokeStyle = "#3b9f46"
+        if (isControlled) {
             return 'controlled'
         }
-        else if (isSelected && isClaimed) {
-            //purple
-            //ctx.fillStyle = '#fb86ed'
-            //ctx.strokeStyle = "#f94de4"
-            return 'selectedClaimed'
-        }
         else if (isSelected) {
-            //green
-            //ctx.fillStyle = '#4fbd5b'
-            //ctx.strokeStyle = "#3b9f46"
             return 'selected'
+        } else if (isTargeted) {
+            return 'targeted'
         }
         else if (isClaimed) {
-            //blue
-            //ctx.fillStyle = '#2070f0'
-            //ctx.strokeStyle = "#0e59d0"
             return 'claimed'
         }
         else {
-            //grey
-            //ctx.fillStyle = "#F0F0F0"
-            //ctx.strokeStyle = "#cacaca"
             return ''
         }
     }, [isControlled, isSelected, isClaimed]);
@@ -53,10 +31,10 @@ export default function CharacterUI({ character, children, isControlled, isSelec
                 <div> {character.hp} / {character.maxHp} HP</div>
                 <div> Speed:{character.maxSpeed}ft</div>
                 <div> Actions:{character.actionsRemaining}</div>
-
+                <div> Target:{character.target}</div>
                 {
                     /*
-                    <div> ID:{character.id}</div>
+                   
                     <div> size:{character.size}</div>
                     <div> direction:{character.direction.toFixed(2)}</div>
                     <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>

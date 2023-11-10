@@ -4,25 +4,25 @@ export default class Player {
         email = "",
         id = "",
         claimedCharacters = [],
-        selectedCharacter = '',
+        //selectedCharacter = '',
         controlledCharacter = ''
     }: {
         email?: string
         id?: string
         claimedCharacters?: string[]
-        selectedCharacter?: string
+        //selectedCharacter?: string
         controlledCharacter?: string
     }) {
         this.email = email
         this.id = id
         this.claimedCharacters = claimedCharacters
-        this.selectedCharacter = selectedCharacter
+        //this.selectedCharacter = selectedCharacter
         this.controlledCharacter = controlledCharacter
     }
     email: string
     id: string
     claimedCharacters: string[]
-    selectedCharacter: string
+    //selectedCharacter: string
     controlledCharacter: string
 }
 

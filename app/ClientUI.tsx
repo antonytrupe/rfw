@@ -10,6 +10,7 @@ import CommunityCreation from './CommunityCreation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Clock from './components/clock/clock';
+import { Accordion } from 'react-bootstrap';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
@@ -28,23 +29,30 @@ export default function ClientUI() {
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [controlledCharacter, setControlledCharacter] = useState<Character>()
+  const [targetCharacter, setTargetCharacter] = useState<Character>()
+  /**
+     * @deprecated The method should not be used
+     */
   const [selectedCharacter, setSelectedCharacter] = useState<Character>()
   const [claimedCharacters, setClaimedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
 
-    eventEmitter.on(CONSTANTS.CLAIMED_CHARACTERS, (claimedCharacters: Character[]) => {
-      setClaimedCharacters(claimedCharacters)
+    eventEmitter.on(CONSTANTS.CLAIMED_CHARACTERS, (character: Character[]) => {
+      setClaimedCharacters(character)
     })
 
-    eventEmitter.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacter: Character) => {
-      setSelectedCharacter(selectedCharacter)
+    eventEmitter.on(CONSTANTS.SELECTED_CHARACTER, (character: Character) => {
+      setSelectedCharacter(character)
     })
 
-    //CONSTANTS.CONTROL_CHARACTER
-    eventEmitter.on(CONSTANTS.CONTROL_CHARACTER, (controlledCharacter: Character) => {
-      setControlledCharacter(controlledCharacter)
+    eventEmitter.on(CONSTANTS.CONTROL_CHARACTER, (character: Character) => {
+      setControlledCharacter(character)
+    })
+
+    eventEmitter.on(CONSTANTS.TARGET_CHARACTER, (character: Character) => {
+      setTargetCharacter(character)
     })
 
     eventEmitter.on(CONSTANTS.DISCONNECT, () => {
@@ -81,14 +89,18 @@ export default function ClientUI() {
 
   const onClick = (event: any) => {
     clientEngine?.clickHandler(event)
-  }
+  } 
 
   const onDoubleClick = (event: any) => {
-    clientEngine?.doubleClickHandler(event)
+     clientEngine?.doubleClickHandler(event)
   }
 
   const onKeyDown = (e: any) => {
     clientEngine?.keyDownHandler(e)
+  }
+
+  const onMouseMove = (e: any) => {
+    clientEngine?.mouseMoveHandler(e)
   }
 
   const onKeyUp = (e: any) => {
@@ -137,9 +149,17 @@ export default function ClientUI() {
     }
   }
 
+  const unClaim = (characterId: string) => {
+    //TODO unclaim
+  }
+
   function controlCharacter(characterId: string) {
     clientEngine?.control(characterId)
-    setControlledCharacter(clientEngine?.getCharacter(characterId))
+    const c = clientEngine?.getCharacter(characterId);
+    setControlledCharacter(c)
+    if (c?.target) {
+      setTargetCharacter(clientEngine?.getCharacter(c?.target))
+    }
   }
 
   const { data: session } = useSession();
@@ -189,7 +209,11 @@ export default function ClientUI() {
           onDoubleClick={onDoubleClick}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
+          onMouseMove={onMouseMove}
           data-testid="canvas" />
+
+{
+  /*
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: '200px' }}>
           {
             // characters
@@ -198,71 +222,115 @@ export default function ClientUI() {
             {
               // controlled character
               controlledCharacter &&
-              <CharacterUI character={controlledCharacter} key={controlledCharacter.id}
-                isControlled={true}
-                isSelected={selectedCharacter?.id == controlledCharacter.id}
-                isClaimed={claimedCharacters.some(c => c.id == controlledCharacter.id)} >
-                {
-                  //<button className={`btn`} onClick={() => castSpell(controlledCharacter.id, 'DISINTEGRATE', [controlledCharacter.id])}>Disintegrate</button>
-                }
-                {
-                  //only show the claim button if the character isn't claimed
-                  !controlledCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(controlledCharacter.id)}>Claim</button>}
-                {
-                  //only show the focus button if its not already selected
-                  !(selectedCharacter?.id == controlledCharacter?.id) && <button className={`btn`} onClick={() => focusCharacter(controlledCharacter.id)}>Focus</button>}
-              </CharacterUI>
+              <Accordion defaultActiveKey="controlled">
+                <Accordion.Item eventKey="controlled">
+                  <Accordion.Header>Controlled</Accordion.Header>
+                  <Accordion.Body>
+                    <CharacterUI character={controlledCharacter} key={controlledCharacter.id}
+                      isControlled={true}
+                      isSelected={selectedCharacter?.id == controlledCharacter.id}
+                      isClaimed={claimedCharacters.some(c => c.id == controlledCharacter.id)} >
+                      {
+                        //only show the focus button if its not already selected
+                        !(selectedCharacter?.id == controlledCharacter?.id) && <button className={`btn`} onClick={() => focusCharacter(controlledCharacter.id)}>Focus</button>
+                      }
+                    </CharacterUI>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Accordion>
             }
             {
-              // selected characters
-              selectedCharacter && selectedCharacter.id != controlledCharacter?.id && <CharacterUI character={selectedCharacter} key={selectedCharacter.id}
-                isControlled={controlledCharacter?.id == selectedCharacter.id}
-                isSelected={true}
-                isClaimed={claimedCharacters.some(c => c.id == selectedCharacter.id)}
-              >{
-                  //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                }
-                {
-                  //only show the claim button if the character isn't claimed
-                  !selectedCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(selectedCharacter.id)}>Claim</button>}
-                {
-                  //show the focus button
-                  <button className={`btn`} onClick={() => focusCharacter(selectedCharacter.id)}>Focus</button>
-                }
-                {
-                  //  show the control button for claimed characters
-                  claimedCharacters.some(c => c.id == selectedCharacter.id) &&
-                  <button className={`btn`} onClick={() => controlCharacter(selectedCharacter.id)}>Control</button>
-                }
-              </CharacterUI>
+              // selected/target characters
+              selectedCharacter &&
+              <Accordion defaultActiveKey="target">
+                <Accordion.Item eventKey="target">
+                  <Accordion.Header>Targets</Accordion.Header>
+                  <Accordion.Body>
+                    {
+                      targetCharacter &&
+                      <CharacterUI character={targetCharacter}
+                        isTargeted={true}
+                        isControlled={controlledCharacter?.id == targetCharacter.id}
+                        isSelected={selectedCharacter.id == targetCharacter.id}
+                        isClaimed={claimedCharacters.some(c => c.id == targetCharacter.id)}>
+                        {
+                          //only show the claim button if the character isn't claimed
+                          !targetCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(targetCharacter.id)}>Claim</button>}
+                        {
+                          //show the focus button
+                          <button className={`btn`} onClick={() => focusCharacter(targetCharacter.id)}>Focus</button>
+                        }
+                        {
+                          //  show the control button for claimed characters
+                          claimedCharacters.some(c => c.id == targetCharacter.id) &&
+                          <button className={`btn`} onClick={() => controlCharacter(targetCharacter.id)}>Control</button>
+                        }
+                      </CharacterUI>
+
+                    }
+
+
+                    {
+                      selectedCharacter && <CharacterUI character={selectedCharacter} key={selectedCharacter.id}
+                        isControlled={controlledCharacter?.id == selectedCharacter.id}
+                        isSelected={true}
+                        isClaimed={claimedCharacters.some(c => c.id == selectedCharacter.id)}>
+                        {
+                          //only show the claim button if the character isn't claimed
+                          !selectedCharacter.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(selectedCharacter.id)}>Claim</button>}
+                        {
+                          //show the focus button
+                          <button className={`btn`} onClick={() => focusCharacter(selectedCharacter.id)}>Focus</button>
+                        }
+                        {
+                          //  show the control button for claimed characters
+                          claimedCharacters.some(c => c.id == selectedCharacter.id) &&
+                          <button className={`btn`} onClick={() => controlCharacter(selectedCharacter.id)}>Control</button>
+                        }
+                      </CharacterUI>
+
+                    }
+
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Accordion>
             }
             {
               //my claimed characters
-              claimedCharacters && claimedCharacters.map((character: Character) => {
-                //make sure we didn't already show it as a controlled or selected character
-                if (character.id != controlledCharacter?.id && character.id != selectedCharacter?.id) {
-                  // console.log(character.id)
-                  return <CharacterUI character={character} key={character.id}
-                    isControlled={controlledCharacter?.id == character.id}
-                    isSelected={selectedCharacter?.id == character.id}
-                    isClaimed={claimedCharacters.some(c => c.id == character.id)}>
-                    {
-                      //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
-                    }
-                    {
-                      //only show the claim button if the character isn't claimed
-                      !character.playerId && session?.user?.email && <button className={`btn`} onClick={() => claimCharacter(character.id)}>Claim</button>}
-                    {
-                      //only show the focus button if its not already selected
-                      !(selectedCharacter?.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
-                    {
-                      //always show the control button for claimed characters
-                      <button className={`btn`} onClick={() => controlCharacter(character.id)}>Control</button>}
-                  </CharacterUI>
-                }
-              })}
+              claimedCharacters && (
+                <Accordion>
+                  <Accordion.Item eventKey="claimed">
+                    <Accordion.Header>My Characters</Accordion.Header>
+                    <Accordion.Body>
+                      {
+                        claimedCharacters.map((character: Character) =>
+                          <CharacterUI character={character} key={character.id}
+                            isControlled={controlledCharacter?.id == character.id}
+                            isSelected={selectedCharacter?.id == character.id}
+                            isClaimed={claimedCharacters.some(c => c.id == character.id)}>
+                            {
+                              //<button className={`btn`} onClick={() => castSpell(character.id, 'DISINTEGRATE', [character.id])}>Disintegrate</button>
+                            }
+                            {
+                              <button className={`btn`} onClick={() => unClaim(character.id)}>UnClaim</button>}
+                            {
+                              //only show the focus button if its not already selected
+                              !(selectedCharacter?.id == character.id) && <button className={`btn`} onClick={() => focusCharacter(character.id)}>Focus</button>}
+                            {
+                              //always show the control button for claimed characters
+                              <button className={`btn`} onClick={() => controlCharacter(character.id)}>Control</button>}
+                          </CharacterUI>
+                        )
+                      }
+                    </Accordion.Body>
+                  </Accordion.Item>
+                </Accordion>
+              )
+            }
           </div>
         </div>
+*/
+        }
       </div >
     </>
   )

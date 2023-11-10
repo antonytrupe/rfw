@@ -6,35 +6,6 @@ import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
 import Player from "./Player";
 
-const selectedColors = {
-    stroke: "#3b9f47",
-    fill: '#59d467'
-}
-
-const controlledColors = {
-    stroke: "#bb3eac",
-    fill: '#fa66e9'
-}
-
-const claimedColors = {
-    stroke: "#0e59d0",
-    fill: '#2070f0'
-}
-
-const selectedControlledColors = {
-    stroke: "#9130b8",
-    fill: '#b150d8'
-}
-
-const selectedClaimedColors = {
-    stroke: "#24d6d6",
-    fill: '#66fafa'
-}
-
-const none = {
-    stroke: "#cacaca",
-    fill: "#F0F0F0"
-}
 
 export default class ClientEngine {
 
@@ -47,6 +18,9 @@ export default class ClientEngine {
     private stopped: boolean = false //control the draw loop
     private connected: boolean = false
     private controlledCharacter: Character | undefined
+    /**
+     * @deprecated The method should not be used
+     */
     private selectedCharacter: Character | undefined
     private claimedCharacters: Character[] = []
     private gameEngine: GameEngine
@@ -60,6 +34,7 @@ export default class ClientEngine {
     private scale: number = 1
     private translateX = -20 * this.scale
     private translateY = -20 * this.scale
+    private mousePosition: { x: number, y: number, } = { x: 0, y: 0 }
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
@@ -99,15 +74,16 @@ export default class ClientEngine {
 
     claim(characterId: string) {
         //  client claim
+        console.log('claim')
         this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
     }
 
     control(characterId: string) {
-        //don't think the server cares
-        //this.socket?.emit(CONSTANTS.CONTROL_CHARACTER, characterId)
         this.controlledCharacter = this.gameEngine.gameWorld.getCharacter(characterId)
         //tell the ui
         this.emit(CONSTANTS.CONTROL_CHARACTER, this.controlledCharacter)
+        //tell the server
+        this.socket?.emit(CONSTANTS.CONTROL_CHARACTER, characterId)
     }
 
     focus(characterId: string) {
@@ -161,6 +137,10 @@ export default class ClientEngine {
         // Use the identity matrix while clearing the canvas
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+        ctx.fillStyle = "#d7f0dd";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         ctx.translate(-this.translateX * this.PIXELS_PER_FOOT / this.scale, -this.translateY * this.PIXELS_PER_FOOT / this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
 
@@ -183,6 +163,20 @@ export default class ClientEngine {
         else if (this.scale <= 1000) {
             this.drawHourScale(ctx)
         }
+
+        const pointedCharacter = this.gameEngine.gameWorld.getCharacterAt(this.mousePosition);
+        //if the mouse is over a character
+        if (pointedCharacter) {
+            //then draw character info
+           
+            this.drawCharacterTooltip(pointedCharacter, this.mousePosition)
+        }
+    }
+
+    drawCharacterTooltip(character: Character, position: { x: number; y: number; }) {
+        console.log(character)
+
+        
     }
 
     private drawCrossHair(ctx: CanvasRenderingContext2D) {
@@ -302,46 +296,61 @@ export default class ClientEngine {
     private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
 
         //don't draw dead characters
-        if (character.hp <= -10)
-            return
+        //if (character.hp <= -10)
+        //    return
+
+
+        const drawControlled = () => {
+            const now = (new Date()).getTime()
+            const a = (3 + Math.sin(now / 200)) / 4
+
+            ctx.save()
+            ctx.rotate(-character.direction)
+
+            ctx.beginPath()
+            ctx.setLineDash([20, 8]);
+
+            ctx.strokeStyle = "rgba(255, 215, 0, " + a + ")"
+            ctx.lineWidth = 6
+            ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 + 3, 0, 2 * Math.PI)
+            ctx.stroke()
+            ctx.restore()
+        }
+
+        const drawTargeted = () => {
+            const now = (new Date()).getTime()
+            const a = (3 + Math.sin((now + 3) / 200)) / 4
+
+            ctx.save()
+            ctx.rotate(-character.direction + .2)
+
+            ctx.beginPath()
+            ctx.setLineDash([20, 8]);
+
+            ctx.strokeStyle = "#bb2930"
+            ctx.strokeStyle = "rgba(187, 41, 48, " + a + ")"
+            ctx.lineWidth = 6
+            ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 + 3, 0, 2 * Math.PI)
+            ctx.stroke()
+            ctx.restore()
+        }
+
 
         const drawHealth = () => {
             ctx.beginPath()
 
-            if (selected && controlled) {
-                //purple
-                ctx.strokeStyle = selectedControlledColors.stroke
-            }
-            else if (selected && claimed) {
-                //purple
-                ctx.strokeStyle = selectedClaimedColors.stroke
-            }
-            else if (controlled) {
-                ctx.strokeStyle = controlledColors.stroke
-            }
-            else if (selected) {
-                //green
-                ctx.strokeStyle = selectedColors.stroke
-            }
-            else if (claimed) {
-                //blue
-                ctx.strokeStyle = claimedColors.stroke
-            }
-            else {
-                //grey
-                ctx.strokeStyle = none.stroke
-            }
+            ctx.strokeStyle = "#e0e0e0"
 
             ctx.lineWidth = 3
             if (character.hp > 0) {
                 //ctx.strokeStyle = "#008000"
-                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
+                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 - 3,
                     (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
                     (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
             }
             else {
                 ctx.strokeStyle = "#D22B2B"
-                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2,
+                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 - 3,
                     ((character.hp + 10) / -10) * Math.PI - Math.PI / 2,
                     ((-character.hp + 10) / -10) * Math.PI - Math.PI / 2)
             }
@@ -357,40 +366,26 @@ export default class ClientEngine {
             return claimedCharacter.id == character.id;
         })
 
-        const selected = this.selectedCharacter?.id == character.id;
+        // const selected = this.selectedCharacter?.id == character.id;
 
         const controlled = this.controlledCharacter?.id == character.id
+        const targeted = this.controlledCharacter?.target == character.id
 
 
-        if (selected && controlled) {
-            //purple
-            ctx.fillStyle = selectedControlledColors.fill
-            ctx.strokeStyle = selectedControlledColors.stroke
+        ctx.fillStyle = "#f0f0f0"
+
+
+        if (targeted) {
+            //TODO draw a special circle around it
+            drawTargeted()
         }
-        else if (selected && claimed) {
-            //purple
-            ctx.fillStyle = selectedClaimedColors.fill
-            ctx.strokeStyle = selectedClaimedColors.stroke
+        if (controlled) {
+            //TODO draw a special circle around it
+            drawControlled()
         }
-        else if (controlled) {
-            //blue
-            ctx.fillStyle = controlledColors.fill
-            ctx.strokeStyle = controlledColors.stroke
-        }
-        else if (selected) {
-            //green
-            ctx.fillStyle = selectedColors.fill
-            ctx.strokeStyle = selectedColors.stroke
-        }
-        else if (claimed) {
-            //blue
-            ctx.fillStyle = claimedColors.fill
-            ctx.strokeStyle = claimedColors.stroke
-        }
-        else {
-            //grey
-            ctx.fillStyle = none.fill
-            ctx.strokeStyle = none.stroke
+
+        if (claimed) {
+            //TODO draw a star or something
         }
 
         ctx.beginPath()
@@ -441,25 +436,40 @@ export default class ClientEngine {
         //  just the first character
         this.selectedCharacter = characters[0]
         //tell the ui about the selected character
-        this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacter)
+        this.emit(CONSTANTS.SELECTED_CHARACTER, this.selectedCharacter)
     }
 
     doubleClickHandler(e: MouseEvent) {
+        e.stopPropagation()
+        e.preventDefault()
         //  console.log('doubleclick')
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
-        //  just the first character
-        if (characters.length >= 1) {
-            this.selectedCharacter = characters[0]
-            //tell the ui about the selected character
-            this.emit(CONSTANTS.SELECTED_CHARACTERS, this.selectedCharacter)
 
-            //if there's a controlled character, then double click means attack
-            if (this.controlledCharacter) {
-                this.gameEngine.attack(this.controlledCharacter.id, this.selectedCharacter.id)
-                //tell the server
-                this.socket?.emit(CONSTANTS.ATTACK, this.controlledCharacter.id, this.selectedCharacter.id)
+        //if logged in 
+        if (this.player) {
+            //  console.log('this.claimedCharacters', this.claimedCharacters)
+            //  console.log('characters', characters)
+            //if no claimed character
+            if (this.claimedCharacters.length == 0 && characters) {
+                //then claim
+                this.claim(characters[0].id)
+                this.control(characters[0].id)
+            }
+            else if (this.controlledCharacter && characters.length > 0) {
+                //attack it
+                this.attack(this.controlledCharacter.id, characters[0].id)
+            }
+            else if (this.controlledCharacter && characters.length == 0) {
+                //  console.log('clearing attackee')
+                this.attack(this.controlledCharacter.id, '')
             }
         }
+    }
+
+    attack(attackerId: string, attackeeId: string) {
+        this.gameEngine.attack(attackerId, attackeeId)
+        //tell the server
+        this.socket?.emit(CONSTANTS.ATTACK, attackerId, attackeeId)
     }
 
     private getZonesInViewPort() {
@@ -491,25 +501,31 @@ export default class ClientEngine {
         return { x, y }
     }
 
+    mouseMoveHandler(e: MouseEvent) {
+        const p = this.getMousePosition(e)
+        // console.log(p)
+        this.mousePosition = p
+    }
+
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
 
-        if (this.selectedCharacter) {
+        if (this.controlledCharacter) {
             if (code == 'KeyD') {
-                this.turnRight(this.selectedCharacter)
+                this.turnRight(this.controlledCharacter)
             }
             else if (code == 'KeyA') {
-                this.turnLeft(this.selectedCharacter)
+                this.turnLeft(this.controlledCharacter)
             }
             else if (code == 'KeyS') {
-                this.decelarate(this.selectedCharacter)
+                this.decelarate(this.controlledCharacter)
             }
             else if (code == 'KeyW') {
                 // console.log('W')
-                this.accelerate(this.selectedCharacter)
+                this.accelerate(this.controlledCharacter)
             }
             else if (code == "ShiftLeft") {
-                this.accelerateDouble(this.selectedCharacter)
+                this.accelerateDouble(this.controlledCharacter)
             }
         }
     }
@@ -560,21 +576,21 @@ export default class ClientEngine {
     }
 
     keyUpHandler(e: KeyboardEvent) {
-        if (this.selectedCharacter) {
+        if (this.controlledCharacter) {
             if (e.code == 'KeyD') {
-                this.turnStop(this.selectedCharacter)
+                this.turnStop(this.controlledCharacter)
             }
             else if (e.code == 'KeyA') {
-                this.turnStop(this.selectedCharacter)
+                this.turnStop(this.controlledCharacter)
             }
             else if (e.code == 'KeyS') {
-                this.accelerateStop(this.selectedCharacter)
+                this.accelerateStop(this.controlledCharacter)
             }
             else if (e.code == 'KeyW') {
-                this.accelerateStop(this.selectedCharacter)
+                this.accelerateStop(this.controlledCharacter)
             }
             else if (e.code == "ShiftLeft") {
-                this.accelerateDoubleStop(this.selectedCharacter)
+                this.accelerateDoubleStop(this.controlledCharacter)
             }
         }
     }
@@ -632,10 +648,11 @@ export default class ClientEngine {
                 this.emit(CONSTANTS.CLAIMED_CHARACTERS, c)
             })
 
-            this.socket?.on(CONSTANTS.SELECTED_CHARACTERS, (selectedCharacter: Character) => {
-                this.selectedCharacter = selectedCharacter
-                this.emit(CONSTANTS.SELECTED_CHARACTERS, selectedCharacter)
-
+            this.socket?.on(CONSTANTS.CONTROL_CHARACTER, (c: Character) => {
+                this.controlledCharacter = c
+                this.emit(CONSTANTS.CONTROL_CHARACTER, c)
+                const t = this.getCharacter(c.target)
+                this.emit(CONSTANTS.TARGET_CHARACTER, t)
             })
 
             //disconnect handler
@@ -648,15 +665,24 @@ export default class ClientEngine {
                 //tell the gameengine we got an update 
                 this.gameEngine.updateCharacters(characters)
 
-                //look for a new version of the selected character
-                const u = characters.find((c) => { return c.id == this.selectedCharacter?.id })
-                //if we didn't find it in the list of updated characters, then just use the current value
-                const mergedSelected = { ...this.selectedCharacter, ...u }
+                //updates for the client ui
+                if (this.selectedCharacter) {
+                    //look for a new version of the selected character
+                    const u = characters.find((c) => { return c.id == this.selectedCharacter?.id })
 
-                //tell the ui about the updates to the selected characters
-                this.emit(CONSTANTS.SELECTED_CHARACTERS, mergedSelected)
+                    //tell the ui about the updates to the selected character
+                    this.emit(CONSTANTS.SELECTED_CHARACTER, u)
+                }
 
-                //tell the ui about any updates to this player's selected characters
+                if (this.controlledCharacter) {
+                    //look for a new version of the controlled character
+                    const u = characters.find((c) => { return c.id == this.controlledCharacter?.id })
+                    this.controlledCharacter = u
+                    //tell the ui about the updates to the selected character
+                    this.emit(CONSTANTS.CONTROL_CHARACTER, u)
+                }
+
+                //tell the ui about any updates to this player's claimed characters
                 const mergedClaimed = this.claimedCharacters.map((claimed) => {
                     //look for each selected character in the list of characters
                     const u = characters.find((c) => { return c.id == claimed.id })

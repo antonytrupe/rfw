@@ -45,9 +45,13 @@ export default class GameEngine {
         this.doGameLogic = doGameLogic
     }
 
-    attack(attacker: string, attackee: string) {
+    attack(attacker: string, attackee: string): Character | undefined {
         //TODO attacker owner check
-        this.updateCharacter({ id: attacker, actions: [{ action: 'attack', target: attackee }] })
+       // console.log('gameengine.attack')
+       // console.log('attacker',attacker)
+        const [c,] = this.updateCharacter({ id: attacker, target: attackee, actions: [{ action: 'attack', target: attackee }] })
+       // console.log(c)
+        return c
     }
 
     getCharacter(characterId: string) {

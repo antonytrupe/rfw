@@ -63,11 +63,13 @@ export default class GameWorld {
      */
     updateCharacter(character: Partial<Character>): [Character | undefined, Zones] {
         //if we don't have a character id, give up
+        // console.log('character.id',character.id)
         if (!character.id) {
             return [undefined, new Map()]
         }
 
         const old: Character | undefined = this.characters.get(character.id)
+        // console.log('old',old)
         const merged = { ...new Character({}), ...old, ...character }
 
         if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
@@ -77,6 +79,7 @@ export default class GameWorld {
 
         //  bail if nothing is changing
         if (isEqual(old, merged)) {
+            // console.log('nothing changed')
             return [undefined, new Map()]
         }
 
@@ -121,6 +124,14 @@ export default class GameWorld {
 
     getAdjacentTacticalZoneNames() {
         //TODO getAdjacentTacticalZoneNames
+    }
+
+    getCharacterAt(position: { x: number, y: number }): Character | undefined {
+        const l = this.getCharactersAt(position)
+        if (l.length > 0) {
+            return l[0]
+        }
+        return undefined
     }
 
     getCharactersAt(position: { x: number, y: number }): Character[] {

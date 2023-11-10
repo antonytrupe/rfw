@@ -1,4 +1,4 @@
-import { SessionProvider } from 'next-auth/react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 //import { auth } from '../auth';
 import ClientUI from './ClientUI';
 
