@@ -1,37 +1,22 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './CharacterUI.scss'
 
 import Character from "@/Character"
 
-export default function CharacterUI({ character, children, isControlled = false, isSelected = false, isClaimed = false, isTargeted = false }: {
-    character: Character, children: any, isControlled?: boolean, isSelected?: boolean, isClaimed?: boolean, isTargeted?: boolean
+export default function CharacterUI({ character, position, children = undefined }: {
+    character: Character | undefined, position: { x: number, y: number }|undefined, children?: any
 }) {
 
-    const statusStyle = useMemo(() => {
-        if (isControlled) {
-            return 'controlled'
-        }
-        else if (isSelected) {
-            return 'selected'
-        } else if (isTargeted) {
-            return 'targeted'
-        }
-        else if (isClaimed) {
-            return 'claimed'
-        }
-        else {
-            return ''
-        }
-    }, [isControlled, isSelected, isClaimed]);
-
     return (
-        <div key={character.id} className={`card character ${statusStyle}`} style={{ display: 'flex', flexDirection: 'row' }}>
+        character &&
+        <div className={`card character`}
+            style={{ display: "flex", position: "absolute", flexDirection: 'row', top: `${position?.y}px`, left: `${position?.x}px` }}>
             <div className="stats" >
-                <div> level {character.level} {character.characterClass}</div>
-                <div> {character.hp} / {character.maxHp} HP</div>
-                <div> Speed:{character.maxSpeed}ft</div>
-                <div> Actions:{character.actionsRemaining}</div>
-                <div> Target:{character.target}</div>
+                <div> level {character?.level} {character?.characterClass}</div>
+                <div> {character?.hp} / {character?.maxHp} HP</div>
+                <div> Speed:{character?.maxSpeed}ft</div>
+                <div> Actions:{character?.actionsRemaining}</div>
+                <div> Target:{character?.target}</div>
                 {
                     /*
                    

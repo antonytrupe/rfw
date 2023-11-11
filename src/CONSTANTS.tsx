@@ -28,6 +28,8 @@ export const CURRENT_PLAYER = 'current_player'
 
 export const SELECTED_CHARACTER = 'client.characters.selected'
 export const CLAIMED_CHARACTERS = 'client.characters.claimed'
+export const HOVERED_CHARACTER = 'client.character.hovered'
+
 
 export const ATTACK = 'attack'
 

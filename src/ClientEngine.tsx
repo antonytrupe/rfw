@@ -163,20 +163,6 @@ export default class ClientEngine {
         else if (this.scale <= 1000) {
             this.drawHourScale(ctx)
         }
-
-        const pointedCharacter = this.gameEngine.gameWorld.getCharacterAt(this.mousePosition);
-        //if the mouse is over a character
-        if (pointedCharacter) {
-            //then draw character info
-           
-            this.drawCharacterTooltip(pointedCharacter, this.mousePosition)
-        }
-    }
-
-    drawCharacterTooltip(character: Character, position: { x: number; y: number; }) {
-        console.log(character)
-
-        
     }
 
     private drawCrossHair(ctx: CanvasRenderingContext2D) {
@@ -380,7 +366,8 @@ export default class ClientEngine {
             drawTargeted()
         }
         if (controlled) {
-            //TODO draw a special circle around it
+            //  draw a special circle around it
+          //  console.log('controlled')
             drawControlled()
         }
 
@@ -492,7 +479,7 @@ export default class ClientEngine {
         return { x: middleX, y: middleY }
     }
 
-    private getMousePosition(e: MouseEvent) {
+    getMousePosition(e: MouseEvent) {
         const rect = this.getCanvas().getBoundingClientRect()
         const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
         const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
@@ -501,15 +488,22 @@ export default class ClientEngine {
         return { x, y }
     }
 
-    mouseMoveHandler(e: MouseEvent) {
-        const p = this.getMousePosition(e)
-        // console.log(p)
-        this.mousePosition = p
+    getScreenPosition(p: { x: number, y: number }) {
+        const rect = this.getCanvas().getBoundingClientRect()
+        const y = p.y * this.PIXELS_PER_FOOT / this.scale - (this.translateY * this.PIXELS_PER_FOOT / this.scale) + rect.top
+        const x = p.x * this.PIXELS_PER_FOOT / this.scale - (this.translateX * this.PIXELS_PER_FOOT / this.scale) + rect.left
+        return { x: x, y: y }
+    }
+
+    getCharacterAt(position: { x: number; y: number; }) {
+        return this.gameEngine.gameWorld.getCharacterAt(position)
     }
 
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
 
+
+       // console.log(this.controlledCharacter)
         if (this.controlledCharacter) {
             if (code == 'KeyD') {
                 this.turnRight(this.controlledCharacter)
@@ -649,6 +643,8 @@ export default class ClientEngine {
             })
 
             this.socket?.on(CONSTANTS.CONTROL_CHARACTER, (c: Character) => {
+              //  console.log(c)
+                this.gameEngine.updateCharacter(c)
                 this.controlledCharacter = c
                 this.emit(CONSTANTS.CONTROL_CHARACTER, c)
                 const t = this.getCharacter(c.target)
@@ -675,11 +671,14 @@ export default class ClientEngine {
                 }
 
                 if (this.controlledCharacter) {
+                   // console.log(this.controlledCharacter)
                     //look for a new version of the controlled character
                     const u = characters.find((c) => { return c.id == this.controlledCharacter?.id })
-                    this.controlledCharacter = u
-                    //tell the ui about the updates to the selected character
-                    this.emit(CONSTANTS.CONTROL_CHARACTER, u)
+                    if (u) {
+                        this.controlledCharacter = u
+                        //tell the ui about the updates to the selected character
+                        this.emit(CONSTANTS.CONTROL_CHARACTER, u)
+                    }
                 }
 
                 //tell the ui about any updates to this player's claimed characters
