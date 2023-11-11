@@ -1,10 +1,10 @@
 import EventEmitter from "events";
 import Character from "./Character";
 import * as CONSTANTS from "./CONSTANTS";
-import GameWorld, { Zone, Zones } from "./GameWorld";
+import GameWorld, { Zones } from "./GameWorld";
 import isEqual from 'lodash.isequal';
 import { roll } from "./utility";
-import Player from "./Player";
+import { GameEvent } from "./ClientEngine";
 
 //processes game logic
 //interacts with the gameworld object and updates it
@@ -47,10 +47,10 @@ export default class GameEngine {
 
     attack(attacker: string, attackee: string): Character | undefined {
         //TODO attacker owner check
-       // console.log('gameengine.attack')
-       // console.log('attacker',attacker)
+        //console.log('gameengine.attack')
+        //console.log('attacker',attacker)
         const [c,] = this.updateCharacter({ id: attacker, target: attackee, actions: [{ action: 'attack', target: attackee }] })
-       // console.log(c)
+        //console.log(c)
         return c
     }
 
@@ -157,7 +157,7 @@ export default class GameEngine {
     }
 
     updateCharacters(characters: Character[]): Character[] {
-        // console.log(characters)
+        //console.log(characters)
         let updatedCharacters: Character[] = []
         characters.forEach((character) => {
             const [c,] = this.gameWorld.updateCharacter(character)
@@ -188,7 +188,7 @@ export default class GameEngine {
         //console.log('spellName', spellName)
         switch (spellName) {
             case 'DISINTEGRATE':
-                // console.log('targetIds', targetIds) 
+                //console.log('targetIds', targetIds) 
                 const damagedTargets = this.gameWorld.getCharacters(targetIds).map((character) => {
                     const damage = roll({ size: 6, count: 2 })
                     if (character) {
@@ -220,12 +220,12 @@ export default class GameEngine {
 
     //leave it public for testing
     step(dt: number, now: number) {
-        //TODO figure out if this is the first step of a new turn
+        //  figure out if this is the first step of a new turn
         const lastTurn = Math.floor((now - dt) / 1000 / 6)
         const currentTurn = Math.floor(now / 1000 / 6)
         let newTurn = false
         if (lastTurn != currentTurn) {
-            // console.log('new turn', currentTurn)
+            //console.log('new turn', currentTurn)
             newTurn = true
         }
         const started = (new Date()).getTime()
@@ -234,6 +234,7 @@ export default class GameEngine {
         //TODO keep track of characters that have their direction and speed acceleration changed separately from their position changed
         //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Character[] = []
+        const gameEvents: GameEvent[] = []
 
         Array.from(this.gameWorld.getAllCharacters().values())
             .forEach((character: Character) => {
@@ -251,18 +252,20 @@ export default class GameEngine {
 
                 const updates = { ...character, ...newPosition, speed: newSpeed, direction: newDirection }
 
-                //TODO actions
+                //actions that are only done on the server(attack/damage)
+                //console.log('this.doGameLogic', this.doGameLogic)
                 if (character.actions.length > 0 && character.actionsRemaining > 0 && this.doGameLogic) {
+                    //console.log('doing an action')
                     const action = character.actions[0]
                     //combat
                     if (action.action == 'attack' && action.target) {
                         //get the target
                         const target = this.getCharacter(action.target)
                         if (target) {
-                            //TODO check range
+                            //check range
                             const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
                             if (distance <= 5 + 0.5) {
-                                // console.log('distance', distance)
+                                //console.log('distance', distance)
                                 //always spend an action
                                 updates.actionsRemaining = character.actionsRemaining - 1
                                 //roll for attack
@@ -273,24 +276,27 @@ export default class GameEngine {
                                     const damage = roll({ size: 6 })
 
                                     //update the target
-                                    //TODO don't do this on the client
                                     const [c,] = this.updateCharacter({ id: target.id, hp: target.hp - damage })
                                     if (c) {
                                         updatedCharacters.push(c)
+                                        gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
                                     }
                                 }
                                 else {
                                     //console.log('miss', attack)
+                                    gameEvents.push({ target: target.id, type: 'miss', amount: 0, time: now })
                                 }
                             }
                             else {
-                                //  console.log('too far away', distance)
+                                //TODO too far away, but not every tick, like once a second or something maybe
+                                //console.log('too far away', distance)
+                                //gameEvents.push({ target: target.id, type: 'to_far_away', amount: 0, time: now })
                             }
                         }
                     }
                 }
 
-                //  compare the values and see if they are different at all
+                //compare the values and see if they are different at all
                 if (!isEqual(updates, character)) {
                     updatedCharacters.push({ ...character, ...updates })
                 }
@@ -308,8 +314,15 @@ export default class GameEngine {
             //tell the server engine about the updated characters
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
         }
+
+        if (gameEvents.length > 0) {
+            //tell the serverengine about the events
+            this.emit(CONSTANTS.GAME_EVENTS, gameEvents)
+        }
+
         const finished = (new Date()).getTime()
-        // console.log('step duration', finished - started)
+        //console.log('step duration', finished - started)
+        //return for testing convenience
         return updatedCharacters
     }
 
@@ -339,11 +352,11 @@ export default class GameEngine {
         let mode = character.mode;
 
         let outsideSoftCaps = currentModeMinSpeed > character.speed || character.speed > currentModeMaxSpeed
-        //    console.log('outsideSoftCaps', outsideSoftCaps)
+        //console.log('outsideSoftCaps', outsideSoftCaps)
         let accel = character.speedAcceleration
         //if we're outside soft caps or acceleration is 0 and we're moving
         if (outsideSoftCaps || (character.speedAcceleration == 0 && character.speed != 0)) {
-            // console.log('forcing sprinting')
+            //console.log('forcing sprinting')
             //force sprinting
             mode = 2;
             //force a direction if acceleration is 0 but we need to slow down
@@ -357,7 +370,7 @@ export default class GameEngine {
         }
         //calculate the speedDelta now that we're taking into account slowing down
         let speedDelta = accel * mode * dt / this.accelerationMultiplier;
-        // console.log('speedDelta', speedDelta)
+        //console.log('speedDelta', speedDelta)
 
         //if the character is trying to stop
         if (character.speedAcceleration == 0) {
@@ -423,8 +436,8 @@ export default class GameEngine {
         //calculate hard caps using sprint and old speed
         const hardMax = character.maxSpeed * 2
         const hardMin = -character.maxSpeed * 2
-        // console.log('hardMax', hardMax)
-        // console.log('hardMin', hardMin)
+        //console.log('hardMax', hardMax)
+        //console.log('hardMin', hardMin)
         newSpeed = Math.max(hardMin, Math.min(newSpeed, hardMax));
         //if we started inside the softcaps
         if (!outsideSoftCaps) {
@@ -454,7 +467,7 @@ export default class GameEngine {
         //console.log('GameEngine.start')
         this.timeoutID = setTimeout(this.tick.bind(this));
         if (typeof window === 'object' && typeof window.requestAnimationFrame === 'function') {
-            //   window.requestAnimationFrame(this.nextTickChecker.bind(this));
+            //window.requestAnimationFrame(this.nextTickChecker.bind(this));
         }
         return this;
     }

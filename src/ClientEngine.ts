@@ -7,6 +7,13 @@ import * as CONSTANTS from "@/CONSTANTS";
 import Player from "./Player";
 
 
+export type GameEvent = {
+    target: string;
+    type: string;
+    amount: number;
+    time: number;
+};
+
 export default class ClientEngine {
 
     //event things
@@ -35,6 +42,7 @@ export default class ClientEngine {
     private translateX = -20 * this.scale
     private translateY = -20 * this.scale
     private mousePosition: { x: number, y: number, } = { x: 0, y: 0 }
+    game_events: GameEvent[] = []
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
@@ -73,7 +81,7 @@ export default class ClientEngine {
     }
 
     claim(characterId: string) {
-        //  client claim
+        //client claim
         console.log('claim')
         this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
     }
@@ -91,17 +99,17 @@ export default class ClientEngine {
         //change the zoom
         this.scale = 1
         //change the  offsets
-        // const center = this.getViewPortOrigin()
+        //const center = this.getViewPortOrigin()
         //console.log('center', center)
         const rect = this.getViewPort()
-        // console.log('rect', rect)
+        //console.log('rect', rect)
         this.translateX = c.x - (rect.right - rect.left) / 2
         this.translateY = c.y - (rect.bottom - rect.top) / 2
     }
 
     wheelHandler(e: WheelEvent) {
         e.stopPropagation()
-        // e.preventDefault()
+        //e.preventDefault()
         let zoom
 
         if (e.deltaY > 0) {
@@ -121,10 +129,10 @@ export default class ClientEngine {
             this.scale = newScale
             this.translateX += deltaX
             this.translateY += deltaY
-            // tell the server our viewport changed
+            //tell the server our viewport changed
             this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
         }
-        // console.log(this.scale)
+        //console.log(this.scale)
     }
 
     private draw() {
@@ -134,7 +142,7 @@ export default class ClientEngine {
         //@ts-ignore
         const ctx: CanvasRenderingContext2D = canvas.getContext('2d')
 
-        // Use the identity matrix while clearing the canvas
+        //Use the identity matrix while clearing the canvas
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
@@ -147,13 +155,14 @@ export default class ClientEngine {
         this.drawCrossHair(ctx)
 
         //draw all the characters
-        // only get the characters from the right zones, just in case we have more data then we need to draw
+        //only get the characters from the right zones, just in case we have more data then we need to draw
         this.gameEngine.gameWorld.getCharactersWithin(this.getViewPort())
             .forEach((character: Character) => {
                 this.drawCharacter(ctx, character)
             })
 
-        this.drawEvent(ctx, { target: 'c8d6e478-ff39-4ee3-8bae-b8c531b86305', type: 'damage', amount: '-5', time: 0 })
+        //draw events
+        this.drawEvents(ctx)
 
         //draw the scale
         if (this.scale <= 3) {
@@ -288,28 +297,28 @@ export default class ClientEngine {
         ctx.beginPath()
         var topCurveHeight = height * 0.3
         ctx.moveTo(x, y + topCurveHeight)
-        // top left curve
+        //top left curve
         ctx.bezierCurveTo(
             x, y,
             x - width / 2, y,
             x - width / 2, y + topCurveHeight
         )
 
-        // bottom left curve
+        //bottom left curve
         ctx.bezierCurveTo(
             x - width / 2, y + (height + topCurveHeight) / 2,
             x, y + (height + topCurveHeight) / 2,
             x, y + height
         )
 
-        // bottom right curve
+        //bottom right curve
         ctx.bezierCurveTo(
             x, y + (height + topCurveHeight) / 2,
             x + width / 2, y + (height + topCurveHeight) / 2,
             x + width / 2, y + topCurveHeight
         )
 
-        // top right curve
+        //top right curve
         ctx.bezierCurveTo(
             x + width / 2, y,
             x, y,
@@ -324,13 +333,24 @@ export default class ClientEngine {
         ctx.strokeStyle = strokeStyle
         ctx.stroke()
         ctx.restore()
-
     }
 
-    private drawEvent(ctx: CanvasRenderingContext2D, event: { target: string, type: string, amount: string, time: number }) {
+    private drawEvents(ctx: CanvasRenderingContext2D) {
 
-        //console.log(event)
+        const now = (new Date()).getTime()
+        this.game_events.forEach((event, i) => {
+            if (now - event.time < 2 * 1000) {
+                this.drawEvent(ctx, event)
+            }
+            else {
+                //TODO drop off old events
+                this.game_events.splice(i, 1)
+            }
+        })
+    }
 
+    private drawEvent(ctx: CanvasRenderingContext2D, event: GameEvent) {
+        //console.log(event) 
         const character = this.getCharacter(event.target)
         if (character) {
             const duration = 2
@@ -345,28 +365,22 @@ export default class ClientEngine {
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(255,0,0,${a})`
             ctx.lineWidth = 2 * this.scale
-            const textSize = ctx.measureText(event.amount)
+            const textSize = ctx.measureText(event.amount.toString())
             ctx.translate(0, -10 - ((1 - a) * distance))
 
             this.drawHeart(ctx, -0, -40, 50, 60, `rgba(255,255,255,${a})`, `rgba(255,0,0,${a})`)
-            // console.log(width)
+            //console.log(width)
             ctx.translate(-textSize.width / 2, 0)
 
-            ctx.fillText(event.amount, 0, 0)
-            ctx.beginPath()
-            ctx.stroke()
-
-
+            ctx.fillText(event.amount.toString(), 0, 0)
             ctx.restore()
         }
     }
 
     private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
-
         //don't draw dead characters
         //if (character.hp <= -10)
-        //    return
-
+        //return
 
         const drawControlled = () => {
             const now = (new Date()).getTime()
@@ -434,21 +448,20 @@ export default class ClientEngine {
             return claimedCharacter.id == character.id;
         })
 
-        // const selected = this.selectedCharacter?.id == character.id;
+        //const selected = this.selectedCharacter?.id == character.id;
 
         const controlled = this.controlledCharacter?.id == character.id
         const targeted = this.controlledCharacter?.target == character.id
-
 
         ctx.fillStyle = "#f0f0f0"
 
 
         if (targeted) {
-            //TODO draw a special circle around it
+            //draw a special circle around it
             drawTargeted()
         }
         if (controlled) {
-            //  draw a special circle around it
+            //draw a special circle around it
             drawControlled()
         }
 
@@ -478,30 +491,30 @@ export default class ClientEngine {
     }
 
     createCommunity(options: { size: string, race: string }) {
-        // get client center
+        //get client center
         const origin = this.getViewPortOrigin()
-        // console.log(origin)
-        // console.log({ ...options, location: origin })
+        //console.log(origin)
+        //console.log({ ...options, location: origin })
         this.socket?.emit(CONSTANTS.CREATE_COMMUNITY, { ...options, location: origin })
     }
 
     clickHandler(e: MouseEvent) {
-        // console.log('click')
-        //  const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
-        // console.log(tzn)
+        //console.log('click')
+        //const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
+        //console.log(tzn)
         //const mp = this.getMousePosition(e)
         //console.log('mouse position', mp)
-        // const zivp = this.getZonesInViewPort()
-        // console.log(zivp)
+        //const zivp = this.getZonesInViewPort()
+        //console.log(zivp)
         //const vp = this.getViewPort()
         //console.log('viewport', vp)
-        //  const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
-        //  console.log(c.length)
-        //  const d = this.gameEngine.gameWorld.getAllCharacters()
-        //  console.log(Array.from(d.values()).length) 
+        //const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
+        //console.log(c.length)
+        //const d = this.gameEngine.gameWorld.getAllCharacters()
+        //console.log(Array.from(d.values()).length) 
 
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
-        //  just the first character
+        //just the first character
         this.selectedCharacter = characters[0]
         //tell the ui about the selected character
         this.emit(CONSTANTS.SELECTED_CHARACTER, this.selectedCharacter)
@@ -510,13 +523,13 @@ export default class ClientEngine {
     doubleClickHandler(e: MouseEvent) {
         e.stopPropagation()
         e.preventDefault()
-        //  console.log('doubleclick')
+        //console.log('doubleclick')
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
 
         //if logged in 
         if (this.player) {
-            //  console.log('this.claimedCharacters', this.claimedCharacters)
-            //  console.log('characters', characters)
+            //console.log('this.claimedCharacters', this.claimedCharacters)
+            //console.log('characters', characters)
             //if no claimed character
             if (this.claimedCharacters.length == 0 && characters) {
                 //then claim
@@ -528,7 +541,7 @@ export default class ClientEngine {
                 this.attack(this.controlledCharacter.id, characters[0].id)
             }
             else if (this.controlledCharacter && characters.length == 0) {
-                //  console.log('clearing attackee')
+                //console.log('clearing attackee')
                 this.attack(this.controlledCharacter.id, '')
             }
         }
@@ -546,9 +559,9 @@ export default class ClientEngine {
 
     castSpell(casterId: string, spellName: string, targets: string[]) {
         //todo maybe don't tell the local gameengine because the damage will end up being wrong?
-        //  console.log('spellName', spellName)
-        // console.log('casterId', casterId)
-        // console.log('targets', targets)
+        //console.log('spellName', spellName)
+        //console.log('casterId', casterId)
+        //console.log('targets', targets)
         this.gameEngine.castSpell(casterId, spellName, targets)
         this.socket?.emit(CONSTANTS.CAST_SPELL, { casterId: casterId, spellName: spellName, targets: targets })
     }
@@ -565,7 +578,7 @@ export default class ClientEngine {
         const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
         const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
 
-        //  console.log('y', y)
+        //console.log('y', y)
         return { x, y }
     }
 
@@ -594,7 +607,7 @@ export default class ClientEngine {
                 this.decelarate(this.controlledCharacter)
             }
             else if (code == 'KeyW') {
-                // console.log('W')
+                //console.log('W')
                 this.accelerate(this.controlledCharacter)
             }
             else if (code == "ShiftLeft") {
@@ -734,7 +747,11 @@ export default class ClientEngine {
                 this.onDisconnect(reason)
             })
 
-            //pc location data
+            this.socket?.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
+                this.game_events = this.game_events.concat(events)
+            })
+
+            //character location data
             this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
                 //tell the gameengine we got an update 
                 this.gameEngine.updateCharacters(characters)

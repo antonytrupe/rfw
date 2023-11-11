@@ -10,6 +10,7 @@ import { getSession } from "next-auth/react"
 import Player from "./Player"
 import { v4 as uuidv4 } from 'uuid';
 import { getRandomPoint, roll } from "./utility"
+import { GameEvent } from "./ClientEngine"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -29,22 +30,28 @@ export default class ServerEngine {
         this.worldDB = new JsonDB(new Config("world", true, true, '/'))
         this.playerDB = new JsonDB(new Config("player", true, true, '/'))
         this.loadWorld()
-        // this.loadPlayers()
+        //this.loadPlayers()
 
         //start the gameengines clock thingy
         this.gameEngine.start()
 
+        //updated characters from the gameengine running on the server
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[], zones: any) => {
-            //   console.log('serverengine SERVER_CHARACTER_UPDATE')
+            //console.log('serverengine SERVER_CHARACTER_UPDATE')
             this.sendAndSaveCharacterUpdates(characters, zones)
+        })
+
+        this.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
+            console.log('serverengine GAME_EVENTS')
+            this.sendEvents(events)
         })
 
         io.on(CONSTANTS.CONNECTION, async socket => {
             //console.log(CONNECTION, socket.id) 
             let player: Player | undefined
-            // let session: Session | null
+            //let session: Session | null
             getSession({ req: socket.conn.request, }).then(async (session) => {
-                //  session = s
+                //session = s
 
                 if (session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
@@ -126,18 +133,18 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
-                // console.log('spellName',spellName)
-                // console.log('casterId',casterId)
-                // console.log('targets',targets)
+                //console.log('spellName',spellName)
+                //console.log('casterId',casterId)
+                //console.log('targets',targets)
                 const updatedCharacters = this.gameEngine.castSpell(casterId, spellName, targets)
-                // console.log(updatedCharacters)
+                //console.log(updatedCharacters)
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
             socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: { x: number, y: number } }) => {
-                // console.log('options', options)
-                // console.log('location', location)
-                // console.log('targets',targets) 
+                //console.log('options', options)
+                //console.log('location', location)
+                //console.log('targets',targets) 
                 this.createCommunity(options)
             })
 
@@ -161,10 +168,10 @@ export default class ServerEngine {
 
             //tell the client where all the character are
             socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
-                // join the right zones/rooms
+                //join the right zones/rooms
                 let oldZones = socket.rooms
                 let newZones = this.gameEngine.getZonesIn(viewPort)
-                // console.log(newZones)
+                //console.log(newZones)
                 //get the list of oldZones that aren't in newZones
                 //leave zones we shouldn't be in
                 oldZones.forEach((zone) => {
@@ -183,6 +190,11 @@ export default class ServerEngine {
         })
     }
 
+    sendEvents(events: GameEvent[]) {
+        console.log('sendEvents')
+        this.io.emit(CONSTANTS.GAME_EVENTS, events)
+    }
+
     async savePlayer(player: Partial<Player>): Promise<Player> {
         //TODO look up the player first and then merge
         let old
@@ -198,7 +210,7 @@ export default class ServerEngine {
     }
 
     async getPlayerByEmail(email: string): Promise<Player | undefined> {
-        //  console.log('getPlayerByEmail')
+        //console.log('getPlayerByEmail')
         let player: Player
         try {
             player = await this.playerDB.getObject<Player>('/PLAYER/' + email)
@@ -212,7 +224,7 @@ export default class ServerEngine {
         console.log('serverengine.attack')
         const c = this.gameEngine.attack(attacker, attackee)
         if (c) {
-             this.sendAndSaveCharacterUpdates([c])
+            this.sendAndSaveCharacterUpdates([c])
         }
     }
 
@@ -291,17 +303,17 @@ export default class ServerEngine {
 
         //find or create the player
         let player = await this.getPlayerByEmail(playerEmail)
-        //  console.log(player)
+        //console.log(player)
         if (!player) {
-            // console.log('make a new player')
+            //console.log('make a new player')
             const id = uuidv4();
             player = await this.savePlayer({ email: playerEmail, id: id })
-            // console.log(player)
+            //console.log(player)
         }
 
         //we've got a player now
         const c = this.gameEngine.claimCharacter(characterId, player.id)
-        // console.log('claimed character', c)
+        //console.log('claimed character', c)
         if (c) {
 
             player.claimedCharacters.push(c.id)
@@ -325,12 +337,12 @@ export default class ServerEngine {
 
         //find or create the player
         let player = await this.getPlayerByEmail(playerEmail)
-        //  console.log(player)
+        //console.log(player)
         if (!player) {
-            // console.log('make a new player')
+            //console.log('make a new player')
             const id = uuidv4();
             player = await this.savePlayer({ email: playerEmail, id: id })
-            // console.log(player)
+            //console.log(player)
         }
 
         //claim it if possible
@@ -341,7 +353,7 @@ export default class ServerEngine {
     }
 
     private createCharacter(character: Partial<Character>): [Character[], Zones] {
-        //  console.log('ServerEngine createCharacter')
+        //console.log('ServerEngine createCharacter')
         let x = roll({ size: 30, modifier: -15 })
         let y = roll({ size: 30, modifier: -15 })
         const id = uuidv4();
@@ -354,11 +366,11 @@ export default class ServerEngine {
         try {
             this.worldDB.load().then(() => {
                 this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                    //  console.log(c)
-                    //  [index: string]: string
+                    //console.log(c)
+                    //[index: string]: string
                     const characters: Character[] = []
 
-                    // @ts-check
+                    //@ts-check
                     Object.entries(c).map(([id, character]: [id: string, character: any]) => {
                         characters.push(character)
 
@@ -395,7 +407,7 @@ export default class ServerEngine {
         let updatedZones = new Map<string, Set<string>>()
         const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
         console.log(className, highestLevel)
-        // work our way down from highest level
+        //work our way down from highest level
         for (let level = highestLevel; level >= 1; level /= 2) {
             //console.log('level', level);
             //make the right amount of each level
@@ -665,12 +677,12 @@ export default class ServerEngine {
             updatedCharacters = updatedCharacters.concat(c)
             updatedZones = new Map([...updatedZones, ...zones]);
         }
-        // console.log(updatedCharacters)
+        //console.log(updatedCharacters)
 
-        // console.log(updatedCharacters)
-        // this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+        //console.log(updatedCharacters)
+        //this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
         this.sendAndSaveCharacterUpdates(updatedCharacters, updatedZones)
 
-        // return [updatedCharacters, updatedZones]
+        //return [updatedCharacters, updatedZones]
     }
 }
