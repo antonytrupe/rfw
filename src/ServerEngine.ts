@@ -191,7 +191,7 @@ export default class ServerEngine {
     }
 
     sendEvents(events: GameEvent[]) {
-        console.log('sendEvents')
+        //console.log('sendEvents')
         this.io.emit(CONSTANTS.GAME_EVENTS, events)
     }
 
@@ -221,7 +221,7 @@ export default class ServerEngine {
     }
 
     attack(attacker: string, attackee: string) {
-        console.log('serverengine.attack')
+        //console.log('serverengine.attack')
         const c = this.gameEngine.attack(attacker, attackee)
         if (c) {
             this.sendAndSaveCharacterUpdates([c])
@@ -406,7 +406,7 @@ export default class ServerEngine {
         let updatedCharacters: Character[] = []
         let updatedZones = new Map<string, Set<string>>()
         const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
-        console.log(className, highestLevel)
+        //console.log(className, highestLevel)
         //work our way down from highest level
         for (let level = highestLevel; level >= 1; level /= 2) {
             //console.log('level', level);
@@ -414,18 +414,18 @@ export default class ServerEngine {
             for (let i = 0; i < highestLevel / level; i++) {
                 let { x, y } = getRandomPoint({ origin, radius })
                 const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
-                console.log('c', c)
+                //console.log('c', c)
                 updatedCharacters = [...updatedCharacters, ...c]
                 updatedZones = new Map([...updatedZones, ...zones])
             }
         }
-        console.log(updatedCharacters)
+        //console.log(updatedCharacters)
         return [updatedCharacters, updatedZones]
     }
 
     createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
-        console.log('createCommunity')
-        console.log(size)
+        //console.log('createCommunity')
+        //console.log(size)
         let updatedCharacters: Character[] = []
         let updatedZones: Zones = new Map<string, Set<string>>()
         let modifier = -16
@@ -475,7 +475,7 @@ export default class ServerEngine {
                 break
         }
 
-        console.log(modifier)
+        //console.log(modifier)
 
         //pc classes
         //barbarians
@@ -487,7 +487,7 @@ export default class ServerEngine {
         })
         updatedCharacters = updatedCharacters.concat(characters)
         updatedZones = new Map([...updatedZones, ...zones]);
-        console.log(updatedCharacters);
+        //console.log(updatedCharacters);
 
         //bards
         [characters, zones] = this.populateClass({
@@ -590,7 +590,7 @@ export default class ServerEngine {
         updatedCharacters = updatedCharacters.concat(characters)
         updatedZones = new Map([...updatedZones, ...zones]);
 
-        console.log(updatedCharacters);
+        //console.log(updatedCharacters);
 
         //npc classes
         //adepts  

@@ -76,13 +76,13 @@ export default class ClientEngine {
         this.gameEngine.stop()
     }
 
-    getCharacter(characterId: string) {
+    getCharacter(characterId: string | undefined) {
         return this.gameEngine.getCharacter(characterId)
     }
 
     claim(characterId: string) {
         //client claim
-        console.log('claim')
+        //console.log('claim')
         this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
     }
 
@@ -426,7 +426,7 @@ export default class ClientEngine {
             ctx.lineWidth = 3
             if (character.hp > 0) {
                 //ctx.strokeStyle = "#008000"
-                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 - 3,
+                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 - 1,
                     (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
                     (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
             }
@@ -453,8 +453,60 @@ export default class ClientEngine {
         const controlled = this.controlledCharacter?.id == character.id
         const targeted = this.controlledCharacter?.target == character.id
 
-        ctx.fillStyle = "#f0f0f0"
+        switch (character.characterClass) {
+            case "BARBARIAN":
+                ctx.fillStyle = "#1c06f9"
+                break;
+            case "BARD":
+                ctx.fillStyle = "#fff500"
+                break;
+            case "CLERIC":
+                ctx.fillStyle = "#171cec"
+                break;
+            case "DRUID":
+                ctx.fillStyle = "#076802"
+                break;
+            case "FIGHTER":
+                ctx.fillStyle = "#d32c31"
+                break
+            case "MONK":
+                ctx.fillStyle = "#ad8820"
+                break;
+            case "PALADIN":
+                ctx.fillStyle = "#076802"
+                break;
+            case "RANGER":
+                ctx.fillStyle = "#1ee134"
+                break;
+            case "ROGUE":
+                ctx.fillStyle = "#d22b17"
+                break;
+            case "SORCERER":
+                ctx.fillStyle = "#df20d6"
+                break;
+            case "WIZARD":
+                ctx.fillStyle = "#9d1fe0"
+                break;
 
+
+            case "ADEPT":
+                ctx.fillStyle = "#6c9bff"
+                break;
+            case "ARISTOCRAT":
+                ctx.fillStyle = "#ffff7e"
+                break;
+            case "COMMONER":
+                ctx.fillStyle = "#f0f0f0"
+                break;
+            case "EXPERT":
+                ctx.fillStyle = "#076802"
+                break;
+            case "WARRIOR":
+                ctx.fillStyle = "#ff6661"
+                break;
+            default:
+                ctx.fillStyle = "#f0f0f0"
+        }
 
         if (targeted) {
             //draw a special circle around it
@@ -596,7 +648,7 @@ export default class ClientEngine {
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
 
-        if (this.controlledCharacter) {
+        if (this.controlledCharacter?.id) {
             if (code == 'KeyD') {
                 this.turnRight(this.controlledCharacter)
             }
@@ -734,11 +786,13 @@ export default class ClientEngine {
                 this.emit(CONSTANTS.CLAIMED_CHARACTERS, c)
             })
 
-            this.socket?.on(CONSTANTS.CONTROL_CHARACTER, (c: Character) => {
-                this.gameEngine.updateCharacter(c)
+            this.socket?.on(CONSTANTS.CONTROL_CHARACTER, (c: Character | undefined) => {
+                if (c) {
+                    this.gameEngine.updateCharacter(c)
+                }
                 this.controlledCharacter = c
                 this.emit(CONSTANTS.CONTROL_CHARACTER, c)
-                const t = this.getCharacter(c.target)
+                const t = this.getCharacter(c?.target)
                 this.emit(CONSTANTS.TARGET_CHARACTER, t)
             })
 
@@ -787,7 +841,7 @@ export default class ClientEngine {
             })
         }
         catch (e) {
-            //something went wrongc
+            //something went wrong
             console.log(e)
             return false
         }
@@ -802,7 +856,7 @@ export default class ClientEngine {
     }
 
     private onServerInitial(characters: Character[]) {
-        console.log(characters)
+        //console.log(characters)
         this.gameEngine.updateCharacters(characters)
     }
 

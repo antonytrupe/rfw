@@ -54,7 +54,7 @@ export default class GameEngine {
         return c
     }
 
-    getCharacter(characterId: string) {
+    getCharacter(characterId: string|undefined) {
         return this.gameWorld.getCharacter(characterId)
     }
 

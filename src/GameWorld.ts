@@ -41,7 +41,10 @@ export default class GameWorld {
         })
     }
 
-    getCharacter(characterId: string): Character | undefined {
+    getCharacter(characterId: string | undefined): Character | undefined {
+        if (!characterId) {
+            return
+        }
         return this.characters.get(characterId)
     }
 
@@ -64,7 +67,7 @@ export default class GameWorld {
     updateCharacter(character: Partial<Character>): [Character | undefined, Zones] {
         //if we don't have a character id, give up
         // console.log('character.id',character.id)
-        if (!character.id) {
+        if (!character?.id) {
             return [undefined, new Map()]
         }
 
