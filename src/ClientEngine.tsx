@@ -153,6 +153,8 @@ export default class ClientEngine {
                 this.drawCharacter(ctx, character)
             })
 
+        this.drawEvent(ctx, { target: 'c8d6e478-ff39-4ee3-8bae-b8c531b86305', type: 'damage', amount: '-5', time: 0 })
+
         //draw the scale
         if (this.scale <= 3) {
             this.drawTurnScale(ctx)
@@ -279,6 +281,86 @@ export default class ClientEngine {
         ctx.restore()
     }
 
+    private drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, fillStyle: string, strokeStyle: string) {
+
+        ctx.save()
+
+        ctx.beginPath()
+        var topCurveHeight = height * 0.3
+        ctx.moveTo(x, y + topCurveHeight)
+        // top left curve
+        ctx.bezierCurveTo(
+            x, y,
+            x - width / 2, y,
+            x - width / 2, y + topCurveHeight
+        )
+
+        // bottom left curve
+        ctx.bezierCurveTo(
+            x - width / 2, y + (height + topCurveHeight) / 2,
+            x, y + (height + topCurveHeight) / 2,
+            x, y + height
+        )
+
+        // bottom right curve
+        ctx.bezierCurveTo(
+            x, y + (height + topCurveHeight) / 2,
+            x + width / 2, y + (height + topCurveHeight) / 2,
+            x + width / 2, y + topCurveHeight
+        )
+
+        // top right curve
+        ctx.bezierCurveTo(
+            x + width / 2, y,
+            x, y,
+            x, y + topCurveHeight
+        )
+
+        ctx.closePath()
+        ctx.fillStyle = fillStyle
+        ctx.fill()
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = strokeStyle
+        ctx.stroke()
+        ctx.restore()
+
+    }
+
+    private drawEvent(ctx: CanvasRenderingContext2D, event: { target: string, type: string, amount: string, time: number }) {
+
+        //console.log(event)
+
+        const character = this.getCharacter(event.target)
+        if (character) {
+            const duration = 2
+            const distance = 60
+
+            const now = (new Date()).getTime()
+            const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
+
+            ctx.save()
+            ctx.translate(character.x * this.PIXELS_PER_FOOT, (character.y - character.size / 2) * this.PIXELS_PER_FOOT)
+
+            ctx.font = 30 + "px Arial"
+            ctx.fillStyle = `rgba(255,0,0,${a})`
+            ctx.lineWidth = 2 * this.scale
+            const textSize = ctx.measureText(event.amount)
+            ctx.translate(0, -10 - ((1 - a) * distance))
+
+            this.drawHeart(ctx, -0, -40, 50, 60, `rgba(255,255,255,${a})`, `rgba(255,0,0,${a})`)
+            // console.log(width)
+            ctx.translate(-textSize.width / 2, 0)
+
+            ctx.fillText(event.amount, 0, 0)
+            ctx.beginPath()
+            ctx.stroke()
+
+
+            ctx.restore()
+        }
+    }
+
     private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
 
         //don't draw dead characters
@@ -367,7 +449,6 @@ export default class ClientEngine {
         }
         if (controlled) {
             //  draw a special circle around it
-          //  console.log('controlled')
             drawControlled()
         }
 
@@ -502,8 +583,6 @@ export default class ClientEngine {
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
 
-
-       // console.log(this.controlledCharacter)
         if (this.controlledCharacter) {
             if (code == 'KeyD') {
                 this.turnRight(this.controlledCharacter)
@@ -643,7 +722,6 @@ export default class ClientEngine {
             })
 
             this.socket?.on(CONSTANTS.CONTROL_CHARACTER, (c: Character) => {
-              //  console.log(c)
                 this.gameEngine.updateCharacter(c)
                 this.controlledCharacter = c
                 this.emit(CONSTANTS.CONTROL_CHARACTER, c)
@@ -671,7 +749,6 @@ export default class ClientEngine {
                 }
 
                 if (this.controlledCharacter) {
-                   // console.log(this.controlledCharacter)
                     //look for a new version of the controlled character
                     const u = characters.find((c) => { return c.id == this.controlledCharacter?.id })
                     if (u) {

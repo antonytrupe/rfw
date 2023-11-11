@@ -13,9 +13,7 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. show the targeted character
 1. some sort of animation for attacking
-1. combat
 2. character age
 2. teleport
 2. unclaim character
@@ -40,6 +38,8 @@ https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of
 19. character health ui
 
 ## DONE
+combat
+show the targeted character
 turn clock/timer
 ability to claim a character  
 ability to view claimed characters
