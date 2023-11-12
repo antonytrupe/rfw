@@ -13,31 +13,33 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. send events to the client
 2. character age
 2. teleport
 2. unclaim character
-3. touch controls
-4. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
-4. random stats when spawning  
-4. no moving while incapacitated/dying/dead  
-5. collision  
-7. strafing  
-8. leveling up system  
-9. package as exe/etc with electron
-10. add steam support
-11. change the position calculation with respect to turning
+3. uncontrol character
+4. 
+5. touch controls
+6. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
+7. random stats when spawning  
+8. no moving while incapacitated/dying/dead  
+9. collision  
+10. strafing  
+11. leveling up system  
+12. package as exe/etc with electron
+13. add steam support
+14. change the position calculation with respect to turning
 https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
-12. admin tool to interact with world
-13. stay centered on selected characters
-14. rightclick move the screen
-15. change selected character stats
-16. chat
-17. randomly spawn new characters
-18. randomly move characters
-19. character health ui
+1.  admin tool to interact with world
+2.  stay centered on selected characters
+3.  rightclick move the screen
+4.  change selected character stats
+5.  chat
+6.  randomly spawn new characters
+7.  randomly move characters
+8.  character health ui
 
 ## DONE
+send events to the client
 some sort of animation for attacking
 combat
 show the targeted character

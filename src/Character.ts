@@ -17,6 +17,7 @@ export default class Character {
         maxHp = 1,
         characterClass = 'COMMONER',
         level = 1,
+        bab = [0],
         target = '',
         actions = [],
         actionsRemaining = 1,
@@ -37,6 +38,7 @@ export default class Character {
         maxHp?: number
         characterClass?: string
         level?: number
+        bab?: number[]
         target?: string
         actions?: []
         actionsRemaining?: number
@@ -57,6 +59,7 @@ export default class Character {
         this.maxHp = maxHp
         this.characterClass = characterClass
         this.level = level
+        this.bab = bab
         this.target = target
         this.actions = actions
         this.actionsRemaining = actionsRemaining
@@ -77,6 +80,7 @@ export default class Character {
     maxHp: number
     characterClass: string
     level: number
+    bab: number[]
     target: string
     actions: Action[]
     actionsRemaining: number

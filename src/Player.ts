@@ -4,25 +4,25 @@ export default class Player {
         email = "",
         id = "",
         claimedCharacters = [],
-        //selectedCharacter = '',
-        controlledCharacter = ''
+        controlledCharacter = '',
+        maxClaimedCharacters = 2
     }: {
         email?: string
         id?: string
         claimedCharacters?: string[]
-        //selectedCharacter?: string
         controlledCharacter?: string
+        maxClaimedCharacters?: number
     }) {
         this.email = email
         this.id = id
         this.claimedCharacters = claimedCharacters
-        //this.selectedCharacter = selectedCharacter
         this.controlledCharacter = controlledCharacter
+        this.maxClaimedCharacters = maxClaimedCharacters
     }
     email: string
     id: string
     claimedCharacters: string[]
-    //selectedCharacter: string
     controlledCharacter: string
+    maxClaimedCharacters: number
 }
 

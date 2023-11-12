@@ -5,9 +5,9 @@
         ".next"
     ],
     "watch": [
-        "src/GameEngine.tsx",
-        "src/ServerEngine.tsx",
-        "src/GameWorld.tsx"
+        "src/GameEngine.ts",
+        "src/ServerEngine.ts",
+        "src/GameWorld.ts"
     ],
     "ext": "js json ts tsx jsx",
     "exec": "npm run dev",

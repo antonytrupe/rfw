@@ -14,7 +14,7 @@ export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 //db constants
 export const CHARACTER_PATH = '/CHARACTER/'
 
-export interface ViewPort {
+interface ViewPort {
     left: number;
     right: number;
     top: number;
@@ -45,7 +45,7 @@ export const CREATE_COMMUNITY = 'world.create_community'
 //clientengine notify UI
 //list of claimed characters, last selected character, last viewport
 export const CLIENT_INFO = 'client.selected_characters.update'
-export interface CLIENT_INFO_INTERFACE {
+interface CLIENT_INFO_INTERFACE {
     claimedCharacters: Character[]
     selectedCharacters: Character[]
     scale: number,
@@ -59,12 +59,12 @@ export const TURN_RIGHT = 'world.character.turn.right'
 export const TURN_STOP = 'world.character.turn.stop'
 export const DECELERATE = 'world.character.decelerate'
 export const ACCELERATE = 'world.character.accelerate'
-//export const DECELERATE_DOUBLE = 'world.character.decelerate_double'
 export const ACCELERATE_DOUBLE = 'world.character.accelerate_double'
 export const STOP_ACCELERATE = 'world.character.stop_accelerate'
 export const STOP_DOUBLE_ACCELERATE = 'world.character.stop_double_accelerate'
 export const CAST_SPELL = 'world.character.cast_spell'
 export const CLAIM_CHARACTER = 'world.character.claim'
+export const UNCLAIM_CHARACTER = 'world.character.unclaim'
 export const CONTROL_CHARACTER = 'world.character.control'
 export const TARGET_CHARACTER = 'world.character.targeted'
 export const GAME_EVENTS = 'game.events'

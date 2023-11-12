@@ -86,7 +86,16 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
     }
 
-    control(characterId: string) {
+    unClaim(characterId: string) {
+        //client claim
+        //console.log('claim')
+        this.claimedCharacters.splice(this.claimedCharacters.findIndex(c => c.id == characterId), 1)
+        this.controlledCharacter = undefined
+        this.socket?.emit(CONSTANTS.UNCLAIM_CHARACTER, characterId)
+    }
+
+    control(characterId: string | undefined) {
+        console.log('clientengine control', characterId)
         this.controlledCharacter = this.gameEngine.gameWorld.getCharacter(characterId)
         //tell the ui
         this.emit(CONSTANTS.CONTROL_CHARACTER, this.controlledCharacter)
@@ -582,16 +591,19 @@ export default class ClientEngine {
         if (this.player) {
             //console.log('this.claimedCharacters', this.claimedCharacters)
             //console.log('characters', characters)
-            //if no claimed character
-            if (this.claimedCharacters.length == 0 && characters) {
-                //then claim
+
+            //if no controlled character and still under maxclaimedcharacter limit
+            if (!this.controlledCharacter && this.claimedCharacters.length < this.player.maxClaimedCharacters && characters) {
+                //then claim and control
                 this.claim(characters[0].id)
                 this.control(characters[0].id)
             }
+            //controlled character, so target is a target
             else if (this.controlledCharacter && characters.length > 0) {
                 //attack it
                 this.attack(this.controlledCharacter.id, characters[0].id)
             }
+            //controlled character, but no target, so clear target
             else if (this.controlledCharacter && characters.length == 0) {
                 //console.log('clearing attackee')
                 this.attack(this.controlledCharacter.id, '')

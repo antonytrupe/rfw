@@ -11,6 +11,7 @@ import Player from "./Player"
 import { v4 as uuidv4 } from 'uuid';
 import { getRandomPoint, roll } from "./utility"
 import { GameEvent } from "./ClientEngine"
+import * as CLASSES from "./CLASSES.json"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -82,7 +83,8 @@ export default class ServerEngine {
 
             //CONSTANTS.CONTROL_CHARACTER
             //don't think the server cares
-            socket.on(CONSTANTS.CONTROL_CHARACTER, (characterId: string) => {
+            socket.on(CONSTANTS.CONTROL_CHARACTER, (characterId: string | undefined) => {
+                //console.log('serverengine controlcharacter', characterId)
                 if (!!player) {
                     this.controlCharacter(characterId, player?.email)
                 }
@@ -92,7 +94,7 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                const [characters, zones] = this.createCharacter({})
+                const [characters, zones] = this.createCharacter({ characterClass: "COMMONER", level: 3 })
                 this.sendAndSaveCharacterUpdates(characters, zones)
             })
 
@@ -158,6 +160,16 @@ export default class ServerEngine {
                 }
             })
 
+            //CONSTANTS.CLAIM_CHARACTER
+            socket.on(CONSTANTS.UNCLAIM_CHARACTER, async (characterId: string) => {
+                if (!!player) {
+                    this.unClaimCharacter(characterId, player.email)
+                }
+                else {
+                    console.log('no session')
+                }
+            })
+
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 console.log('CONSTANTS.DISCONNECT', reason)
                 //remove the character from the database
@@ -189,6 +201,43 @@ export default class ServerEngine {
             })
         })
     }
+    async unClaimCharacter(characterId: string, playerEmail: string) {
+        if (!playerEmail) {
+            console.log('bailing on unclaim character: no email')
+            return
+        }
+
+        const character = this.gameEngine.gameWorld.getCharacter(characterId)
+        if (!character) {
+            console.log('bailing on unclaim character: no character')
+            return
+        }
+
+        //find or create the player
+        let player = await this.getPlayerByEmail(playerEmail)
+        //bail if no player found
+        if (!player) {
+            return
+        }
+
+        //we've got a player now
+        const c = this.gameEngine.unClaimCharacter(characterId)
+        //console.log('claimed character', c)
+        if (c) {
+            player.claimedCharacters.splice(player.claimedCharacters.indexOf(c.id), 1)
+            this.savePlayer({
+                email: player.email, claimedCharacters: player.claimedCharacters,
+                //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
+                controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
+            })
+
+            //tell the client it worked
+            this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
+                this.gameEngine.gameWorld.getCharacters(player.claimedCharacters)
+            )
+            this.sendAndSaveCharacterUpdates([c], undefined)
+        }
+    }
 
     sendEvents(events: GameEvent[]) {
         //console.log('sendEvents')
@@ -205,6 +254,7 @@ export default class ServerEngine {
 
         }
         const merged = { ...new Player({}), ...old, ...player }
+        //console.log('merged', merged)
         this.playerDB.push('/PLAYER/' + player.email, merged)
         return merged
     }
@@ -328,10 +378,10 @@ export default class ServerEngine {
         }
     }
 
-    async controlCharacter(characterId: string, playerEmail: string) {
-
+    async controlCharacter(characterId: string | undefined, playerEmail: string) {
+        //console.log('controlCharacter')
         const character = this.gameEngine.gameWorld.getCharacter(characterId)
-        if (!character || !playerEmail) {
+        if ((!!characterId && !character) || !playerEmail) {
             return
         }
 
@@ -346,20 +396,12 @@ export default class ServerEngine {
         }
 
         //claim it if possible
-        this.claimCharacter(characterId, playerEmail)
+        if (characterId) {
+            this.claimCharacter(characterId, playerEmail)
+        }
 
         this.savePlayer({ ...player, controlledCharacter: characterId })
 
-    }
-
-    private createCharacter(character: Partial<Character>): [Character[], Zones] {
-        //console.log('ServerEngine createCharacter')
-        let x = roll({ size: 30, modifier: -15 })
-        let y = roll({ size: 30, modifier: -15 })
-        const id = uuidv4();
-        const [c, zones] = this.gameEngine.createCharacter({ id: id, x: x, y: y, ...character })
-        //this.sendAndSaveCharacterUpdates(c, zones)
-        return [c, zones]
     }
 
     private loadWorld() {
@@ -399,28 +441,6 @@ export default class ServerEngine {
                 console.log('failed to save character', character)
             }
         })
-    }
-
-    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [Character[], Zones] {
-
-        let updatedCharacters: Character[] = []
-        let updatedZones = new Map<string, Set<string>>()
-        const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
-        //console.log(className, highestLevel)
-        //work our way down from highest level
-        for (let level = highestLevel; level >= 1; level /= 2) {
-            //console.log('level', level);
-            //make the right amount of each level
-            for (let i = 0; i < highestLevel / level; i++) {
-                let { x, y } = getRandomPoint({ origin, radius })
-                const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
-                //console.log('c', c)
-                updatedCharacters = [...updatedCharacters, ...c]
-                updatedZones = new Map([...updatedZones, ...zones])
-            }
-        }
-        //console.log(updatedCharacters)
-        return [updatedCharacters, updatedZones]
     }
 
     createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
@@ -684,5 +704,42 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(updatedCharacters, updatedZones)
 
         //return [updatedCharacters, updatedZones]
+    }
+
+    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [Character[], Zones] {
+
+        let updatedCharacters: Character[] = []
+        let updatedZones = new Map<string, Set<string>>()
+        const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
+        //console.log(className, highestLevel)
+        //work our way down from highest level
+        for (let level = highestLevel; level >= 1; level /= 2) {
+            //console.log('level', level);
+            //make the right amount of each level
+            for (let i = 0; i < highestLevel / level; i++) {
+                let { x, y } = getRandomPoint({ origin, radius })
+                const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
+                //console.log('c', c)
+                updatedCharacters = [...updatedCharacters, ...c]
+                updatedZones = new Map([...updatedZones, ...zones])
+            }
+        }
+        //console.log(updatedCharacters)
+        return [updatedCharacters, updatedZones]
+    }
+
+    //we have class and level
+    private createCharacter(character: Partial<Character>): [Character[], Zones] {
+        //console.log('ServerEngine createCharacter')
+        const classInfo = CLASSES[character.characterClass as keyof typeof CLASSES]
+        const hitDie = classInfo.HitDie
+        const bab = classInfo.BAB[character.level?.toString() as keyof typeof classInfo.BAB]
+        const hp = roll({ size: hitDie, count: character.level! - 1, modifier: hitDie })
+        let x = roll({ size: 30, modifier: -15 })
+        let y = roll({ size: 30, modifier: -15 })
+        const id = uuidv4();
+        const [c, zones] = this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, bab: bab, ...character })
+        //this.sendAndSaveCharacterUpdates(c, zones)
+        return [c, zones]
     }
 }

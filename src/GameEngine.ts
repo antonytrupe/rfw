@@ -54,7 +54,7 @@ export default class GameEngine {
         return c
     }
 
-    getCharacter(characterId: string|undefined) {
+    getCharacter(characterId: string | undefined) {
         return this.gameWorld.getCharacter(characterId)
     }
 
@@ -104,10 +104,18 @@ export default class GameEngine {
      * 
      * @param characterId 
      * @param playerId 
-     * @returns a tuple who's first item is a list that contains the claimed character if claimed, otherwise an empty list
+     * @returns 
      */
     claimCharacter(characterId: string, playerId: string | undefined): Character | undefined {
         const [character,] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
+        if (character) {
+            return character
+        }
+        return undefined
+    }
+
+    unClaimCharacter(characterId: string) {
+        const [character,] = this.gameWorld.updateCharacter({ id: characterId, playerId: "" });
         if (character) {
             return character
         }
@@ -173,7 +181,7 @@ export default class GameEngine {
     }
 
     createCharacter(character: Partial<Character>): [Character[], Zones] {
-        let maxHp = roll({ modifier: 1000 })
+        let maxHp = roll({ modifier: 0 })
 
         const merged = { ...character, size: 5, maxHp: maxHp, hp: maxHp };
 
