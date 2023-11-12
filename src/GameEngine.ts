@@ -227,6 +227,10 @@ export default class GameEngine {
         this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
     }
 
+    private calculateXp(a:Character[],b:Character[]){
+        //TODO calculate xp
+    }
+
     //leave it public for testing
     step(dt: number, now: number) {
         //  figure out if this is the first step of a new turn

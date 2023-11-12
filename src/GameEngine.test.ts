@@ -16,7 +16,7 @@ describe('GameEngine', () => {
             gameEngine.createCharacter({ id: '1', x: 0, y: 0 })
             gameEngine.createCharacter({ id: '2', x: 0, y: 0 })
             gameEngine.createCharacter({ id: '3', x: 0, y: 0 })
-            console.log(gameEngine.gameWorld.getAllCharacters())
+            //console.log(gameEngine.gameWorld.getAllCharacters())
             expect(Array.from(gameEngine.gameWorld.getAllCharacters().values()).length).toBe(3)
         })
    
