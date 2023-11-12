@@ -270,37 +270,40 @@ export default class GameEngine {
                     //combat
                     if (action.action == 'attack' && action.target) {
                         //get the target
-                        const target = this.getCharacter(action.target)
-                        if (target) {
+                        let target = this.getCharacter(action.target)
+                        if (target && target.id) {
                             //check range
                             const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
                             if (distance <= 5 + 0.5) {
                                 //console.log('distance', distance)
                                 //always spend an action
                                 updates.actionsRemaining = character.actionsRemaining - 1
-                                //TODO handle multiple attacks
+                                //handle multiple attacks
                                 character.bab.forEach((bab) => {
                                     //roll for attack
                                     const attack = roll({ size: 20, modifier: bab })
                                     if (attack > 10) {
                                         //console.log('hit', attack)
                                         //roll for damage
-                                        const damage = roll({ size: 6 })
+                                        const damage = roll({ size: 6 });
 
                                         //update the target
-                                        const [c,] = this.updateCharacter({ id: target.id, hp: target.hp - damage })
-                                        if (c) {
-                                            updatedCharacters.push(c)
-                                            gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
-                                        }
+                                        [target,] = this.updateCharacter({ id: target!.id, hp: target!.hp - damage })
+
+                                        updatedCharacters.push(target!)
+                                        gameEvents.push({ target: target!.id, type: 'attack', amount: damage, time: now })
+
                                     }
                                     else {
                                         //console.log('miss', attack)
-                                        gameEvents.push({ target: target.id, type: 'miss', amount: 0, time: now })
+                                        gameEvents.push({ target: target!.id, type: 'miss', amount: 0, time: now })
                                     }
-
                                 })
-
+                                //fight back
+                                if (!target.target) {
+                                    console.log('start fighting back')
+                                    this.attack(target.id, character.id)
+                                }
                             }
                             else {
                                 //TODO too far away, but not every tick, like once a second or something maybe
