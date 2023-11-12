@@ -94,7 +94,7 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                const [characters, zones] = this.createCharacter({ characterClass: "COMMONER", level: 3 })
+                const [characters, zones] = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
                 this.sendAndSaveCharacterUpdates(characters, zones)
             })
 
@@ -731,14 +731,17 @@ export default class ServerEngine {
     //we have class and level
     private createCharacter(character: Partial<Character>): [Character[], Zones] {
         //console.log('ServerEngine createCharacter')
+        console.log(character)
         const classInfo = CLASSES[character.characterClass as keyof typeof CLASSES]
         const hitDie = classInfo.HitDie
         const bab = classInfo.BAB[character.level?.toString() as keyof typeof classInfo.BAB]
         const hp = roll({ size: hitDie, count: character.level! - 1, modifier: hitDie })
+        console.log('level', character.level)
+        console.log('hp', hp)
         let x = roll({ size: 30, modifier: -15 })
         let y = roll({ size: 30, modifier: -15 })
         const id = uuidv4();
-        const [c, zones] = this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, bab: bab, ...character })
+        const [c, zones] = this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, ...character })
         //this.sendAndSaveCharacterUpdates(c, zones)
         return [c, zones]
     }

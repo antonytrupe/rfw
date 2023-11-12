@@ -1,10 +1,10 @@
 export function roll({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }) {
     let sum = modifier
     for (let i = 0; i < count; i++) {
-        sum += Math.floor(Math.random() * (size + 1))
+        sum += Math.floor(Math.random() * size + 1)
     }
     return sum
-} 
+}
 
 export function getRandomPoint({ origin: { x, y }, radius }: { origin: { x: number, y: number }, radius: number }) {
     const direction = Math.random() * Math.PI * 2

@@ -345,14 +345,15 @@ export default class ClientEngine {
     }
 
     private drawEvents(ctx: CanvasRenderingContext2D) {
-
+        //TODO somewhere handle multiple events for the same target not overlapping
         const now = (new Date()).getTime()
         this.game_events.forEach((event, i) => {
+            //if its a recent event
             if (now - event.time < 2 * 1000) {
                 this.drawEvent(ctx, event)
             }
             else {
-                //TODO drop off old events
+                //drop off old events
                 this.game_events.splice(i, 1)
             }
         })

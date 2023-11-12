@@ -181,9 +181,10 @@ export default class GameEngine {
     }
 
     createCharacter(character: Partial<Character>): [Character[], Zones] {
+        //TODO does this belong in gameengine or serverengine or both?
         let maxHp = roll({ modifier: 0 })
 
-        const merged = { ...character, size: 5, maxHp: maxHp, hp: maxHp };
+        const merged = { size: 5, maxHp: maxHp, hp: maxHp, ...character };
 
         const [c, zones] = this.gameWorld.updateCharacter(merged)
         if (c) {
@@ -244,6 +245,7 @@ export default class GameEngine {
         const updatedCharacters: Character[] = []
         const gameEvents: GameEvent[] = []
 
+        //TODO get them in initiative order
         Array.from(this.gameWorld.getAllCharacters().values())
             .forEach((character: Character) => {
                 if (newTurn) {
@@ -261,7 +263,7 @@ export default class GameEngine {
                 const updates = { ...character, ...newPosition, speed: newSpeed, direction: newDirection }
 
                 //actions that are only done on the server(attack/damage)
-                //console.log('this.doGameLogic', this.doGameLogic)
+                //TODO put different initiatives at different ticks in the turn
                 if (character.actions.length > 0 && character.actionsRemaining > 0 && this.doGameLogic) {
                     //console.log('doing an action')
                     const action = character.actions[0]
@@ -276,24 +278,29 @@ export default class GameEngine {
                                 //console.log('distance', distance)
                                 //always spend an action
                                 updates.actionsRemaining = character.actionsRemaining - 1
-                                //roll for attack
-                                const attack = roll({ size: 20 })
-                                if (attack > 10) {
-                                    //console.log('hit', attack)
-                                    //roll for damage
-                                    const damage = roll({ size: 6 })
+                                //TODO handle multiple attacks
+                                character.bab.forEach((bab) => {
+                                    //roll for attack
+                                    const attack = roll({ size: 20, modifier: bab })
+                                    if (attack > 10) {
+                                        //console.log('hit', attack)
+                                        //roll for damage
+                                        const damage = roll({ size: 6 })
 
-                                    //update the target
-                                    const [c,] = this.updateCharacter({ id: target.id, hp: target.hp - damage })
-                                    if (c) {
-                                        updatedCharacters.push(c)
-                                        gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
+                                        //update the target
+                                        const [c,] = this.updateCharacter({ id: target.id, hp: target.hp - damage })
+                                        if (c) {
+                                            updatedCharacters.push(c)
+                                            gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
+                                        }
                                     }
-                                }
-                                else {
-                                    //console.log('miss', attack)
-                                    gameEvents.push({ target: target.id, type: 'miss', amount: 0, time: now })
-                                }
+                                    else {
+                                        //console.log('miss', attack)
+                                        gameEvents.push({ target: target.id, type: 'miss', amount: 0, time: now })
+                                    }
+
+                                })
+
                             }
                             else {
                                 //TODO too far away, but not every tick, like once a second or something maybe
