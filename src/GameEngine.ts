@@ -5,6 +5,7 @@ import GameWorld, { Zones } from "./GameWorld";
 import isEqual from 'lodash.isequal';
 import { roll } from "./utility";
 import { GameEvent } from "./ClientEngine";
+import * as LEVELS from "./LEVELS.json"
 
 //processes game logic
 //interacts with the gameworld object and updates it
@@ -45,13 +46,179 @@ export default class GameEngine {
         this.doGameLogic = doGameLogic
     }
 
-    attack(attacker: string, attackee: string): Character | undefined {
+
+    //this is the wrapper and callback function that calls step
+    private tick() {
+        const now = (new Date()).getTime()
+        this.lastTimestamp = this.lastTimestamp || now
+        const dt = now - this.lastTimestamp
+        this.lastTimestamp = now
+        this.step(dt, now)
+
+        //60 frames per second is one frame every ~17 milliseconds
+        //30 frames per second is one frame every ~33 milliseconds
+        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
+    }
+
+    //leave it public for testing
+    step(dt: number, now: number) {
+        //console.log('GameEngine.step')
+
+        //figure out if this is the first step of a new turn
+        const lastTurn = Math.floor((now - dt) / 1000 / 6)
+        const currentTurn = Math.floor(now / 1000 / 6)
+        let newTurn = false
+        if (lastTurn != currentTurn) {
+            //console.log('new turn', currentTurn)
+            newTurn = true
+        }
+        const started = (new Date()).getTime()
+
+        //TODO keep track of characters that have their direction and speed acceleration changed separately from their position changed
+        //clients only need acceleration changes, they can keep calculating new locations themselves accurately
+        const updatedCharacters: Set<string> = new Set()
+        const gameEvents: GameEvent[] = []
+
+        //TODO get them in initiative order
+        Array.from(this.gameWorld.getAllCharacters().values())
+            .forEach((character: Character) => {
+                if (newTurn) {
+                    this.updateCharacter({ id: character.id, actionsRemaining: 1 })
+                    if (character.actionsRemaining != 1) {
+                        updatedCharacters.add(character.id)
+                    }
+                }
+                //TODO calculate position and angle all at once
+                //calculate the new angle
+                let newDirection = this.calculateDirection(character, dt);
+
+                //TODO if they went over their walk speed or they went over their walk distance, then no action
+                let newSpeed = this.calculateSpeed(character, dt);
+
+                //pass the new speed to the location calculatin or not?
+                let newPosition: { x: number, y: number } = this.calculatePosition(character, dt)
+
+                this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
+                if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
+                    updatedCharacters.add(character.id)
+                }
+
+                //actions that are only done on the server(attack/damage)
+                //TODO put different initiatives at different ticks in the turn
+                if (character.actions.length > 0 && character.actionsRemaining > 0 && this.doGameLogic) {
+                    //console.log('doing an action')
+                    const action = character.actions[0]
+                    //combat
+                    if (action.action == 'attack' && action.target) {
+                        //get the target
+                        const target = this.getCharacter(action.target)
+                        if (target && target.id) {
+                            //check range
+                            const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
+                            if (distance <= 5 + 0.5) {
+                                //console.log('distance', distance)
+                                //always spend an action
+                                this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
+                                updatedCharacters.add(character.id)
+
+                                //handle multiple attacks
+                                character.bab.forEach((bab) => {
+                                    //roll for attack
+                                    const attack = roll({ size: 20, modifier: bab })
+                                    if (attack > 10) {
+                                        //console.log('hit', attack)
+                                        //roll for damage
+                                        const damage = roll({ size: 6 });
+
+                                        //update the target's hp, clamped to -10 and maxHp
+                                        this.updateCharacter({ id: target.id, hp: this.clamp(target!.hp - damage, -10, target!.maxHp) })
+                                        updatedCharacters.add(target.id)
+                                        //if the target was alive but now its not alive
+                                        if (target.hp > 0 && target.hp <= damage) {
+                                            //give xp
+                                            this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
+                                            updatedCharacters.add(character.id)
+
+                                            if (character.xp >= LEVELS[(character.level + 1).toString() as keyof typeof LEVELS]) {
+                                                this.updateCharacter({ id: character.id, level: character.level + 1 })
+                                                updatedCharacters.add(character.id)
+                                            }
+                                            //its (almost)dead, Jim
+                                            //both characters stop attacking
+                                            this.attackStop(character.id, target.id)
+                                            this.attackStop(target.id, character.id)
+                                            updatedCharacters.add(character.id)
+                                            updatedCharacters.add(target.id)
+
+                                        }
+                                        gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
+
+                                    }
+                                    else {
+                                        //console.log('miss', attack)
+                                        gameEvents.push({ target: target!.id, type: 'miss', amount: 0, time: now })
+                                    }
+                                })
+                                //fight back
+                                if (!target.target) {
+                                    console.log('start fighting back')
+                                    this.attack(target.id, character.id)
+                                    updatedCharacters.add(target.id)
+                                }
+                            }
+                            else {
+                                //TODO too far away, but not every tick, like once a second or something maybe
+                                //console.log('too far away', distance)
+                                //gameEvents.push({ target: target.id, type: 'to_far_away', amount: 0, time: now })
+                            }
+                        }
+                    }
+                }
+
+                //if below 0 hps and not stable
+                if (character.hp < 0 && newTurn) {
+                    //loose another hp
+                    this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - 1, -10, character.hp) })
+                    updatedCharacters.add(character.id)
+                }
+            })
+
+        if (updatedCharacters.size > 0) {
+
+            //tell the server engine about the updated characters
+            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
+        }
+
+        if (gameEvents.length > 0) {
+            //tell the serverengine about the events
+            this.emit(CONSTANTS.GAME_EVENTS, gameEvents)
+        }
+
+        const finished = (new Date()).getTime()
+        //console.log('step duration', finished - started)
+        //return for testing convenience
+        return updatedCharacters
+    }
+
+    attackStop(attackerId: string, attackeeId: string): GameEngine {
         //TODO attacker owner check
-        //console.log('gameengine.attack')
-        //console.log('attacker',attacker)
-        const [c,] = this.updateCharacter({ id: attacker, target: attackee, actions: [{ action: 'attack', target: attackee }] })
-        //console.log(c)
-        return c
+        this.updateCharacter({ id: attackerId, target: "", actions: [] })
+
+        let attackee = this.getCharacter(attackeeId);
+        if (attackee) {
+            this.updateCharacter({ id: attackeeId, targeters: attackee.targeters.splice(attackee.targeters.indexOf(attackerId), 1) })
+        }
+        return this
+    }
+
+    attack(attackerId: string, attackeeId: string): GameEngine {
+        //TODO attacker owner check
+        this.updateCharacter({ id: attackerId, target: attackeeId, actions: [{ action: 'attack', target: attackeeId }] })
+        let attackee = this.getCharacter(attackeeId);
+        if (attackee) {
+            this.updateCharacter({ id: attackeeId, targeters: [...attackee.targeters, attackerId] })
+        }
+        return this
     }
 
     getCharacter(characterId: string | undefined) {
@@ -62,24 +229,24 @@ export default class GameEngine {
         if (character.playerId != playerId) {
             return
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, mode: 1 })
+        return this.getCharacter(character.id)
     }
 
     accelerateStop(character: Character, playerId: string | undefined) {
         if (character.playerId != playerId) {
             return
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 0 })
+        return this.getCharacter(character.id)
     }
 
     accelerateDouble(character: Character, playerId: string | undefined) {
         if (character.playerId != playerId) {
             return
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, mode: 2 })
+        return this.getCharacter(character.id)
     }
 
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
@@ -96,8 +263,8 @@ export default class GameEngine {
         if (character.playerId != playerId) {
             return
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 0 })
+        return this.getCharacter(character.id)
     }
 
     /**
@@ -107,35 +274,29 @@ export default class GameEngine {
      * @returns 
      */
     claimCharacter(characterId: string, playerId: string | undefined): Character | undefined {
-        const [character,] = this.gameWorld.updateCharacter({ id: characterId, playerId: playerId });
-        if (character) {
-            return character
-        }
-        return undefined
+        this.gameWorld.updateCharacter({ id: characterId, playerId: playerId })
+        return this.getCharacter(characterId)
     }
 
     unClaimCharacter(characterId: string) {
-        const [character,] = this.gameWorld.updateCharacter({ id: characterId, playerId: "" });
-        if (character) {
-            return character
-        }
-        return undefined
+        this.gameWorld.updateCharacter({ id: characterId, playerId: "" })
+        return this.getCharacter(characterId)
     }
 
     decelerate(character: Character, playerId: string | undefined) {
         if (character.playerId != playerId) {
             return
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: -1 })
+        return this.getCharacter(character.id)
     }
 
     accelerate(character: Character, playerId: string | undefined) {
         if (character.playerId != playerId) {
             return
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
+        return this.getCharacter(character.id)
     }
 
     /**
@@ -147,8 +308,8 @@ export default class GameEngine {
         if (character.playerId != playerId) {
             return undefined
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: 1 })
+        return this.getCharacter(character.id)
     }
 
     /**
@@ -160,37 +321,44 @@ export default class GameEngine {
         if (character.playerId != playerId) {
             return undefined
         }
-        const [c,] = this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
-        return c
+        this.gameWorld.updateCharacter({ id: character.id, directionAcceleration: -1 })
+        return this.getCharacter(character.id)
     }
 
-    updateCharacters(characters: Character[]): Character[] {
+    updateCharacters(characters: Character[]): GameEngine {
         //console.log(characters)
-        let updatedCharacters: Character[] = []
         characters.forEach((character) => {
-            const [c,] = this.gameWorld.updateCharacter(character)
-            if (c) {
-                updatedCharacters.push(c)
-            }
+            this.gameWorld.updateCharacter(character)
         })
-        return updatedCharacters
+        return this
     }
 
-    updateCharacter(character: Partial<Character>) {
-        return this.gameWorld.updateCharacter(character)
+    updateCharacter(character: Partial<Character>): GameEngine {
+        this.gameWorld.updateCharacter(character)
+        return this
     }
 
-    createCharacter(character: Partial<Character>): [Character[], Zones] {
+    createCharacter(character: Partial<Character>): GameEngine {
+        if (!character || !character.id) {
+            return this
+        }
         //TODO does this belong in gameengine or serverengine or both?
         let maxHp = roll({ modifier: 0 })
 
         const merged = { size: 5, maxHp: maxHp, hp: maxHp, ...character };
 
-        const [c, zones] = this.gameWorld.updateCharacter(merged)
-        if (c) {
-            return [[c], zones]
-        }
-        return [[], zones]
+        this.gameWorld.updateCharacter(merged)
+
+        return this
+
+    }
+
+    private shortRest(character: Character) {
+        //TODO short rest
+    }
+
+    private longRest(character: Character) {
+        //TODO long rest
     }
 
     castSpell(casterId: string, spellName: string, targetIds: string[]): (Character | undefined)[] {
@@ -214,139 +382,15 @@ export default class GameEngine {
         }
     }
 
-    //this is the wrapper and callback function that calls step
-    private tick() {
-        const now = (new Date()).getTime()
-        this.lastTimestamp = this.lastTimestamp || now
-        const dt = now - this.lastTimestamp
-        this.lastTimestamp = now
-        this.step(dt, now)
-
-        //60 frames per second is one frame every ~17 milliseconds
-        //30 frames per second is one frame every ~33 milliseconds
-        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
-    }
-
-    private calculateXp(a:Character[],b:Character[]){
+    private calculateXp(party: Character[], monsters: Character[]) {
         //TODO calculate xp
+        return 500
     }
 
-    //leave it public for testing
-    step(dt: number, now: number) {
-        //  figure out if this is the first step of a new turn
-        const lastTurn = Math.floor((now - dt) / 1000 / 6)
-        const currentTurn = Math.floor(now / 1000 / 6)
-        let newTurn = false
-        if (lastTurn != currentTurn) {
-            //console.log('new turn', currentTurn)
-            newTurn = true
-        }
-        const started = (new Date()).getTime()
-        //console.log('GameEngine.step')
-
-        //TODO keep track of characters that have their direction and speed acceleration changed separately from their position changed
-        //clients only need acceleration changes, they can keep calculating new locations themselves accurately
-        const updatedCharacters: Character[] = []
-        const gameEvents: GameEvent[] = []
-
-        //TODO get them in initiative order
-        Array.from(this.gameWorld.getAllCharacters().values())
-            .forEach((character: Character) => {
-                if (newTurn) {
-                    character.actionsRemaining = 1
-                }
-                //TODO calculate position and angle all at once
-                //calculate the new angle
-                let newDirection = this.calculateDirection(character, dt);
-
-                let newSpeed = this.calculateSpeed(character, dt);
-
-                //TODO pass the new speed to the location calculatin or not?
-                let newPosition: { x: number, y: number } = this.calculatePosition(character, dt);
-
-                const updates = { ...character, ...newPosition, speed: newSpeed, direction: newDirection }
-
-                //actions that are only done on the server(attack/damage)
-                //TODO put different initiatives at different ticks in the turn
-                if (character.actions.length > 0 && character.actionsRemaining > 0 && this.doGameLogic) {
-                    //console.log('doing an action')
-                    const action = character.actions[0]
-                    //combat
-                    if (action.action == 'attack' && action.target) {
-                        //get the target
-                        let target = this.getCharacter(action.target)
-                        if (target && target.id) {
-                            //check range
-                            const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
-                            if (distance <= 5 + 0.5) {
-                                //console.log('distance', distance)
-                                //always spend an action
-                                updates.actionsRemaining = character.actionsRemaining - 1
-                                //handle multiple attacks
-                                character.bab.forEach((bab) => {
-                                    //roll for attack
-                                    const attack = roll({ size: 20, modifier: bab })
-                                    if (attack > 10) {
-                                        //console.log('hit', attack)
-                                        //roll for damage
-                                        const damage = roll({ size: 6 });
-
-                                        //update the target
-                                        [target,] = this.updateCharacter({ id: target!.id, hp: target!.hp - damage })
-
-                                        updatedCharacters.push(target!)
-                                        gameEvents.push({ target: target!.id, type: 'attack', amount: damage, time: now })
-
-                                    }
-                                    else {
-                                        //console.log('miss', attack)
-                                        gameEvents.push({ target: target!.id, type: 'miss', amount: 0, time: now })
-                                    }
-                                })
-                                //fight back
-                                if (!target.target) {
-                                    console.log('start fighting back')
-                                    this.attack(target.id, character.id)
-                                }
-                            }
-                            else {
-                                //TODO too far away, but not every tick, like once a second or something maybe
-                                //console.log('too far away', distance)
-                                //gameEvents.push({ target: target.id, type: 'to_far_away', amount: 0, time: now })
-                            }
-                        }
-                    }
-                }
-
-                //compare the values and see if they are different at all
-                if (!isEqual(updates, character)) {
-                    updatedCharacters.push({ ...character, ...updates })
-                }
-
-                //return updates
-            })
-
-        if (updatedCharacters.length > 0) {
-            //update the gameworld state 
-            this.gameWorld.updateCharacters(updatedCharacters)
-            updatedCharacters.forEach((character: Character) => {
-                this.gameWorld.updateCharacter(character)
-            })
-
-            //tell the server engine about the updated characters
-            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
-        }
-
-        if (gameEvents.length > 0) {
-            //tell the serverengine about the events
-            this.emit(CONSTANTS.GAME_EVENTS, gameEvents)
-        }
-
-        const finished = (new Date()).getTime()
-        //console.log('step duration', finished - started)
-        //return for testing convenience
-        return updatedCharacters
+    private clamp(number: number, min: number, max: number) {
+        return Math.max(min, Math.min(number, max))
     }
+
 
     getDistance(p1: { x: number; y: number; }, p2: { x: number; y: number; }) {
         const deltaX = p2.x - p1.x;

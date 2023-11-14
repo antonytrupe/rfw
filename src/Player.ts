@@ -1,4 +1,9 @@
 export default class Player {
+    email: string
+    id: string
+    claimedCharacters: string[]
+    controlledCharacter: string
+    maxClaimedCharacters: number
 
     constructor({
         email = "",
@@ -19,10 +24,4 @@ export default class Player {
         this.controlledCharacter = controlledCharacter
         this.maxClaimedCharacters = maxClaimedCharacters
     }
-    email: string
-    id: string
-    claimedCharacters: string[]
-    controlledCharacter: string
-    maxClaimedCharacters: number
 }
-

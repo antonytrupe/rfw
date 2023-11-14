@@ -16,6 +16,8 @@ export default function CharacterUI({ character, position, children = undefined 
                 <div> {character?.hp} / {character?.maxHp} HP</div>
                 <div> Speed:{character?.maxSpeed}ft</div>
                 <div> Actions:{character?.actionsRemaining}</div>
+                <div> XP:{character?.xp}</div>
+                <div> Level:{character?.level}</div>
                 <div> Target:{character?.target}</div>
                 {
                     /*

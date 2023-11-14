@@ -13,6 +13,8 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
+1. pathing
+1. fight/flight/assist/social
 1. healing/long/short rest
 2. leveling up system  
 3. running away

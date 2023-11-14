@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getRandomPoint, roll } from "./utility"
 import { GameEvent } from "./ClientEngine"
 import * as CLASSES from "./CLASSES.json"
+import * as LEVELS from "./LEVELS.json"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -37,13 +38,13 @@ export default class ServerEngine {
         this.gameEngine.start()
 
         //updated characters from the gameengine running on the server
-        this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: Character[], zones: any) => {
+        this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: string[]) => {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
-            this.sendAndSaveCharacterUpdates(characters, zones)
+            this.sendAndSaveCharacterUpdates(characters)
         })
 
         this.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
-            console.log('serverengine GAME_EVENTS')
+            //console.log('serverengine GAME_EVENTS')
             this.sendEvents(events)
         })
 
@@ -94,8 +95,8 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                const [characters, zones] = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
-                this.sendAndSaveCharacterUpdates(characters, zones)
+                const  characters = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
+                this.sendAndSaveCharacterUpdates([characters], new Map())
             })
 
             socket.on(CONSTANTS.ATTACK, async (attacker: string, attackee: string) => {
@@ -235,7 +236,7 @@ export default class ServerEngine {
             this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
                 this.gameEngine.gameWorld.getCharacters(player.claimedCharacters)
             )
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
@@ -272,10 +273,8 @@ export default class ServerEngine {
 
     attack(attacker: string, attackee: string) {
         //console.log('serverengine.attack')
-        const c = this.gameEngine.attack(attacker, attackee)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c])
-        }
+        this.gameEngine.attack(attacker, attackee)
+        this.sendAndSaveCharacterUpdates([attacker, attackee])
     }
 
     getCharacter(id: string) {
@@ -285,56 +284,56 @@ export default class ServerEngine {
     accelerateDoubleStop(character: Character, player: Player | undefined) {
         const c = this.gameEngine.accelerateDoubleStop(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     accelerateDouble(character: Character, player: Player | undefined) {
         const c = this.gameEngine.accelerateDouble(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     decelerate(character: Character, player: Player | undefined) {
         const c = this.gameEngine.decelerate(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     accelerate(character: Character, player: Player | undefined) {
         const c = this.gameEngine.accelerate(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     accelerateStop(character: Character, player: Player | undefined) {
         const c = this.gameEngine.accelerateStop(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     turnStop(character: Character, player: Player | undefined) {
         const c = this.gameEngine.turnStop(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     turnRight(character: Character, player: Player | undefined) {
         const c = this.gameEngine.turnRight(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
     turnLeft(character: Character, player: Player | undefined) {
         const c = this.gameEngine.turnLeft(character, player?.id)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
@@ -374,7 +373,7 @@ export default class ServerEngine {
                 this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
             )
 
-            this.sendAndSaveCharacterUpdates([c], undefined)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
     }
 
@@ -428,14 +427,16 @@ export default class ServerEngine {
         }
     }
 
-    private sendAndSaveCharacterUpdates(characters: Character[], zones: Zones | undefined = undefined) {
+    private sendAndSaveCharacterUpdates(characterIds: string[], zones: Zones | undefined = undefined) {
         //TODO only send character updates to the rooms they're in
-        this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
 
-        characters.forEach((character) => {
+        characterIds.forEach((id) => {
+            const character = this.getCharacter(id)
+            this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, [character])
+
             try {
                 //array version
-                this.worldDB.push(CONSTANTS.CHARACTER_PATH + character.id, character)
+                this.worldDB.push(CONSTANTS.CHARACTER_PATH + id, character)
             }
             catch (e) {
                 console.log('failed to save character', character)
@@ -446,8 +447,8 @@ export default class ServerEngine {
     createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
         //console.log('createCommunity')
         //console.log(size)
-        let updatedCharacters: Character[] = []
-        let updatedZones: Zones = new Map<string, Set<string>>()
+        let updatedCharacters: string[] = []
+        //let updatedZones: Zones = new Map<string, Set<string>>()
         let modifier = -16
         let totalSize = 0
 
@@ -505,8 +506,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
         //console.log(updatedCharacters);
 
         //bards
@@ -515,8 +516,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+       // updatedZones = new Map([...updatedZones, ...zones]);
 
         //clerics
 
@@ -525,8 +526,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //druid
 
@@ -535,8 +536,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //fighter 
         [characters, zones] = this.populateClass({
@@ -544,8 +545,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //monk 
         [characters, zones] = this.populateClass({
@@ -553,8 +554,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //paladin 
         [characters, zones] = this.populateClass({
@@ -562,8 +563,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //ranger 
         [characters, zones] = this.populateClass({
@@ -571,8 +572,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //rogue 
         [characters, zones] = this.populateClass({
@@ -580,8 +581,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //sorcerer 
         [characters, zones] = this.populateClass({
@@ -589,8 +590,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //warrior 
         [characters, zones] = this.populateClass({
@@ -598,8 +599,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //wizard 
         [characters, zones] = this.populateClass({
@@ -607,8 +608,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //console.log(updatedCharacters);
 
@@ -619,8 +620,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //aristocrats 
         [characters, zones] = this.populateClass({
@@ -628,8 +629,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //commoner 
         [characters, zones] = this.populateClass({
@@ -637,8 +638,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //expert 
         [characters, zones] = this.populateClass({
@@ -646,8 +647,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         });
-        updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        updatedCharacters = updatedCharacters.concat(characters);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         //warrior
         [characters, zones] = this.populateClass({
@@ -656,93 +657,96 @@ export default class ServerEngine {
             origin: location, radius: radius
         });
         updatedCharacters = updatedCharacters.concat(characters)
-        updatedZones = new Map([...updatedZones, ...zones]);
+        //updatedZones = new Map([...updatedZones, ...zones]);
 
         let remaining = totalSize - updatedCharacters.length
         //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
             updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
+            //updatedZones = new Map([...updatedZones, ...zones]);
         }
 
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
             updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
+            //updatedZones = new Map([...updatedZones, ...zones]);
         }
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
+            const c= this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
             updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
+            //updatedZones = new Map([...updatedZones, ...zones]);
         }
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
             updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
+            //updatedZones = new Map([...updatedZones, ...zones]);
         }
 
         //create the rest as commoners
         for (let i = 0; updatedCharacters.length < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const [c, zones] = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
             updatedCharacters = updatedCharacters.concat(c)
-            updatedZones = new Map([...updatedZones, ...zones]);
+            //updatedZones = new Map([...updatedZones, ...zones]);
         }
         //console.log(updatedCharacters)
 
         //console.log(updatedCharacters)
         //this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
-        this.sendAndSaveCharacterUpdates(updatedCharacters, updatedZones)
+        this.sendAndSaveCharacterUpdates(updatedCharacters, new Map())
 
         //return [updatedCharacters, updatedZones]
     }
 
-    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [Character[], Zones] {
+    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [string[], Zones] {
 
-        let updatedCharacters: Character[] = []
-        let updatedZones = new Map<string, Set<string>>()
+        let updatedCharacters: string[] = []
+        //let updatedZones = new Map<string, Set<string>>()
         const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
         //console.log(className, highestLevel)
         //work our way down from highest level
-        for (let level = highestLevel; level >= 1; level /= 2) {
+        for (let l = highestLevel; l >= 1; l /= 2) {
             //console.log('level', level);
             //make the right amount of each level
-            for (let i = 0; i < highestLevel / level; i++) {
+            for (let i = 0; i < highestLevel / l; i++) {
                 let { x, y } = getRandomPoint({ origin, radius })
-                const [c, zones] = this.createCharacter({ characterClass: className, level: Math.round(level), x: x, y: y })
+                const level = Math.round(l)
+                const xp = LEVELS[level.toString() as keyof typeof LEVELS]
+                const c = this.createCharacter({ characterClass: className, level: level, xp: xp, x: x, y: y })
                 //console.log('c', c)
                 updatedCharacters = [...updatedCharacters, ...c]
-                updatedZones = new Map([...updatedZones, ...zones])
+                ///updatedZones = new Map([...updatedZones, ...zones])
             }
         }
         //console.log(updatedCharacters)
-        return [updatedCharacters, updatedZones]
+        return [updatedCharacters, new Map()]
     }
 
     //we have class and level
-    private createCharacter(character: Partial<Character>): [Character[], Zones] {
+    private createCharacter(character: Partial<Character>): string  {
         //console.log('ServerEngine createCharacter')
-        console.log(character)
+        //console.log(character)
         const classInfo = CLASSES[character.characterClass as keyof typeof CLASSES]
         const hitDie = classInfo.HitDie
         const bab = classInfo.BAB[character.level?.toString() as keyof typeof classInfo.BAB]
         const hp = roll({ size: hitDie, count: character.level! - 1, modifier: hitDie })
-        console.log('level', character.level)
-        console.log('hp', hp)
+        //console.log('level', character.level)
+        //console.log('hp', hp)
         let x = roll({ size: 30, modifier: -15 })
         let y = roll({ size: 30, modifier: -15 })
         const id = uuidv4();
-        const [c, zones] = this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, ...character })
+        const age = 30
+        const  c  = this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
         //this.sendAndSaveCharacterUpdates(c, zones)
-        return [c, zones]
+        return id
     }
 }

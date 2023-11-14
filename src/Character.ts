@@ -1,4 +1,31 @@
+
+
 export default class Character {
+    id: string
+    playerId: string
+    size: number
+    maxSpeed: number
+    x: number
+    y: number
+    speed: number
+    speedAcceleration: number
+    mode: number //1 for walk, 2 for  run, .5 for stealth, .25 for crawl
+    directionAcceleration: number
+    direction: number
+    hp: number
+    tmpHp: number
+    maxHp: number
+    characterClass: string
+    level: number
+    bab: number[]
+    target: string
+    targeters: string[]
+    actions: Action[]
+    actionsRemaining: number
+    birthdate: Date
+    age: number
+    race: string
+    xp: number
 
     constructor({
         id = "undefined",
@@ -17,32 +44,15 @@ export default class Character {
         maxHp = 1,
         characterClass = 'COMMONER',
         level = 1,
+        xp = 0,
         bab = [0],
         target = '',
+        targeters = [],
         actions = [],
         actionsRemaining = 1,
-    }: {
-        id?: string
-        playerId?: string
-        size?: number
-        direction?: number
-        x?: number
-        y?: number
-        maxSpeed?: number
-        mode?: number
-        speed?: number
-        directionAcceleration?: number
-        speedAcceleration?: number
-        hp?: number
-        tmpHp?: number
-        maxHp?: number
-        characterClass?: string
-        level?: number
-        bab?: number[]
-        target?: string
-        actions?: []
-        actionsRemaining?: number
-    }) {
+        age = 30,
+        race = "HUMAN"
+    }: CharacterInterface) {
         this.id = id
         this.playerId = playerId
         this.size = size
@@ -59,31 +69,44 @@ export default class Character {
         this.maxHp = maxHp
         this.characterClass = characterClass
         this.level = level
+        this.xp = xp
         this.bab = bab
         this.target = target
+        this.targeters = targeters
         this.actions = actions
         this.actionsRemaining = actionsRemaining
+        this.birthdate = new Date(new Date().getTime() - age * 365 * 24 * 60 * 60 * 1000)
+        this.age = age
+        this.race = race
     }
-    id: string
-    playerId: string
-    size: number
-    maxSpeed: number
-    x: number
-    y: number
-    speed: number
-    speedAcceleration: number
-    mode: number //1 for run, 2 for double run, .5 for walk/stealth, .25 for crawl
-    directionAcceleration: number
-    direction: number
-    hp: number
-    tmpHp: number
-    maxHp: number
-    characterClass: string
-    level: number
-    bab: number[]
-    target: string
-    actions: Action[]
-    actionsRemaining: number
+
+}
+
+interface CharacterInterface {
+    id?: string
+    playerId?: string
+    size?: number
+    direction?: number
+    x?: number
+    y?: number
+    maxSpeed?: number
+    mode?: number
+    speed?: number
+    directionAcceleration?: number
+    speedAcceleration?: number
+    hp?: number
+    tmpHp?: number
+    maxHp?: number
+    characterClass?: string
+    level?: number
+    xp?: number
+    bab?: number[]
+    target?: string
+    targeters?: string[]
+    actions?: []
+    actionsRemaining?: number
+    age?: number
+    race?: string
 }
 
 export class Action {

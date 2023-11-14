@@ -682,6 +682,7 @@ export default class ClientEngine {
     }
 
     private accelerateDouble(character: Character) {
+        console.log(character)
         if (character) {
             const c = this.gameEngine.accelerateDouble(character, this.player?.id);
             if (c) {
@@ -821,12 +822,17 @@ export default class ClientEngine {
             //character location data
             this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
                 //tell the gameengine we got an update 
+                //console.log(characters)
                 this.gameEngine.updateCharacters(characters)
 
                 //updates for the client ui
                 if (this.selectedCharacter) {
                     //look for a new version of the selected character
-                    const u = characters.find((c) => { return c.id == this.selectedCharacter?.id })
+                    const u = characters.find((c) => {
+                        //console.log(c)
+
+                        return c.id == this.selectedCharacter?.id
+                    })
 
                     //tell the ui about the updates to the selected character
                     this.emit(CONSTANTS.SELECTED_CHARACTER, u)

@@ -20,14 +20,13 @@ export default class GameWorld {
     //the entries are just a list of character ids
     private zones: Zones = new Map<string, Zone>()
 
-    updateCharacters(characters: Character[]): [Character[], Map<string, Set<string>>] {
+    updateCharacters(characters: Character[]):GameWorld {
         let updatedZones = new Map<string, Set<string>>()
         characters.forEach((character) => {
-            let [c, z] = this.updateCharacter(character)
-            updatedZones = new Map([...Array.from(updatedZones.entries()), ...Array.from(z.entries())])
+              this.updateCharacter(character) 
         })
         //console.log('updateCharacters', updatedZones)
-        return [characters, updatedZones]
+        return this
     }
 
     getAllCharacters() {
@@ -64,11 +63,11 @@ export default class GameWorld {
      * @param character the values that we want to change 
      * @returns 
      */
-    updateCharacter(character: Partial<Character>): [Character | undefined, Zones] {
+    updateCharacter(character: Partial<Character>):GameWorld {
         //if we don't have a character id, give up
         // console.log('character.id',character.id)
         if (!character?.id) {
-            return [undefined, new Map()]
+            return this
         }
 
         const old: Character | undefined = this.characters.get(character.id)
@@ -77,13 +76,13 @@ export default class GameWorld {
 
         if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
             //bail if it doesn't have a location
-            return [undefined, new Map()]
+            return this
         }
 
         //  bail if nothing is changing
         if (isEqual(old, merged)) {
             // console.log('nothing changed')
-            return [undefined, new Map()]
+            return this
         }
 
         //  console.log('got past sanity checks')
@@ -122,7 +121,7 @@ export default class GameWorld {
         }
 
         this.characters.set(merged.id, merged)
-        return [merged, updatedZones]
+        return this
     }
 
     getAdjacentTacticalZoneNames() {
