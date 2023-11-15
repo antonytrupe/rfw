@@ -13,21 +13,21 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. pathing
-2. fight/flight/assist/social
-3. healing/long/short rest
-4. running away
-5. character age
-6. teleport
-7. touch controls
-8. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
-9. random stats when spawning  
-10. no moving while incapacitated/dying/dead  
-11. collision  
-12. strafing  
-13. package as exe/etc with electron
-14. add steam support
-15. change the position calculation with respect to turning: https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
+1. change the position calculation with respect to turning: https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
+2. sliding around others
+3. pathing
+4. fight/flight/assist/social
+5. healing/long/short rest
+6. running away
+7. character age
+8. teleport
+9. touch controls
+10. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
+11. random stats when spawning 
+12. no moving while incapacitated/dying/dead 
+13. strafing 
+14. package as exe/etc with electron
+15. add steam support
 16. admin tool to interact with world
 17. stay centered on selected characters
 18. rightclick move the screen
@@ -38,7 +38,8 @@ magical portals that let you fast travel but age you based on normal travel spee
 23. character health ui
 
 ## DONE
-leveling up system  
+collision 
+leveling up system 
 fighting back
 unclaim character
 uncontrol character
@@ -47,7 +48,7 @@ some sort of animation for attacking
 combat
 show the targeted character
 turn clock/timer
-ability to claim a character  
+ability to claim a character 
 ability to view claimed characters
 ability to zoom to a character
 make the client only request what it can see

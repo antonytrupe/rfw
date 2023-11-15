@@ -20,6 +20,7 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
+
     private ticksPerSecond: number
 
     private lastTimestamp: DOMHighResTimeStamp | undefined
@@ -34,7 +35,8 @@ export default class GameEngine {
     doGameLogic: boolean
 
     /**
-     * 
+     * 60 frames per second is one frame every ~17 milliseconds
+     * 30 frames per second is one frame every ~33 milliseconds
      * @param param0 
      * @param eventEmitter 
      */
@@ -56,8 +58,6 @@ export default class GameEngine {
         this.lastTimestamp = now
         this.step(dt, now)
 
-        //60 frames per second is one frame every ~17 milliseconds
-        //30 frames per second is one frame every ~33 milliseconds
         this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
     }
 
@@ -98,6 +98,14 @@ export default class GameEngine {
 
                 //pass the new speed to the location calculatin or not?
                 let newPosition: { x: number, y: number } = this.calculatePosition(character, dt)
+                // check for collisions
+                const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .8 })
+                if (collisions.length > 1) {
+                    newPosition = { x: character.x, y: character.y }
+                    //console.log('collision')
+                }
+                //TODO figure out how to slide
+
 
                 this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
                 if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {

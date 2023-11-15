@@ -88,7 +88,6 @@ export default class ClientEngine {
     }
 
     control(characterId: string | undefined) {
-        console.log('clientengine control', characterId)
         this.controlledCharacter = this.gameEngine.gameWorld.getCharacter(characterId)
         //tell the ui
         this.emit(CONSTANTS.CONTROL_CHARACTER, this.controlledCharacter)
