@@ -1,11 +1,11 @@
 "use client"
-import EventEmitter from "events";
-import { Socket, io } from "socket.io-client";
-import GameEngine from "@/GameEngine";
-import Character from "./Character";
-import * as CONSTANTS from "@/CONSTANTS";
-import Player from "./Player";
-import { GameEvent } from "./GameEvent";
+import EventEmitter from "events"
+import { Socket, io } from "socket.io-client"
+import GameEngine from "@/GameEngine"
+import Character from "./Character"
+import * as CONSTANTS from "@/CONSTANTS"
+import Player from "./Player"
+import { GameEvent } from "./GameEvent"
 
 export default class ClientEngine {
 
@@ -65,7 +65,7 @@ export default class ClientEngine {
     }
 
     stop() {
-        this.stopped = true;
+        this.stopped = true
         this.gameEngine.stop()
     }
 
@@ -147,8 +147,8 @@ export default class ClientEngine {
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-        ctx.fillStyle = "#d7f0dd";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#d7f0dd"
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
 
         ctx.translate(-this.translateX * this.PIXELS_PER_FOOT / this.scale, -this.translateY * this.PIXELS_PER_FOOT / this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
@@ -330,7 +330,7 @@ export default class ClientEngine {
         ctx.fillStyle = fillStyle
         ctx.fill()
 
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3
         ctx.strokeStyle = strokeStyle
         ctx.stroke()
         ctx.restore()
@@ -392,7 +392,7 @@ export default class ClientEngine {
             ctx.rotate(-character.direction)
 
             ctx.beginPath()
-            ctx.setLineDash([20, 8]);
+            ctx.setLineDash([20, 8])
 
             ctx.strokeStyle = "rgba(255, 215, 0, " + a + ")"
             ctx.lineWidth = 6
@@ -409,7 +409,7 @@ export default class ClientEngine {
             ctx.rotate(-character.direction + .2)
 
             ctx.beginPath()
-            ctx.setLineDash([20, 8]);
+            ctx.setLineDash([20, 8])
 
             ctx.strokeStyle = "#bb2930"
             ctx.strokeStyle = "rgba(187, 41, 48, " + a + ")"
@@ -447,10 +447,8 @@ export default class ClientEngine {
         ctx.rotate(character.direction)
 
         const claimed = this.claimedCharacters.some((claimedCharacter) => {
-            return claimedCharacter.id == character.id;
+            return claimedCharacter.id == character.id
         })
-
-        //const selected = this.selectedCharacter?.id == character.id;
 
         const controlled = this.controlledCharacter?.id == character.id
         const targeted = this.controlledCharacter?.target == character.id
@@ -458,54 +456,54 @@ export default class ClientEngine {
         switch (character.characterClass) {
             case "BARBARIAN":
                 ctx.fillStyle = "#1c06f9"
-                break;
+                break
             case "BARD":
                 ctx.fillStyle = "#fff500"
-                break;
+                break
             case "CLERIC":
                 ctx.fillStyle = "#171cec"
-                break;
+                break
             case "DRUID":
                 ctx.fillStyle = "#076802"
-                break;
+                break
             case "FIGHTER":
                 ctx.fillStyle = "#d32c31"
                 break
             case "MONK":
                 ctx.fillStyle = "#ad8820"
-                break;
+                break
             case "PALADIN":
                 ctx.fillStyle = "#076802"
-                break;
+                break
             case "RANGER":
                 ctx.fillStyle = "#1ee134"
-                break;
+                break
             case "ROGUE":
                 ctx.fillStyle = "#d22b17"
-                break;
+                break
             case "SORCERER":
                 ctx.fillStyle = "#df20d6"
-                break;
+                break
             case "WIZARD":
                 ctx.fillStyle = "#9d1fe0"
-                break;
+                break
 
 
             case "ADEPT":
                 ctx.fillStyle = "#6c9bff"
-                break;
+                break
             case "ARISTOCRAT":
                 ctx.fillStyle = "#ffff7e"
-                break;
+                break
             case "COMMONER":
                 ctx.fillStyle = "#f0f0f0"
-                break;
+                break
             case "EXPERT":
                 ctx.fillStyle = "#076802"
-                break;
+                break
             case "WARRIOR":
                 ctx.fillStyle = "#ff6661"
-                break;
+                break
             default:
                 ctx.fillStyle = "#f0f0f0"
         }
@@ -582,11 +580,11 @@ export default class ClientEngine {
 
         //if logged in 
         if (this.player) {
-
             //if no controlled character, and still under maxclaimedcharacter limit or already claimed this character
-            if (!this.controlledCharacter && (this.claimedCharacters.length < this.player.maxClaimedCharacters && characters ||
-                this.claimedCharacters.some((c) => c.id == characters[0].id)
-            )) {
+            if (characters.length > 0 &&
+                (!this.controlledCharacter && (this.claimedCharacters.length < this.player.maxClaimedCharacters) ||
+                    (this.claimedCharacters.some((c) => c.id == characters[0].id))
+                )) {
                 //then claim and control
                 this.claim(characters[0].id)
                 this.control(characters[0].id)
@@ -655,7 +653,7 @@ export default class ClientEngine {
         return { x: x, y: y }
     }
 
-    getCharacterAt(position: { x: number; y: number; }) {
+    getCharacterAt(position: { x: number, y: number }) {
         return this.gameEngine.gameWorld.getCharacterAt(position)
     }
 
@@ -685,36 +683,36 @@ export default class ClientEngine {
     private accelerateDouble(character: Character) {
         console.log(character)
         if (character) {
-            const c = this.gameEngine.accelerateDouble(character, this.player?.id);
+            const c = this.gameEngine.accelerateDouble(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, c);
+                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, c)
             }
         }
     }
 
     private accelerate(character: Character) {
         if (character) {
-            const c = this.gameEngine.accelerate(character, this.player?.id);
+            const c = this.gameEngine.accelerate(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.ACCELERATE, c);
+                this.socket?.emit(CONSTANTS.ACCELERATE, c)
             }
         }
     }
 
     private decelarate(character: Character) {
         if (character) {
-            const c = this.gameEngine.decelerate(character, this.player?.id);
+            const c = this.gameEngine.decelerate(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.DECELERATE, c);
+                this.socket?.emit(CONSTANTS.DECELERATE, c)
             }
         }
     }
 
     private turnLeft(character: Character) {
         if (character) {
-            const c = this.gameEngine.turnLeft(character, this.player?.id);
+            const c = this.gameEngine.turnLeft(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.TURN_LEFT, c);
+                this.socket?.emit(CONSTANTS.TURN_LEFT, c)
             }
         }
     }
@@ -750,27 +748,27 @@ export default class ClientEngine {
 
     private accelerateDoubleStop(character: Character) {
         if (character) {
-            const c = this.gameEngine.accelerateDoubleStop(character, this.player?.id);
+            const c = this.gameEngine.accelerateDoubleStop(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, c);
+                this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, c)
             }
         }
     }
 
     private accelerateStop(character: Character) {
         if (character) {
-            const c = this.gameEngine.accelerateStop(character, this.player?.id);
+            const c = this.gameEngine.accelerateStop(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, c);
+                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, c)
             }
         }
     }
 
     private turnStop(character: Character) {
         if (character) {
-            const c = this.gameEngine.turnStop(character, this.player?.id);
+            const c = this.gameEngine.turnStop(character, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.TURN_STOP, c);
+                this.socket?.emit(CONSTANTS.TURN_STOP, c)
             }
         }
     }

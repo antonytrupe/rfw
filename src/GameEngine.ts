@@ -1,11 +1,9 @@
-import EventEmitter from "events";
-import Character from "./Character";
-import * as CONSTANTS from "./CONSTANTS";
-import GameWorld from "./GameWorld";
-import { Zones } from "./Zones";
-import isEqual from 'lodash.isequal';
-import { roll } from "./utility";
-import { GameEvent } from "./GameEvent";
+import EventEmitter from "events"
+import Character from "./Character"
+import * as CONSTANTS from "./CONSTANTS"
+import GameWorld from "./GameWorld"
+import { roll } from "./utility"
+import { GameEvent } from "./GameEvent"
 import * as LEVELS from "./LEVELS.json"
 
 //processes game logic
@@ -14,9 +12,9 @@ import * as LEVELS from "./LEVELS.json"
 export default class GameEngine {
 
     //EventEmitter function
-    private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter;
-    private emit: (eventName: string | symbol, ...args: any[]) => boolean;
-    private eventNames: () => (string | symbol)[];
+    private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
+    private emit: (eventName: string | symbol, ...args: any[]) => boolean
+    private eventNames: () => (string | symbol)[]
     //data object
     gameWorld: GameWorld
 
@@ -58,7 +56,7 @@ export default class GameEngine {
         this.lastTimestamp = now
         this.step(dt, now)
 
-        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond);
+        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond)
     }
 
     //leave it public for testing
@@ -91,14 +89,14 @@ export default class GameEngine {
                 }
                 //TODO calculate position and angle all at once
                 //calculate the new angle
-                let newDirection = this.calculateDirection(character, dt);
+                let newDirection = this.calculateDirection(character, dt)
 
                 //TODO if they went over their walk speed or they went over their walk distance, then no action
-                let newSpeed = this.calculateSpeed(character, dt);
+                let newSpeed = this.calculateSpeed(character, dt)
 
                 //pass the new speed to the location calculatin or not?
                 let newPosition: { x: number, y: number } = this.calculatePosition(character, dt)
-                // check for collisions
+                //check for collisions
                 const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .8 })
                 if (collisions.length > 1) {
                     newPosition = { x: character.x, y: character.y }
@@ -137,7 +135,7 @@ export default class GameEngine {
                                     if (attack > 10) {
                                         //console.log('hit', attack)
                                         //roll for damage
-                                        const damage = roll({ size: 6 });
+                                        const damage = roll({ size: 6 })
 
                                         //update the target's hp, clamped to -10 and maxHp
                                         this.updateCharacter({ id: target.id, hp: this.clamp(target!.hp - damage, -10, target!.maxHp) })
@@ -217,7 +215,7 @@ export default class GameEngine {
         this.updateCharacter({ id: attackerId, target: "", actions: [] })
 
         if (attackeeId) {
-            let attackee = this.getCharacter(attackeeId);
+            let attackee = this.getCharacter(attackeeId)
             if (attackee) {
                 this.updateCharacter({ id: attackeeId, targeters: attackee.targeters.splice(attackee.targeters.indexOf(attackerId), 1) })
             }
@@ -229,7 +227,7 @@ export default class GameEngine {
         //TODO attacker owner check
         this.updateCharacter({ id: attackerId, target: attackeeId, actions: [{ action: 'attack', target: attackeeId }] })
         if (attackeeId) {
-            let attackee = this.getCharacter(attackeeId);
+            let attackee = this.getCharacter(attackeeId)
             if (attackee) {
                 this.updateCharacter({ id: attackeeId, targeters: [...attackee.targeters, attackerId] })
             }
@@ -389,7 +387,7 @@ export default class GameEngine {
                     const damage = roll({ size: 6, count: 2 })
                     if (character) {
                         const hp = Math.max(-10, character.hp - damage)
-                        const newLocal = this.gameWorld.updateCharacter({ id: character.id, hp: hp });
+                        const newLocal = this.gameWorld.updateCharacter({ id: character.id, hp: hp })
                         //this is dumb
                         return newLocal
                     }
@@ -411,30 +409,30 @@ export default class GameEngine {
     }
 
 
-    getDistance(p1: { x: number; y: number; }, p2: { x: number; y: number; }) {
-        const deltaX = p2.x - p1.x;
-        const deltaY = p2.y - p1.y;
-        const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
-        return distance;
+    getDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
+        const deltaX = p2.x - p1.x
+        const deltaY = p2.y - p1.y
+        const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
+        return distance
     }
 
     private calculateDirection(character: Character, dt: number) {
-        let newAngle = character.direction;
+        let newAngle = character.direction
         if (character.directionAcceleration != 0) {
-            newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier;
+            newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier
         }
         //keep it from growing
         newAngle %= (Math.PI * 2)
-        return newAngle;
+        return newAngle
     }
 
     private calculateSpeed(character: Character, dt: number) {
-        let newSpeed = 0;
+        let newSpeed = 0
         //soft caps might be the same as hard caps
         //if mode or acceleration are 0 then the soft caps get pushed to 0
         const currentModeMaxSpeed = character.maxSpeed * character.mode * Math.abs(character.speedAcceleration)
         const currentModeMinSpeed = -character.maxSpeed * character.mode * Math.abs(character.speedAcceleration)
-        let mode = character.mode;
+        let mode = character.mode
 
         let outsideSoftCaps = currentModeMinSpeed > character.speed || character.speed > currentModeMaxSpeed
         //console.log('outsideSoftCaps', outsideSoftCaps)
@@ -443,7 +441,7 @@ export default class GameEngine {
         if (outsideSoftCaps || (character.speedAcceleration == 0 && character.speed != 0)) {
             //console.log('forcing sprinting')
             //force sprinting
-            mode = 2;
+            mode = 2
             //force a direction if acceleration is 0 but we need to slow down
             //force acceleration in the opposite direction of movement
             if (character.speed > 0) {
@@ -454,7 +452,7 @@ export default class GameEngine {
             }
         }
         //calculate the speedDelta now that we're taking into account slowing down
-        let speedDelta = accel * mode * dt / this.accelerationMultiplier;
+        let speedDelta = accel * mode * dt / this.accelerationMultiplier
         //console.log('speedDelta', speedDelta)
 
         //if the character is trying to stop
@@ -523,38 +521,40 @@ export default class GameEngine {
         const hardMin = -character.maxSpeed * 2
         //console.log('hardMax', hardMax)
         //console.log('hardMin', hardMin)
-        newSpeed = Math.max(hardMin, Math.min(newSpeed, hardMax));
+        newSpeed = Math.max(hardMin, Math.min(newSpeed, hardMax))
         //if we started inside the softcaps
         if (!outsideSoftCaps) {
             //then stay capped to them
-            newSpeed = Math.max(currentModeMinSpeed, Math.min(newSpeed, currentModeMaxSpeed));
+            newSpeed = Math.max(currentModeMinSpeed, Math.min(newSpeed, currentModeMaxSpeed))
         }
         else {
             //if we started outside the softcaps
         }
 
 
-        return newSpeed;
+        return newSpeed
     }
 
     private calculatePosition(character: Character, dt: number) {
-        let x: number = character.x;
-        let y: number = character.y;
+        //(cp⋅x−rcosα
+        //cp⋅y+rsinα)
+        let x: number = character.x
+        let y: number = character.y
         if (character.speed != 0) {
             //calculate new position
-            x = character.x + character.speed * Math.sin(character.direction) * dt / this.speedMultiplier;
-            y = character.y - character.speed * Math.cos(character.direction) * dt / this.speedMultiplier;
+            x = character.x + character.speed * Math.sin(character.direction) * dt / this.speedMultiplier
+            y = character.y - character.speed * Math.cos(character.direction) * dt / this.speedMultiplier
         }
-        return { x, y };
+        return { x, y }
     }
 
     start() {
         //console.log('GameEngine.start')
-        this.timeoutID = setTimeout(this.tick.bind(this));
+        this.timeoutID = setTimeout(this.tick.bind(this))
         if (typeof window === 'object' && typeof window.requestAnimationFrame === 'function') {
-            //window.requestAnimationFrame(this.nextTickChecker.bind(this));
+            //window.requestAnimationFrame(this.nextTickChecker.bind(this)) 
         }
-        return this;
+        return this
     }
 
     stop() {
