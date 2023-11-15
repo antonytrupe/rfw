@@ -786,7 +786,6 @@ export default class ClientEngine {
                 path: "/api/world/"
             })
             this.socket.on(CONSTANTS.CONNECT, () => {
-                //console.log('CONSTANTS.CONNECT')
                 this.onConnect()
             })
 
@@ -886,6 +885,7 @@ export default class ClientEngine {
     }
 
     private onConnect() {
+        console.log('connected')
         this.connected = true
         //tell the ui we connected
         this.emit(CONSTANTS.CONNECT)

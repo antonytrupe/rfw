@@ -87,8 +87,7 @@ export default class GameEngine {
                         updatedCharacters.add(character.id)
                     }
                 }
-                //TODO calculate position and angle all at once
-                //calculate the new angle
+                 //calculate the new angle
                 let newDirection = this.calculateDirection(character, dt)
 
                 //TODO if they went over their walk speed or they went over their walk distance, then no action
@@ -408,22 +407,11 @@ export default class GameEngine {
         return Math.max(min, Math.min(number, max))
     }
 
-
     getDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
         const deltaX = p2.x - p1.x
         const deltaY = p2.y - p1.y
         const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
         return distance
-    }
-
-    private calculateDirection(character: Character, dt: number) {
-        let newAngle = character.direction
-        if (character.directionAcceleration != 0) {
-            newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier
-        }
-        //keep it from growing
-        newAngle %= (Math.PI * 2)
-        return newAngle
     }
 
     private calculateSpeed(character: Character, dt: number) {
@@ -535,15 +523,24 @@ export default class GameEngine {
         return newSpeed
     }
 
+    private calculateDirection(character: Character, dt: number) {
+        let newAngle = character.direction
+        if (character.directionAcceleration != 0) {
+            newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier
+        }
+        //keep it from growing
+        newAngle %= (Math.PI * 2)
+        return newAngle
+    }
+
     private calculatePosition(character: Character, dt: number) {
-        //(cp⋅x−rcosα
-        //cp⋅y+rsinα)
+        const w = character.directionAcceleration / this.turnMultiplier
         let x: number = character.x
         let y: number = character.y
         if (character.speed != 0) {
             //calculate new position
-            x = character.x + character.speed * Math.sin(character.direction) * dt / this.speedMultiplier
-            y = character.y - character.speed * Math.cos(character.direction) * dt / this.speedMultiplier
+            x = character.x + character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
+            y = character.y - character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
         }
         return { x, y }
     }

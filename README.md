@@ -13,31 +13,31 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. change the position calculation with respect to turning: https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
-2. sliding around others
-3. pathing
-4. fight/flight/assist/social
-5. healing/long/short rest
-6. running away
-7. character age
-8. teleport
-9. touch controls
-10. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
-11. random stats when spawning 
-12. no moving while incapacitated/dying/dead 
-13. strafing 
-14. package as exe/etc with electron
-15. add steam support
-16. admin tool to interact with world
-17. stay centered on selected characters
-18. rightclick move the screen
-19. change selected character stats
-20. chat
-21. randomly spawn new characters
-22. randomly move characters
-23. character health ui
+1. sliding around others
+2. pathing
+3. fight/flight/assist/social
+4. healing/long/short rest
+5. running away
+6. character age
+7. teleport
+8. touch controls
+9.  keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
+10. random stats when spawning 
+11. no moving while incapacitated/dying/dead 
+12. strafing 
+13. package as exe/etc with electron
+14. add steam support
+15. admin tool to interact with world
+16. stay centered on selected characters
+17. rightclick move the screen
+18. change selected character stats
+19. chat
+20. randomly spawn new characters
+21. randomly move characters
+22. character health ui
 
 ## DONE
+change the position calculation with respect to turning
 collision 
 leveling up system 
 fighting back
