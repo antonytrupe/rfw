@@ -5,12 +5,12 @@ import * as CONSTANTS from "@/CONSTANTS"
 import Character from "@/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Server } from "socket.io"
-import { Zones } from "./GameWorld"
+import { Zones } from "./Zones"
 import { getSession } from "next-auth/react"
 import Player from "./Player"
 import { v4 as uuidv4 } from 'uuid';
 import { getRandomPoint, roll } from "./utility"
-import { GameEvent } from "./ClientEngine"
+import { GameEvent } from "./GameEvent"
 import * as CLASSES from "./CLASSES.json"
 import * as LEVELS from "./LEVELS.json"
 
@@ -86,7 +86,7 @@ export default class ServerEngine {
             //don't think the server cares
             socket.on(CONSTANTS.CONTROL_CHARACTER, (characterId: string | undefined) => {
                 //console.log('serverengine controlcharacter', characterId)
-                if (!!player) {
+                if (!!player && characterId) {
                     this.controlCharacter(characterId, player?.email)
                 }
                 else {
@@ -95,12 +95,17 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                const  characters = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
+                const characters = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
                 this.sendAndSaveCharacterUpdates([characters], new Map())
             })
 
             socket.on(CONSTANTS.ATTACK, async (attacker: string, attackee: string) => {
-                this.attack(attacker, attackee)
+                if (attackee) {
+                    this.attack(attacker, attackee)
+                }
+                else {
+                    this.attackStop(attacker)
+                }
             })
 
             socket.on(CONSTANTS.TURN_LEFT, async (character: Character) => {
@@ -202,6 +207,11 @@ export default class ServerEngine {
             })
         })
     }
+
+    attackStop(attackerId: string) {
+        this.gameEngine.attackStop(attackerId)
+    }
+
     async unClaimCharacter(characterId: string, playerEmail: string) {
         if (!playerEmail) {
             console.log('bailing on unclaim character: no email')
@@ -338,18 +348,10 @@ export default class ServerEngine {
     }
 
     async claimCharacter(characterId: string, playerEmail: string) {
-
         if (!playerEmail) {
             console.log('bailing on claim character: no email')
             return
         }
-
-        const character = this.gameEngine.gameWorld.getCharacter(characterId)
-        if (!character) {
-            console.log('bailing on claim character: no character')
-            return
-        }
-
         //find or create the player
         let player = await this.getPlayerByEmail(playerEmail)
         //console.log(player)
@@ -359,27 +361,44 @@ export default class ServerEngine {
             player = await this.savePlayer({ email: playerEmail, id: id })
             //console.log(player)
         }
-
         //we've got a player now
-        const c = this.gameEngine.claimCharacter(characterId, player.id)
-        //console.log('claimed character', c)
-        if (c) {
 
-            player.claimedCharacters.push(c.id)
-            this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
-
-            //tell the client it got worked
-            this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
-                this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
-            )
-
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+        //if we already claimed this character, then bail
+        if (player.claimedCharacters.some((c) => c == characterId)) {
+            console.log('bailing on claim character, already claimed this character')
+            return
         }
+
+        const character = this.getCharacter(characterId)
+        if (!character) {
+            console.log('bailing on claim character: no character')
+            return
+        }
+
+        //check if the character is claimed by another player
+        if (!!character.playerId) {
+            console.log('character.playerId', character.playerId)
+            console.log('bailing on claim character: claimed by another player')
+            return
+        }
+
+        this.gameEngine.updateCharacter({ id: characterId, playerId: player.id })
+
+        player.claimedCharacters.push(characterId)
+        this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
+
+        //tell the client it worked
+        this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
+            this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
+        )
+
+        this.sendAndSaveCharacterUpdates([characterId], undefined)
+        return this
     }
 
-    async controlCharacter(characterId: string | undefined, playerEmail: string) {
+    async controlCharacter(characterId: string, playerEmail: string) {
         //console.log('controlCharacter')
-        const character = this.gameEngine.gameWorld.getCharacter(characterId)
+        const character = this.getCharacter(characterId)
         if ((!!characterId && !character) || !playerEmail) {
             return
         }
@@ -428,8 +447,7 @@ export default class ServerEngine {
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[], zones: Zones | undefined = undefined) {
-        //TODO only send character updates to the rooms they're in
-
+        //TODO only send character updates to the room/zone they're in
         characterIds.forEach((id) => {
             const character = this.getCharacter(id)
             this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, [character])
@@ -447,11 +465,10 @@ export default class ServerEngine {
     createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
         //console.log('createCommunity')
         //console.log(size)
-        let updatedCharacters: string[] = []
         //let updatedZones: Zones = new Map<string, Set<string>>()
         let modifier = -16
         let totalSize = 0
-
+        let createdCount = 0
         let radius = 90
 
         switch (size) {
@@ -506,9 +523,9 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
-        //console.log(updatedCharacters);
+        console.log(characters)
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //bards
         [characters, zones] = this.populateClass({
@@ -516,28 +533,26 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-       // updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
-        //clerics
-
+        //clerics 
         [characters, zones] = this.populateClass({
             className: 'BARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //druid
-
         [characters, zones] = this.populateClass({
             className: 'DRUID',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //fighter 
         [characters, zones] = this.populateClass({
@@ -545,8 +560,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //monk 
         [characters, zones] = this.populateClass({
@@ -554,8 +569,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //paladin 
         [characters, zones] = this.populateClass({
@@ -563,8 +578,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //ranger 
         [characters, zones] = this.populateClass({
@@ -572,8 +587,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //rogue 
         [characters, zones] = this.populateClass({
@@ -581,8 +596,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //sorcerer 
         [characters, zones] = this.populateClass({
@@ -590,8 +605,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //warrior 
         [characters, zones] = this.populateClass({
@@ -599,8 +614,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //wizard 
         [characters, zones] = this.populateClass({
@@ -608,10 +623,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
-
-        //console.log(updatedCharacters);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //npc classes
         //adepts  
@@ -620,8 +633,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //aristocrats 
         [characters, zones] = this.populateClass({
@@ -629,8 +642,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //commoner 
         [characters, zones] = this.populateClass({
@@ -638,8 +651,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //expert 
         [characters, zones] = this.populateClass({
@@ -647,8 +660,8 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         });
-        updatedCharacters = updatedCharacters.concat(characters);
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
         //warrior
         [characters, zones] = this.populateClass({
@@ -656,60 +669,53 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         });
-        updatedCharacters = updatedCharacters.concat(characters)
-        //updatedZones = new Map([...updatedZones, ...zones]);
+        createdCount += characters.length
+        this.sendAndSaveCharacterUpdates(characters);
 
-        let remaining = totalSize - updatedCharacters.length
+        let remaining = totalSize - createdCount
         //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            //updatedZones = new Map([...updatedZones, ...zones]);
+            createdCount++
+            this.sendAndSaveCharacterUpdates([c])
         }
 
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const c = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            //updatedZones = new Map([...updatedZones, ...zones]);
+            const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
+            createdCount++
+            this.sendAndSaveCharacterUpdates([c])
         }
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            const c= this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            //updatedZones = new Map([...updatedZones, ...zones]);
+            const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
+            createdCount++
+            this.sendAndSaveCharacterUpdates([c])
         }
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
             const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            //updatedZones = new Map([...updatedZones, ...zones]);
+            createdCount++
+            this.sendAndSaveCharacterUpdates([c])
         }
 
         //create the rest as commoners
-        for (let i = 0; updatedCharacters.length < totalSize; i++) {
+        for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
             const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
-            updatedCharacters = updatedCharacters.concat(c)
-            //updatedZones = new Map([...updatedZones, ...zones]);
+            createdCount++
+            this.sendAndSaveCharacterUpdates([c])
         }
-        //console.log(updatedCharacters)
-
-        //console.log(updatedCharacters)
-        //this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
-        this.sendAndSaveCharacterUpdates(updatedCharacters, new Map())
-
-        //return [updatedCharacters, updatedZones]
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [string[], Zones] {
 
-        let updatedCharacters: string[] = []
+        let createdCharacterIds: string[] = []
         //let updatedZones = new Map<string, Set<string>>()
         const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
         //console.log(className, highestLevel)
@@ -721,18 +727,18 @@ export default class ServerEngine {
                 let { x, y } = getRandomPoint({ origin, radius })
                 const level = Math.round(l)
                 const xp = LEVELS[level.toString() as keyof typeof LEVELS]
-                const c = this.createCharacter({ characterClass: className, level: level, xp: xp, x: x, y: y })
+                const id = this.createCharacter({ characterClass: className, level: level, xp: xp, x: x, y: y })
                 //console.log('c', c)
-                updatedCharacters = [...updatedCharacters, ...c]
+                createdCharacterIds = [...createdCharacterIds, id]
                 ///updatedZones = new Map([...updatedZones, ...zones])
             }
         }
         //console.log(updatedCharacters)
-        return [updatedCharacters, new Map()]
+        return [createdCharacterIds, new Map()]
     }
 
     //we have class and level
-    private createCharacter(character: Partial<Character>): string  {
+    private createCharacter(character: Partial<Character>): string {
         //console.log('ServerEngine createCharacter')
         //console.log(character)
         const classInfo = CLASSES[character.characterClass as keyof typeof CLASSES]
@@ -745,8 +751,7 @@ export default class ServerEngine {
         let y = roll({ size: 30, modifier: -15 })
         const id = uuidv4();
         const age = 30
-        const  c  = this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
-        //this.sendAndSaveCharacterUpdates(c, zones)
+        this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
         return id
     }
 }

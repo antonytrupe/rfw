@@ -14,31 +14,31 @@ magical portals that let you fast travel but age you based on normal travel spee
 
 ## TODO LIST
 1. pathing
-1. fight/flight/assist/social
-1. healing/long/short rest
-2. leveling up system  
-3. running away
-4. character age
-5. teleport
-6. touch controls
-7. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
-8. random stats when spawning  
-9. no moving while incapacitated/dying/dead  
-10. collision  
-11. strafing  
-12. package as exe/etc with electron
-13. add steam support
-14. change the position calculation with respect to turning: https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
-15. admin tool to interact with world
-16. stay centered on selected characters
-17. rightclick move the screen
-18. change selected character stats
-19. chat
-20. randomly spawn new characters
-21. randomly move characters
-22. character health ui
+2. fight/flight/assist/social
+3. healing/long/short rest
+4. running away
+5. character age
+6. teleport
+7. touch controls
+8. keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
+9. random stats when spawning  
+10. no moving while incapacitated/dying/dead  
+11. collision  
+12. strafing  
+13. package as exe/etc with electron
+14. add steam support
+15. change the position calculation with respect to turning: https://math.stackexchange.com/questions/311555/how-to-calculate-the-position-of-a-turning-object-based-on-its-rotation
+16. admin tool to interact with world
+17. stay centered on selected characters
+18. rightclick move the screen
+19. change selected character stats
+20. chat
+21. randomly spawn new characters
+22. randomly move characters
+23. character health ui
 
 ## DONE
+leveling up system  
 fighting back
 unclaim character
 uncontrol character

@@ -1,5 +1,5 @@
 import Character from "./Character"
-import { Zones } from "./GameWorld"
+import { Zones } from "./Zones"
 
 //client connect
 export const CONNECT = 'connect'

@@ -1,10 +1,11 @@
 import EventEmitter from "events";
 import Character from "./Character";
 import * as CONSTANTS from "./CONSTANTS";
-import GameWorld, { Zones } from "./GameWorld";
+import GameWorld from "./GameWorld";
+import { Zones } from "./Zones";
 import isEqual from 'lodash.isequal';
 import { roll } from "./utility";
-import { GameEvent } from "./ClientEngine";
+import { GameEvent } from "./GameEvent";
 import * as LEVELS from "./LEVELS.json"
 
 //processes game logic
@@ -115,7 +116,7 @@ export default class GameEngine {
                         if (target && target.id) {
                             //check range
                             const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
-                            if (distance <= 5 + 0.5) {
+                            if (distance <= (target.size / 2 + character.size / 2) * 1.1) {
                                 //console.log('distance', distance)
                                 //always spend an action
                                 this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
@@ -145,8 +146,8 @@ export default class GameEngine {
                                             }
                                             //its (almost)dead, Jim
                                             //both characters stop attacking
-                                            this.attackStop(character.id, target.id)
-                                            this.attackStop(target.id, character.id)
+                                            this.attackStop(character.id)
+                                            this.attackStop(target.id)
                                             updatedCharacters.add(character.id)
                                             updatedCharacters.add(target.id)
 
@@ -175,8 +176,9 @@ export default class GameEngine {
                     }
                 }
 
-                //if below 0 hps and not stable
-                if (character.hp < 0 && newTurn) {
+                //if below 0 hps and not dead 
+                //TODO stable check
+                if (character.hp < 0 && character.hp > -10 && newTurn) {
                     //loose another hp
                     this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - 1, -10, character.hp) })
                     updatedCharacters.add(character.id)
@@ -200,13 +202,17 @@ export default class GameEngine {
         return updatedCharacters
     }
 
-    attackStop(attackerId: string, attackeeId: string): GameEngine {
+    attackStop(attackerId: string): GameEngine {
         //TODO attacker owner check
+        const attacker = this.getCharacter(attackerId)
+        const attackeeId = attacker?.target
         this.updateCharacter({ id: attackerId, target: "", actions: [] })
 
-        let attackee = this.getCharacter(attackeeId);
-        if (attackee) {
-            this.updateCharacter({ id: attackeeId, targeters: attackee.targeters.splice(attackee.targeters.indexOf(attackerId), 1) })
+        if (attackeeId) {
+            let attackee = this.getCharacter(attackeeId);
+            if (attackee) {
+                this.updateCharacter({ id: attackeeId, targeters: attackee.targeters.splice(attackee.targeters.indexOf(attackerId), 1) })
+            }
         }
         return this
     }
@@ -214,14 +220,19 @@ export default class GameEngine {
     attack(attackerId: string, attackeeId: string): GameEngine {
         //TODO attacker owner check
         this.updateCharacter({ id: attackerId, target: attackeeId, actions: [{ action: 'attack', target: attackeeId }] })
-        let attackee = this.getCharacter(attackeeId);
-        if (attackee) {
-            this.updateCharacter({ id: attackeeId, targeters: [...attackee.targeters, attackerId] })
+        if (attackeeId) {
+            let attackee = this.getCharacter(attackeeId);
+            if (attackee) {
+                this.updateCharacter({ id: attackeeId, targeters: [...attackee.targeters, attackerId] })
+            }
+        }
+        else {
+
         }
         return this
     }
 
-    getCharacter(characterId: string | undefined) {
+    getCharacter(characterId: string) {
         return this.gameWorld.getCharacter(characterId)
     }
 
@@ -268,7 +279,7 @@ export default class GameEngine {
     }
 
     /**
-     * 
+     * @deprecated
      * @param characterId 
      * @param playerId 
      * @returns 
@@ -278,6 +289,11 @@ export default class GameEngine {
         return this.getCharacter(characterId)
     }
 
+    /**
+     * @deprecated
+     * @param characterId 
+     * @returns 
+     */
     unClaimCharacter(characterId: string) {
         this.gameWorld.updateCharacter({ id: characterId, playerId: "" })
         return this.getCharacter(characterId)
@@ -295,8 +311,9 @@ export default class GameEngine {
         if (character.playerId != playerId) {
             return
         }
-        this.gameWorld.updateCharacter({ id: character.id, speedAcceleration: 1 })
-        return this.getCharacter(character.id)
+        return this.gameWorld
+            .updateCharacter({ id: character.id, speedAcceleration: 1 })
+            .getCharacter(character.id)
     }
 
     /**
@@ -342,15 +359,9 @@ export default class GameEngine {
         if (!character || !character.id) {
             return this
         }
-        //TODO does this belong in gameengine or serverengine or both?
-        let maxHp = roll({ modifier: 0 })
-
-        const merged = { size: 5, maxHp: maxHp, hp: maxHp, ...character };
-
-        this.gameWorld.updateCharacter(merged)
+        this.gameWorld.updateCharacter(character)
 
         return this
-
     }
 
     private shortRest(character: Character) {

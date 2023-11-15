@@ -1,15 +1,11 @@
 import isEqual from "lodash.isequal";
 import Character from "./Character";
-
-export type Zone = Set<string>
-
-export type Zones = Map<string, Zone>
+import { Zones, Zone } from "./Zones";
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
 //doesn't know anything about client/server
 export default class GameWorld {
-
 
     //needs to be private to force going through a setter to keep the zones up to date
     private characters: Map<string, Character> = new Map<string, Character>()
@@ -20,10 +16,10 @@ export default class GameWorld {
     //the entries are just a list of character ids
     private zones: Zones = new Map<string, Zone>()
 
-    updateCharacters(characters: Character[]):GameWorld {
+    updateCharacters(characters: Character[]): GameWorld {
         let updatedZones = new Map<string, Set<string>>()
         characters.forEach((character) => {
-              this.updateCharacter(character) 
+            this.updateCharacter(character)
         })
         //console.log('updateCharacters', updatedZones)
         return this
@@ -32,6 +28,17 @@ export default class GameWorld {
     getAllCharacters() {
         return this.characters
     }
+
+    getCharactersNearby({ x, y, r }: { x: number, y: number, r: number }): Character[] {
+        //TODO make this smarter and use zones
+        return Array.from(this.characters.values()).filter((character): boolean => {
+            const a = x - character.x
+            const b = y - character.y
+            const d = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
+            return d <= r
+        })
+    }
+
 
     getCharactersWithin({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }): Character[] {
         //TODO make this smarter and use zones
@@ -63,7 +70,7 @@ export default class GameWorld {
      * @param character the values that we want to change 
      * @returns 
      */
-    updateCharacter(character: Partial<Character>):GameWorld {
+    updateCharacter(character: Partial<Character>): GameWorld {
         //if we don't have a character id, give up
         // console.log('character.id',character.id)
         if (!character?.id) {
@@ -72,7 +79,7 @@ export default class GameWorld {
 
         const old: Character | undefined = this.characters.get(character.id)
         // console.log('old',old)
-        const merged = { ...new Character({}), ...old, ...character }
+        const merged: Character = { ...new Character({}), ...old, ...character }
 
         if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
             //bail if it doesn't have a location

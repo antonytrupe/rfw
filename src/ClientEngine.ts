@@ -5,14 +5,7 @@ import GameEngine from "@/GameEngine";
 import Character from "./Character";
 import * as CONSTANTS from "@/CONSTANTS";
 import Player from "./Player";
-
-
-export type GameEvent = {
-    target: string;
-    type: string;
-    amount: number;
-    time: number;
-};
+import { GameEvent } from "./GameEvent";
 
 export default class ClientEngine {
 
@@ -76,7 +69,7 @@ export default class ClientEngine {
         this.gameEngine.stop()
     }
 
-    getCharacter(characterId: string | undefined) {
+    getCharacter(characterId: string) {
         return this.gameEngine.getCharacter(characterId)
     }
 
@@ -590,11 +583,11 @@ export default class ClientEngine {
 
         //if logged in 
         if (this.player) {
-            //console.log('this.claimedCharacters', this.claimedCharacters)
-            //console.log('characters', characters)
 
-            //if no controlled character and still under maxclaimedcharacter limit
-            if (!this.controlledCharacter && this.claimedCharacters.length < this.player.maxClaimedCharacters && characters) {
+            //if no controlled character, and still under maxclaimedcharacter limit or already claimed this character
+            if (!this.controlledCharacter && (this.claimedCharacters.length < this.player.maxClaimedCharacters && characters ||
+                this.claimedCharacters.some((c) => c.id == characters[0].id)
+            )) {
                 //then claim and control
                 this.claim(characters[0].id)
                 this.control(characters[0].id)
@@ -605,11 +598,20 @@ export default class ClientEngine {
                 this.attack(this.controlledCharacter.id, characters[0].id)
             }
             //controlled character, but no target, so clear target
-            else if (this.controlledCharacter && characters.length == 0) {
+            else if (this.controlledCharacter && this.controlledCharacter.target && characters.length == 0) {
                 //console.log('clearing attackee')
-                this.attack(this.controlledCharacter.id, '')
+                this.attackStop(this.controlledCharacter.id)
             }
         }
+        if (this.controlledCharacter?.id) {
+            this.controlledCharacter = this.getCharacter(this.controlledCharacter.id)
+        }
+    }
+
+    attackStop(attackerId: string) {
+        this.gameEngine.attackStop(attackerId)
+        //tell the server
+        this.socket?.emit(CONSTANTS.ATTACK, attackerId, undefined)
     }
 
     attack(attackerId: string, attackeeId: string) {
@@ -806,8 +808,10 @@ export default class ClientEngine {
                 }
                 this.controlledCharacter = c
                 this.emit(CONSTANTS.CONTROL_CHARACTER, c)
-                const t = this.getCharacter(c?.target)
-                this.emit(CONSTANTS.TARGET_CHARACTER, t)
+                if (c?.target) {
+                    const t = this.getCharacter(c.target)
+                    this.emit(CONSTANTS.TARGET_CHARACTER, t)
+                }
             })
 
             //disconnect handler
@@ -838,9 +842,14 @@ export default class ClientEngine {
                     this.emit(CONSTANTS.SELECTED_CHARACTER, u)
                 }
 
-                if (this.controlledCharacter) {
+                if (this.controlledCharacter?.id) {
                     //look for a new version of the controlled character
-                    const u = characters.find((c) => { return c.id == this.controlledCharacter?.id })
+                    //console.log(this.controlledCharacter)
+                    const u = characters.find((c) => {
+                        //console.log(c)
+                        //console.log(this.controlledCharacter)
+                        return c.id == this.controlledCharacter?.id
+                    })
                     if (u) {
                         this.controlledCharacter = u
                         //tell the ui about the updates to the selected character
