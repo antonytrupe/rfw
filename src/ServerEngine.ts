@@ -60,6 +60,7 @@ export default class ServerEngine {
                     if (!player) {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
                     }
+                    console.log(player.email, ' joined')
                     socket.join(player.id)
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
@@ -256,13 +257,13 @@ export default class ServerEngine {
     }
 
     async savePlayer(player: Partial<Player>): Promise<Player> {
-        //TODO look up the player first and then merge
+        //look up the player first and then merge
         let old
         try {
             old = await this.playerDB.getObject<Player>('/PLAYER/' + player.email)
         }
         catch (error) {
-
+            console.log('error saving player', player)
         }
         const merged = { ...new Player({}), ...old, ...player }
         //console.log('merged', merged)
@@ -479,32 +480,32 @@ export default class ServerEngine {
             case "HAMLET":
                 modifier = -2
                 totalSize = roll({ size: 320, modifier: 80 })
-                radius = 200
+                radius = 240
                 break
             case "VILLAGE":
                 modifier = -1
                 totalSize = roll({ size: 500, modifier: 400 })
-                radius = 300
+                radius = 500
                 break
             case "SMALL_TOWN":
                 modifier = 0
                 totalSize = roll({ size: 1100, modifier: 900 })
-                radius = 500
+                radius = 800
                 break
             case "LARGE_TOWN":
                 modifier = 3
                 totalSize = roll({ size: 3000, modifier: 2000 })
-                radius = 800
+                radius = 1200
                 break
             case "SMALL_CITY":
                 modifier = 6
                 totalSize = roll({ size: 7000, modifier: 5000 })
-                radius = 1100
+                radius = 1500
                 break
             case "LARGE_CITY":
                 modifier = 9
                 totalSize = roll({ size: 13000, modifier: 12000 })
-                radius = 1600
+                radius = 2000
                 break
             case "METROPOLIS":
                 modifier = 12
@@ -517,18 +518,16 @@ export default class ServerEngine {
 
         //pc classes
         //barbarians
-
-        let [characters, zones] = this.populateClass({
+        let [characters,] = this.populateClass({
             className: 'BARBARIAN',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        console.log(characters)
         createdCount += characters.length
         this.sendAndSaveCharacterUpdates(characters);
 
         //bards
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'BARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -537,7 +536,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //clerics 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'BARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -546,7 +545,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //druid
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'DRUID',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -555,7 +554,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //fighter 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'FIGHTER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -564,7 +563,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //monk 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'MONK',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -573,7 +572,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //paladin 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'PALADIN',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -582,7 +581,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //ranger 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'RANGER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -591,7 +590,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //rogue 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'ROGUE',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -600,7 +599,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //sorcerer 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'SORCERER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -609,7 +608,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //warrior 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -618,7 +617,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //wizard 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'WIZARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -628,7 +627,7 @@ export default class ServerEngine {
 
         //npc classes
         //adepts  
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'ADEPT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -637,7 +636,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //aristocrats 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'ARISTOCRAT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -646,7 +645,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //commoner 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'COMMONER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -655,7 +654,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //expert 
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'EXPERT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -664,7 +663,7 @@ export default class ServerEngine {
         this.sendAndSaveCharacterUpdates(characters);
 
         //warrior
-        [characters, zones] = this.populateClass({
+        [characters,] = this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
@@ -672,15 +671,17 @@ export default class ServerEngine {
         createdCount += characters.length
         this.sendAndSaveCharacterUpdates(characters);
 
+        const buffer = 10
+
         let remaining = totalSize - createdCount
         //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
-            let p
-            do {
+            let p = getRandomPoint({ origin: location, radius })
+            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+                radius += 5;
                 p = getRandomPoint({ origin: location, radius })
-            } while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: 5 }).length > 0)
-
+            }
             const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
@@ -688,45 +689,56 @@ export default class ServerEngine {
 
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
-            let p
-            do {
+            let p = getRandomPoint({ origin: location, radius })
+            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+                radius += 5;
                 p = getRandomPoint({ origin: location, radius })
-            } while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: 5 }).length > 0) const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
+            }
+            const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
-            let p
-            do {
+            let p = getRandomPoint({ origin: location, radius })
+            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+                radius += 5;
                 p = getRandomPoint({ origin: location, radius })
-            } while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: 5 }).length > 0) const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
+            }
+            const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
-            let p
-            do {
+            let p = getRandomPoint({ origin: location, radius })
+            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+                radius += 5;
                 p = getRandomPoint({ origin: location, radius })
-            } while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: 5 }).length > 0) const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
+            }
+            const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
+        //console.log('createdCount before commoner fill', createdCount)
 
         //create the rest as commoners
         for (let i = 0; createdCount < totalSize; i++) {
-            let p
-            do {
+            let p = getRandomPoint({ origin: location, radius })
+            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+                radius += 5;
                 p = getRandomPoint({ origin: location, radius })
-            } while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: 5 }).length > 0) const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
+            }
+            const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
+        //console.log('createdCount after commoner fill', createdCount)
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [string[], Zones] {
-
+        let x, y
+        const buffer = 10
         let createdCharacterIds: string[] = []
         //let updatedZones = new Map<string, Set<string>>()
         const highestLevel = roll({ size: diceSize, count: diceCount, modifier: modifier })
@@ -736,10 +748,12 @@ export default class ServerEngine {
             //console.log('level', level);
             //make the right amount of each level
             for (let i = 0; i < highestLevel / l; i++) {
-                let x, y
-                do {
+
+                ({ x, y } = getRandomPoint({ origin, radius }))
+                while (this.gameEngine.gameWorld.getCharactersNearby({ x: x, y: y, r: buffer }).length > 0) {
+                    radius += 5;
                     ({ x, y } = getRandomPoint({ origin, radius }))
-                } while (this.gameEngine.gameWorld.getCharactersNearby({ x: x, y: y, r: 5 }).length > 0)
+                }
 
                 const level = Math.round(l)
                 const xp = LEVELS[level.toString() as keyof typeof LEVELS]

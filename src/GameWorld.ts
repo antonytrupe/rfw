@@ -1,6 +1,6 @@
-import isEqual from "lodash.isequal";
-import Character from "./Character";
-import { Zones, Zone } from "./Zones";
+import isEqual from "lodash.isequal"
+import Character from "./Character"
+import { Zones, Zone } from "./Zones"
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
@@ -17,11 +17,9 @@ export default class GameWorld {
     private zones: Zones = new Map<string, Zone>()
 
     updateCharacters(characters: Character[]): GameWorld {
-        let updatedZones = new Map<string, Set<string>>()
         characters.forEach((character) => {
             this.updateCharacter(character)
         })
-        //console.log('updateCharacters', updatedZones)
         return this
     }
 
@@ -72,13 +70,13 @@ export default class GameWorld {
      */
     updateCharacter(character: Partial<Character>): GameWorld {
         //if we don't have a character id, give up
-        // console.log('character.id',character.id)
+        //console.log('character.id',character.id)
         if (!character?.id) {
             return this
         }
 
         const old: Character | undefined = this.characters.get(character.id)
-        // console.log('old',old)
+        //console.log('old',old)
         const merged: Character = { ...new Character({}), ...old, ...character }
 
         if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
@@ -86,14 +84,13 @@ export default class GameWorld {
             return this
         }
 
-        //  bail if nothing is changing
+        //bail if nothing is changing
         if (isEqual(old, merged)) {
-            // console.log('nothing changed')
+            //console.log('nothing changed')
             return this
         }
 
-        //  console.log('got past sanity checks')
-
+        //console.log('got past sanity checks')
         const newZoneName = this.getTacticalZoneName({ x: merged.x, y: merged.y })
         let newZone = this.zones.get(newZoneName)
         let updatedZones = new Map<string, Set<string>>()
@@ -145,9 +142,9 @@ export default class GameWorld {
 
     getCharactersAt(position: { x: number, y: number }): Character[] {
         //TODO take into account characters that overlap into adjacent zones
-        // get the zone that includes this point
+        //get the zone that includes this point
         const zoneName = this.getTacticalZoneName(position)
-        // console.log(zoneName)
+        //console.log(zoneName)
         const zone = this.zones.get(zoneName)
         //make sure we got a zone
         if (!!zone) {
