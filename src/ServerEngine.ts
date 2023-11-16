@@ -425,7 +425,8 @@ export default class ServerEngine {
 
     private loadWorld() {
         try {
-            this.worldDB.load().then(() => {
+            this.worldDB.load()
+            .then(() => {
                 this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
                     //console.log(c)
                     //[index: string]: string
@@ -436,10 +437,12 @@ export default class ServerEngine {
                         characters.push(character)
 
                     })
-                    this.gameEngine.gameWorld.updateCharacters(characters)
+                    this.gameEngine.updateCharacters(characters)
                 }).catch(err => {
-                    //console.log('empty database')
+                    console.log('empty player database',err)
                 })
+            }).catch((error)=>{
+                console.log('failed to load db ',error)
             })
         }
         catch (e) {

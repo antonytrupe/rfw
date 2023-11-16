@@ -21,7 +21,7 @@ export default class ClientEngine {
     /**
      * @deprecated The method should not be used
      */
-    private selectedCharacter: Character | undefined
+    //private selectedCharacter: Character | undefined
     private claimedCharacters: Character[] = []
     private gameEngine: GameEngine
     private player: Player | undefined
@@ -551,25 +551,12 @@ export default class ClientEngine {
     }
 
     clickHandler(e: MouseEvent) {
-        //console.log('click')
-        //const tzn = this.gameEngine.gameWorld.getTacticalZoneName(this.getMousePosition(e))
-        //console.log(tzn)
-        //const mp = this.getMousePosition(e)
-        //console.log('mouse position', mp)
-        //const zivp = this.getZonesInViewPort()
-        //console.log(zivp)
-        //const vp = this.getViewPort()
-        //console.log('viewport', vp)
-        //const c = this.gameEngine.gameWorld.getCharactersWithin(rect)
-        //console.log(c.length)
-        //const d = this.gameEngine.gameWorld.getAllCharacters()
-        //console.log(Array.from(d.values()).length) 
 
-        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
+        //const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
         //just the first character
-        this.selectedCharacter = characters[0]
+        //this.selectedCharacter = characters[0]
         //tell the ui about the selected character
-        this.emit(CONSTANTS.SELECTED_CHARACTER, this.selectedCharacter)
+        //this.emit(CONSTANTS.SELECTED_CHARACTER, this.selectedCharacter)
     }
 
     doubleClickHandler(e: MouseEvent) {
@@ -824,19 +811,6 @@ export default class ClientEngine {
                 //tell the gameengine we got an update 
                 //console.log(characters)
                 this.gameEngine.updateCharacters(characters)
-
-                //updates for the client ui
-                if (this.selectedCharacter) {
-                    //look for a new version of the selected character
-                    const u = characters.find((c) => {
-                        //console.log(c)
-
-                        return c.id == this.selectedCharacter?.id
-                    })
-
-                    //tell the ui about the updates to the selected character
-                    this.emit(CONSTANTS.SELECTED_CHARACTER, u)
-                }
 
                 if (this.controlledCharacter?.id) {
                     //look for a new version of the controlled character
