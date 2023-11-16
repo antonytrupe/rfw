@@ -64,14 +64,6 @@ export default class ServerEngine {
                     socket.join(player.id)
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
-
-                    socket.emit(CONSTANTS.CLAIMED_CHARACTERS,
-                        this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
-                    )
-
-                    socket.emit(CONSTANTS.CONTROL_CHARACTER,
-                        this.gameEngine.gameWorld.getCharacter(player?.controlledCharacter)
-                    )
                 }
             })
 
@@ -83,15 +75,15 @@ export default class ServerEngine {
                 )
             })
 
-            //CONSTANTS.CONTROL_CHARACTER
-            //don't think the server cares
-            socket.on(CONSTANTS.CONTROL_CHARACTER, (characterId: string | undefined) => {
+            socket.on(CONSTANTS.CONTROL_CHARACTER, async (characterId: string | undefined) => {
                 //console.log('serverengine controlcharacter', characterId)
-                if (!!player && characterId) {
-                    this.controlCharacter(characterId, player?.email)
+                //console.log('player', player)
+                if (!!player && characterId != undefined) {
+                    player = await this.controlCharacter(characterId, player?.email)
+                    socket.emit(CONSTANTS.CURRENT_PLAYER, player)
                 }
                 else {
-                    console.log('no session')
+                    console.log('bailing on control character, no session')
                 }
             })
 
@@ -109,36 +101,36 @@ export default class ServerEngine {
                 }
             })
 
-            socket.on(CONSTANTS.TURN_LEFT, async (character: Character) => {
-                this.turnLeft(character, player)
+            socket.on(CONSTANTS.TURN_LEFT, async (characterId: string) => {
+                this.turnLeft(characterId, player)
             })
 
-            socket.on(CONSTANTS.TURN_RIGHT, async (character: Character) => {
-                this.turnRight(character, player)
+            socket.on(CONSTANTS.TURN_RIGHT, async (characterId: string) => {
+                this.turnRight(characterId, player)
             })
 
-            socket.on(CONSTANTS.TURN_STOP, async (character: Character) => {
-                this.turnStop(character, player)
+            socket.on(CONSTANTS.TURN_STOP, async (characterId: string) => {
+                this.turnStop(characterId, player)
             })
 
-            socket.on(CONSTANTS.STOP_ACCELERATE, async (character: Character) => {
-                this.accelerateStop(character, player)
+            socket.on(CONSTANTS.STOP_ACCELERATE, async (characterId: string) => {
+                this.accelerateStop(characterId, player)
             })
 
-            socket.on(CONSTANTS.ACCELERATE, async (character: Character) => {
-                this.accelerate(character, player)
+            socket.on(CONSTANTS.ACCELERATE, async (characterId: string) => {
+                this.accelerate(characterId, player)
             })
 
-            socket.on(CONSTANTS.DECELERATE, async (character: Character) => {
-                this.decelerate(character, player)
+            socket.on(CONSTANTS.DECELERATE, async (characterId: string) => {
+                this.decelerate(characterId, player)
             })
 
-            socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (character: Character) => {
-                this.accelerateDouble(character, player)
+            socket.on(CONSTANTS.ACCELERATE_DOUBLE, async (characterId: string) => {
+                this.accelerateDouble(characterId, player)
             })
 
-            socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (character: Character) => {
-                this.accelerateDoubleStop(character, player)
+            socket.on(CONSTANTS.STOP_DOUBLE_ACCELERATE, async (characterId: string) => {
+                this.accelerateDoubleStop(characterId, player)
             })
 
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
@@ -157,23 +149,24 @@ export default class ServerEngine {
                 this.createCommunity(options)
             })
 
-            //CONSTANTS.CLAIM_CHARACTER
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
                 if (!!player) {
-                    this.claimCharacter(characterId, player.email)
+                    player = await this.claimCharacter(characterId, player.email)
+                    socket.emit(CONSTANTS.CURRENT_PLAYER, player)
                 }
                 else {
-                    console.log('no session')
+                    console.log('bailing on claim character, no session')
                 }
             })
 
-            //CONSTANTS.CLAIM_CHARACTER
             socket.on(CONSTANTS.UNCLAIM_CHARACTER, async (characterId: string) => {
                 if (!!player) {
-                    this.unClaimCharacter(characterId, player.email)
+                    player = await this.unClaimCharacter(characterId, player.email)
+                    socket.emit(CONSTANTS.CURRENT_PLAYER, player)
+
                 }
                 else {
-                    console.log('no session')
+                    console.log('bailing on unclaim character, no session')
                 }
             })
 
@@ -211,44 +204,6 @@ export default class ServerEngine {
 
     attackStop(attackerId: string) {
         this.gameEngine.attackStop(attackerId)
-    }
-
-    async unClaimCharacter(characterId: string, playerEmail: string) {
-        if (!playerEmail) {
-            console.log('bailing on unclaim character: no email')
-            return
-        }
-
-        const character = this.gameEngine.gameWorld.getCharacter(characterId)
-        if (!character) {
-            console.log('bailing on unclaim character: no character')
-            return
-        }
-
-        //find or create the player
-        let player = await this.getPlayerByEmail(playerEmail)
-        //bail if no player found
-        if (!player) {
-            return
-        }
-
-        //we've got a player now
-        const c = this.gameEngine.unClaimCharacter(characterId)
-        //console.log('claimed character', c)
-        if (c) {
-            player.claimedCharacters.splice(player.claimedCharacters.indexOf(c.id), 1)
-            this.savePlayer({
-                email: player.email, claimedCharacters: player.claimedCharacters,
-                //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
-                controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
-            })
-
-            //tell the client it worked
-            this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
-                this.gameEngine.gameWorld.getCharacters(player.claimedCharacters)
-            )
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
-        }
     }
 
     sendEvents(events: GameEvent[]) {
@@ -292,63 +247,100 @@ export default class ServerEngine {
         return this.gameEngine.getCharacter(id)
     }
 
-    accelerateDoubleStop(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.accelerateDoubleStop(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    accelerateDoubleStop(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.accelerateDoubleStop(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    accelerateDouble(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.accelerateDouble(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    accelerateDouble(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.accelerateDouble(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    decelerate(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.decelerate(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    decelerate(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.decelerate(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    accelerate(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.accelerate(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    accelerate(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.accelerate(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    accelerateStop(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.accelerateStop(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    accelerateStop(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.accelerateStop(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    turnStop(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.turnStop(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    turnStop(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.turnStop(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    turnRight(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.turnRight(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    turnRight(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.turnRight(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    turnLeft(character: Character, player: Player | undefined) {
-        const c = this.gameEngine.turnLeft(character, player?.id)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+    turnLeft(characterId: string, player: Player | undefined) {
+        const character = this.gameEngine.turnLeft(characterId, player?.id)
+        if (!!character) {
+            this.sendAndSaveCharacterUpdates([characterId], undefined)
         }
     }
 
-    async claimCharacter(characterId: string, playerEmail: string) {
+    async unClaimCharacter(characterId: string, playerEmail: string): Promise<Player | undefined> {
+        if (!playerEmail) {
+            console.log('bailing on unclaim character: no email')
+            return
+        }
+
+        //find or create the player
+        let player = await this.getPlayerByEmail(playerEmail)
+        //bail if no player found
+        if (!player) {
+            return player
+        }
+
+        const character = this.gameEngine.gameWorld.getCharacter(characterId)
+        if (!character) {
+            console.log('bailing on unclaim character: no character')
+            return player
+        }
+
+        //we've got a player now
+        const c = this.gameEngine.unClaimCharacter(characterId)
+        //console.log('claimed character', c)
+        if (c) {
+            player.claimedCharacters.splice(player.claimedCharacters.indexOf(c.id), 1)
+            player = await this.savePlayer({
+                email: player.email, claimedCharacters: player.claimedCharacters,
+                //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
+                controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
+            })
+
+            //tell the client it worked
+            this.io.to(player.id).emit(CONSTANTS.CURRENT_PLAYER, player)
+            this.sendAndSaveCharacterUpdates([c.id], undefined)
+        }
+        return player
+    }
+
+    async claimCharacter(characterId: string, playerEmail: string): Promise<Player | undefined> {
         if (!playerEmail) {
             console.log('bailing on claim character: no email')
             return
@@ -367,40 +359,35 @@ export default class ServerEngine {
         //if we already claimed this character, then bail
         if (player.claimedCharacters.some((c) => c == characterId)) {
             console.log('bailing on claim character, already claimed this character')
-            return
+            return player
         }
 
         const character = this.getCharacter(characterId)
         if (!character) {
             console.log('bailing on claim character: no character')
-            return
+            return player
         }
 
         //check if the character is claimed by another player
         if (!!character.playerId) {
             console.log('character.playerId', character.playerId)
             console.log('bailing on claim character: claimed by another player')
-            return
+            return player
         }
 
         this.gameEngine.updateCharacter({ id: characterId, playerId: player.id })
 
         player.claimedCharacters.push(characterId)
-        this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
-
-        //tell the client it worked
-        this.io.to(player.id).emit(CONSTANTS.CLAIMED_CHARACTERS,
-            this.gameEngine.gameWorld.getCharacters(player?.claimedCharacters)
-        )
+        player = await this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
 
         this.sendAndSaveCharacterUpdates([characterId], undefined)
-        return this
+        return player
     }
 
-    async controlCharacter(characterId: string, playerEmail: string) {
+    async controlCharacter(characterId: string, playerEmail: string): Promise<Player | undefined> {
         //console.log('controlCharacter')
-        const character = this.getCharacter(characterId)
-        if ((!!characterId && !character) || !playerEmail) {
+
+        if (!playerEmail) {
             return
         }
 
@@ -414,36 +401,41 @@ export default class ServerEngine {
             //console.log(player)
         }
 
-        //claim it if possible
-        if (characterId) {
-            this.claimCharacter(characterId, playerEmail)
+        const character = this.getCharacter(characterId)
+        if ((!!characterId && !character)) {
+            return player
         }
 
-        this.savePlayer({ ...player, controlledCharacter: characterId })
+        //claim it if possible
+        if (characterId) {
+            player = await this.claimCharacter(characterId, playerEmail)
+        }
+
+        return await this.savePlayer({ ...player, controlledCharacter: characterId })
 
     }
 
     private loadWorld() {
         try {
             this.worldDB.load()
-            .then(() => {
-                this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                    //console.log(c)
-                    //[index: string]: string
-                    const characters: Character[] = []
+                .then(() => {
+                    this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
+                        //console.log(c)
+                        //[index: string]: string
+                        const characters: Character[] = []
 
-                    //@ts-check
-                    Object.entries(c).map(([id, character]: [id: string, character: any]) => {
-                        characters.push(character)
+                        //@ts-check
+                        Object.entries(c).map(([id, character]: [id: string, character: any]) => {
+                            characters.push(character)
 
+                        })
+                        this.gameEngine.updateCharacters(characters)
+                    }).catch(err => {
+                        console.log('empty player database', err)
                     })
-                    this.gameEngine.updateCharacters(characters)
-                }).catch(err => {
-                    console.log('empty player database',err)
+                }).catch((error) => {
+                    console.log('failed to load db ', error)
                 })
-            }).catch((error)=>{
-                console.log('failed to load db ',error)
-            })
         }
         catch (e) {
             //console.log('failed to load')

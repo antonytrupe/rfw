@@ -1,5 +1,4 @@
 import Character from "./Character"
-import { Zones } from "./Zones"
 
 //client connect
 export const CONNECT = 'connect'
@@ -26,8 +25,6 @@ export interface CLIENT_INITIAL_INTERFACE extends ViewPort { }
 
 export const CURRENT_PLAYER = 'current_player'
 
-export const SELECTED_CHARACTER = 'client.characters.selected'
-export const CLAIMED_CHARACTERS = 'client.characters.claimed'
 export const HOVERED_CHARACTER = 'client.character.hovered'
 
 
@@ -45,13 +42,7 @@ export const CREATE_COMMUNITY = 'world.create_community'
 //clientengine notify UI
 //list of claimed characters, last selected character, last viewport
 export const CLIENT_INFO = 'client.selected_characters.update'
-interface CLIENT_INFO_INTERFACE {
-    claimedCharacters: Character[]
-    selectedCharacters: Character[]
-    scale: number,
-    translateX: number,
-    translateY: number
-}
+
 
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'

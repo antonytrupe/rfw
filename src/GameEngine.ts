@@ -248,30 +248,6 @@ export default class GameEngine {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    accelerateDoubleStop(character: Character, playerId: string | undefined) {
-        if (character.playerId != playerId) {
-            return
-        }
-        return this.updateCharacter({ id: character.id, mode: 1 })
-            .getCharacter(character.id)
-    }
-
-    accelerateStop(character: Character, playerId: string | undefined) {
-        if (character.playerId != playerId) {
-            return
-        }
-        return this.updateCharacter({ id: character.id, speedAcceleration: 0 })
-            .getCharacter(character.id)
-    }
-
-    accelerateDouble(character: Character, playerId: string | undefined) {
-        if (character.playerId != playerId) {
-            return
-        }
-        this.updateCharacter({ id: character.id, mode: 2 })
-        return this.getCharacter(character.id)
-    }
-
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
         let zones = []
         for (let i = left; i < right; i += 30) {
@@ -282,34 +258,64 @@ export default class GameEngine {
         return zones
     }
 
-    turnStop(character: Character, playerId: string | undefined) {
-        if (character.playerId != playerId) {
-            return
-        }
-        this.updateCharacter({ id: character.id, directionAcceleration: 0 })
-        return this.getCharacter(character.id)
-    }
-
     /**
      * @deprecated
      * @param characterId 
      * @returns 
      */
     unClaimCharacter(characterId: string) {
-        this.updateCharacter({ id: characterId, playerId: "" })
-        return this.getCharacter(characterId)
+        return this.updateCharacter({ id: characterId, playerId: "" })
+            .getCharacter(characterId)
     }
 
-    decelerate(character: Character, playerId: string | undefined) {
-        if (character.playerId != playerId) {
+    accelerateDoubleStop(characterId: string, playerId: string | undefined) {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
+            return
+        }
+        return this.updateCharacter({ id: character.id, mode: 1 })
+            .getCharacter(character.id)
+    }
+
+    accelerateStop(characterId: string, playerId: string | undefined) {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
+            return
+        }
+        return this.updateCharacter({ id: character.id, speedAcceleration: 0 })
+            .getCharacter(character.id)
+    }
+
+    accelerateDouble(characterId: string, playerId: string | undefined) {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
+            return
+        }
+        this.updateCharacter({ id: character.id, mode: 2 })
+        return this.getCharacter(character.id)
+    }
+
+    turnStop(characterId: string, playerId: string | undefined) {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
+            return
+        }
+        this.updateCharacter({ id: character.id, directionAcceleration: 0 })
+        return this.getCharacter(character.id)
+    }
+
+    decelerate(characterId: string, playerId: string | undefined) {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
             return
         }
         this.updateCharacter({ id: character.id, speedAcceleration: -1 })
         return this.getCharacter(character.id)
     }
 
-    accelerate(character: Character, playerId: string | undefined) {
-        if (character.playerId != playerId) {
+    accelerate(characterId: string, playerId: string | undefined) {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
             return
         }
         return this
@@ -322,8 +328,9 @@ export default class GameEngine {
      * @param characters list of characters to turn left
      * @returns updated characters. empty array if no characters updated
      */
-    turnLeft(character: Character, playerId: string | undefined): Character | undefined {
-        if (character.playerId != playerId) {
+    turnLeft(characterId: string, playerId: string | undefined): Character | undefined {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
             return undefined
         }
         this.updateCharacter({ id: character.id, directionAcceleration: 1 })
@@ -335,12 +342,13 @@ export default class GameEngine {
      * @param characters 
      * @returns a list of characters
      */
-    turnRight(character: Character, playerId: string | undefined): Character | undefined {
-        if (character.playerId != playerId) {
+    turnRight(characterId: string, playerId: string | undefined): Character | undefined {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
             return undefined
         }
-        this.updateCharacter({ id: character.id, directionAcceleration: -1 })
-        return this.getCharacter(character.id)
+        return this.updateCharacter({ id: characterId, directionAcceleration: -1 })
+            .getCharacter(characterId)
     }
 
     updateCharacters(characters: Character[]): GameEngine {

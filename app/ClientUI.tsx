@@ -10,7 +10,7 @@ import CommunityCreation from './CommunityCreation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Clock from './components/clock/clock';
-import { Accordion } from 'react-bootstrap';
+import Player from '@/Player';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()
@@ -28,48 +28,15 @@ export default function ClientUI() {
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
-
-  const [controlledCharacter, setControlledCharacter] = useState<Character>()
-  /**
-    * @deprecated The method should not be used
-    */
-  const [targetCharacter, setTargetCharacter] = useState<Character>()
-
+  const [player, setPlayer] = useState<Player>()
   const [hoveredCharacter, setHoveredCharacter] = useState<Character>()
-  /**
-     * @deprecated The method should not be used
-     */
-  const [selectedCharacter, setSelectedCharacter] = useState<Character>()
-  /**
-    * @deprecated The method should not be used
-    */
-  const [claimedCharacters, setClaimedCharacters] = useState<Character[]>([])
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
 
-    eventEmitter.on(CONSTANTS.HOVERED_CHARACTER, (character: Character) => {
-      setHoveredCharacter(character)
-    })
 
-    eventEmitter.on(CONSTANTS.CLAIMED_CHARACTERS, (character: Character[]) => {
-      setClaimedCharacters(character)
-    })
-
-    eventEmitter.on(CONSTANTS.SELECTED_CHARACTER, (character: Character) => {
-      setSelectedCharacter(character)
-    })
-
-    eventEmitter.on(CONSTANTS.CONTROL_CHARACTER, (character: Character) => {
-      setControlledCharacter(character)
-    })
-
-    eventEmitter.on(CONSTANTS.TARGET_CHARACTER, (character: Character) => {
-      setTargetCharacter(character)
-    })
-
-    eventEmitter.on(CONSTANTS.TARGET_CHARACTER, (character: Character) => {
-      setTargetCharacter(character)
+    eventEmitter.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
+      setPlayer(player)
     })
 
     eventEmitter.on(CONSTANTS.DISCONNECT, () => {
@@ -142,49 +109,15 @@ export default function ClientUI() {
 
   const createCommunity = (options: { size: string, race: string }) => {
     clientEngine?.createCommunity(options)
-  }
-
-  const castSpell = (casterId: string, spellName: string, targets: string[]) => {
-    clientEngine?.castSpell(casterId, spellName, targets)
-  }
-
-  const claimCharacter = (characterId: string) => {
-
-    clientEngine?.claim(characterId)
-    const c = clientEngine?.getCharacter(characterId)
-    if (c) {
-      setClaimedCharacters([...claimedCharacters, c])
-    }
-  }
-
-  const focusCharacter = (characterId: string) => {
-    if (clientEngine) {
-      const c = clientEngine.getCharacter(characterId)
-      // clientEngine.gameEngine.gameWorld.getCharacter(characterId)
-      if (c) {
-        clientEngine.focus(characterId)
-        //clientEngine.selectedCharacters = [c]
-        //setSelectedCharacters([c])
-      }
-    }
-  }
-
+  } 
+  
   const unClaim = (characterId: string) => {
-    //TODO unclaim
+    //  unclaim
     clientEngine?.unClaim(characterId)
-    //update controlled
-    setControlledCharacter(undefined)
-    //update claimed
-    setClaimedCharacters(claimedCharacters.splice(claimedCharacters.findIndex(c => c.id == characterId), 1))
   }
 
-  function controlCharacter(characterId: string | undefined) {
+  function controlCharacter(characterId: string) {
     clientEngine?.control(characterId)
-    const c = clientEngine?.getCharacter(characterId);
-    setControlledCharacter(c)
-    if (c?.target) {
-      setTargetCharacter(clientEngine?.getCharacter(c?.target))
-    }
   }
 
   const { data: session } = useSession();
@@ -222,8 +155,8 @@ export default function ClientUI() {
               connected && (<button onClick={disconnect}>Disconnect</button>)
               */
             }
-            {connected && controlledCharacter && (<button onClick={() => { controlCharacter(undefined) }}>Uncontrol</button>)}
-            {connected && controlledCharacter && (<button onClick={() => { unClaim(controlledCharacter.id) }}>Unclaim</button>)}
+            {connected && player?.controlledCharacter && (<button onClick={() => { controlCharacter("") }}>Uncontrol</button>)}
+            {connected && player?.controlledCharacter && (<button onClick={() => { unClaim(player.controlledCharacter) }}>Unclaim</button>)}
           </div>
         </div>
       </div>

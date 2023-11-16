@@ -17,12 +17,6 @@ export default class ClientEngine {
     //state things
     private stopped: boolean = false //control the draw loop
     private connected: boolean = false
-    private controlledCharacter: Character | undefined
-    /**
-     * @deprecated The method should not be used
-     */
-    //private selectedCharacter: Character | undefined
-    private claimedCharacters: Character[] = []
     private gameEngine: GameEngine
     private player: Player | undefined
 
@@ -76,23 +70,30 @@ export default class ClientEngine {
     claim(characterId: string) {
         //client claim
         //console.log('claim')
-        this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
+        if (this.player) {
+            this.player.controlledCharacter = characterId
+            this.socket?.emit(CONSTANTS.CLAIM_CHARACTER, characterId)
+        }
     }
 
     unClaim(characterId: string) {
         //client claim
         //console.log('claim')
-        this.claimedCharacters.splice(this.claimedCharacters.findIndex(c => c.id == characterId), 1)
-        this.controlledCharacter = undefined
-        this.socket?.emit(CONSTANTS.UNCLAIM_CHARACTER, characterId)
+        if (this.player) {
+            this.player.claimedCharacters.splice(this.player.claimedCharacters.findIndex(c => c == characterId), 1)
+            this.player.controlledCharacter = ""
+            this.socket?.emit(CONSTANTS.UNCLAIM_CHARACTER, characterId)
+        }
     }
 
-    control(characterId: string | undefined) {
-        this.controlledCharacter = this.gameEngine.gameWorld.getCharacter(characterId)
-        //tell the ui
-        this.emit(CONSTANTS.CONTROL_CHARACTER, this.controlledCharacter)
-        //tell the server
-        this.socket?.emit(CONSTANTS.CONTROL_CHARACTER, characterId)
+    control(characterId: string) {
+        if (this.player) {
+            this.player.controlledCharacter = characterId
+            //tell the ui
+            this.emit(CONSTANTS.CONTROL_CHARACTER, this.player.controlledCharacter)
+            //tell the server
+            this.socket?.emit(CONSTANTS.CONTROL_CHARACTER, characterId)
+        }
     }
 
     focus(characterId: string) {
@@ -446,12 +447,12 @@ export default class ClientEngine {
         ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
         ctx.rotate(character.direction)
 
-        const claimed = this.claimedCharacters.some((claimedCharacter) => {
-            return claimedCharacter.id == character.id
+        const claimed = this.player?.claimedCharacters.some((id) => {
+            return id == character.id
         })
 
-        const controlled = this.controlledCharacter?.id == character.id
-        const targeted = this.controlledCharacter?.target == character.id
+        const isControlled = this.player?.controlledCharacter == character.id
+        const isTargeted = !!this.player?.controlledCharacter && this.getCharacter(this.player?.controlledCharacter)?.target == character.id
 
         switch (character.characterClass) {
             case "BARBARIAN":
@@ -488,7 +489,6 @@ export default class ClientEngine {
                 ctx.fillStyle = "#9d1fe0"
                 break
 
-
             case "ADEPT":
                 ctx.fillStyle = "#6c9bff"
                 break
@@ -508,11 +508,11 @@ export default class ClientEngine {
                 ctx.fillStyle = "#f0f0f0"
         }
 
-        if (targeted) {
+        if (isTargeted) {
             //draw a special circle around it
             drawTargeted()
         }
-        if (controlled) {
+        if (isControlled) {
             //draw a special circle around it
             drawControlled()
         }
@@ -557,6 +557,10 @@ export default class ClientEngine {
         //this.selectedCharacter = characters[0]
         //tell the ui about the selected character
         //this.emit(CONSTANTS.SELECTED_CHARACTER, this.selectedCharacter)
+
+        if (this.player?.controlledCharacter) {
+            //TODO
+        }
     }
 
     doubleClickHandler(e: MouseEvent) {
@@ -566,29 +570,26 @@ export default class ClientEngine {
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
 
         //if logged in 
-        if (this.player) {
+        if (!!this.player) {
             //if no controlled character, and still under maxclaimedcharacter limit or already claimed this character
             if (characters.length > 0 &&
-                (!this.controlledCharacter && (this.claimedCharacters.length < this.player.maxClaimedCharacters) ||
-                    (this.claimedCharacters.some((c) => c.id == characters[0].id))
+                (!this.player?.controlledCharacter && (this.player?.claimedCharacters.length < this.player.maxClaimedCharacters) ||
+                    (this.player?.claimedCharacters.some((id) => id == characters[0].id))
                 )) {
                 //then claim and control
                 this.claim(characters[0].id)
                 this.control(characters[0].id)
             }
             //controlled character, so target is a target
-            else if (this.controlledCharacter && characters.length > 0) {
+            else if (!!this.player?.controlledCharacter && characters.length > 0) {
                 //attack it
-                this.attack(this.controlledCharacter.id, characters[0].id)
+                this.attack(this.player?.controlledCharacter, characters[0].id)
             }
             //controlled character, but no target, so clear target
-            else if (this.controlledCharacter && this.controlledCharacter.target && characters.length == 0) {
+            else if (!!this.player?.controlledCharacter && !!this.getCharacter(this.player?.controlledCharacter)?.target && characters.length == 0) {
                 //console.log('clearing attackee')
-                this.attackStop(this.controlledCharacter.id)
+                this.attackStop(this.player?.controlledCharacter)
             }
-        }
-        if (this.controlledCharacter?.id) {
-            this.controlledCharacter = this.getCharacter(this.controlledCharacter.id)
         }
     }
 
@@ -647,115 +648,101 @@ export default class ClientEngine {
     keyDownHandler(e: KeyboardEvent) {
         const code = e.code
 
-        if (this.controlledCharacter?.id) {
+        if (this.player?.controlledCharacter) {
             if (code == 'KeyD') {
-                this.turnRight(this.controlledCharacter)
+                this.turnRight(this.player.controlledCharacter)
             }
             else if (code == 'KeyA') {
-                this.turnLeft(this.controlledCharacter)
+                this.turnLeft(this.player.controlledCharacter)
             }
             else if (code == 'KeyS') {
-                this.decelarate(this.controlledCharacter)
+                this.decelarate(this.player.controlledCharacter)
             }
             else if (code == 'KeyW') {
                 //console.log('W')
-                this.accelerate(this.controlledCharacter)
+                this.accelerate(this.player.controlledCharacter)
             }
             else if (code == "ShiftLeft") {
-                this.accelerateDouble(this.controlledCharacter)
+                this.accelerateDouble(this.player.controlledCharacter)
             }
         }
     }
 
-    private accelerateDouble(character: Character) {
-        console.log(character)
+    private accelerateDouble(characterId: string) {
+        const character = this.getCharacter(characterId)
         if (character) {
-            const c = this.gameEngine.accelerateDouble(character, this.player?.id)
+            const c = this.gameEngine.accelerateDouble(characterId, this.player?.id)
             if (c) {
-                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, c)
+                this.socket?.emit(CONSTANTS.ACCELERATE_DOUBLE, characterId)
             }
         }
     }
 
-    private accelerate(character: Character) {
-        if (character) {
-            const c = this.gameEngine.accelerate(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.ACCELERATE, c)
-            }
+    private accelerate(characterId: string) {
+        const character = this.gameEngine.accelerate(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.ACCELERATE, characterId)
         }
     }
 
-    private decelarate(character: Character) {
-        if (character) {
-            const c = this.gameEngine.decelerate(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.DECELERATE, c)
-            }
+    private decelarate(characterId: string) {
+        const character = this.gameEngine.decelerate(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.DECELERATE, characterId)
         }
     }
 
-    private turnLeft(character: Character) {
-        if (character) {
-            const c = this.gameEngine.turnLeft(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.TURN_LEFT, c)
-            }
+    private turnLeft(characterId: string) {
+        const character = this.gameEngine.turnLeft(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.TURN_LEFT, characterId)
         }
     }
 
-    private turnRight(character: Character) {
-        if (character) {
-            const c = this.gameEngine.turnRight(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.TURN_RIGHT, c)
-            }
+    private turnRight(characterId: string) {
+        const character = this.gameEngine.turnRight(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.TURN_RIGHT, characterId)
+        }
+    }
+
+    private accelerateDoubleStop(characterId: string) {
+        const character = this.gameEngine.accelerateDoubleStop(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, characterId)
+        }
+    }
+
+    private accelerateStop(characterId: string) {
+        const character = this.gameEngine.accelerateStop(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.STOP_ACCELERATE, characterId)
+        }
+    }
+
+    private turnStop(characterId: string) {
+        const character = this.gameEngine.turnStop(characterId, this.player?.id)
+        if (!!character) {
+            this.socket?.emit(CONSTANTS.TURN_STOP, characterId)
         }
     }
 
     keyUpHandler(e: KeyboardEvent) {
-        if (this.controlledCharacter) {
+        if (this.player?.controlledCharacter) {
             if (e.code == 'KeyD') {
-                this.turnStop(this.controlledCharacter)
+                this.turnStop(this.player.controlledCharacter)
             }
             else if (e.code == 'KeyA') {
-                this.turnStop(this.controlledCharacter)
+                this.turnStop(this.player.controlledCharacter)
             }
             else if (e.code == 'KeyS') {
-                this.accelerateStop(this.controlledCharacter)
+                this.accelerateStop(this.player.controlledCharacter)
             }
             else if (e.code == 'KeyW') {
-                this.accelerateStop(this.controlledCharacter)
+                this.accelerateStop(this.player.controlledCharacter)
             }
             else if (e.code == "ShiftLeft") {
-                this.accelerateDoubleStop(this.controlledCharacter)
-            }
-        }
-    }
-
-    private accelerateDoubleStop(character: Character) {
-        if (character) {
-            const c = this.gameEngine.accelerateDoubleStop(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.STOP_DOUBLE_ACCELERATE, c)
-            }
-        }
-    }
-
-    private accelerateStop(character: Character) {
-        if (character) {
-            const c = this.gameEngine.accelerateStop(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.STOP_ACCELERATE, c)
-            }
-        }
-    }
-
-    private turnStop(character: Character) {
-        if (character) {
-            const c = this.gameEngine.turnStop(character, this.player?.id)
-            if (c) {
-                this.socket?.emit(CONSTANTS.TURN_STOP, c)
+                this.accelerateDoubleStop(this.player.controlledCharacter)
             }
         }
     }
@@ -778,23 +765,7 @@ export default class ClientEngine {
 
             this.socket?.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
                 this.player = player
-            })
-
-            this.socket?.on(CONSTANTS.CLAIMED_CHARACTERS, (c: Character[]) => {
-                this.claimedCharacters = c
-                this.emit(CONSTANTS.CLAIMED_CHARACTERS, c)
-            })
-
-            this.socket?.on(CONSTANTS.CONTROL_CHARACTER, (c: Character | undefined) => {
-                if (c) {
-                    this.gameEngine.updateCharacter(c)
-                }
-                this.controlledCharacter = c
-                this.emit(CONSTANTS.CONTROL_CHARACTER, c)
-                if (c?.target) {
-                    const t = this.getCharacter(c.target)
-                    this.emit(CONSTANTS.TARGET_CHARACTER, t)
-                }
+                this.emit(CONSTANTS.CURRENT_PLAYER, player)
             })
 
             //disconnect handler
@@ -812,30 +783,6 @@ export default class ClientEngine {
                 //console.log(characters)
                 this.gameEngine.updateCharacters(characters)
 
-                if (this.controlledCharacter?.id) {
-                    //look for a new version of the controlled character
-                    //console.log(this.controlledCharacter)
-                    const u = characters.find((c) => {
-                        //console.log(c)
-                        //console.log(this.controlledCharacter)
-                        return c.id == this.controlledCharacter?.id
-                    })
-                    if (u) {
-                        this.controlledCharacter = u
-                        //tell the ui about the updates to the selected character
-                        this.emit(CONSTANTS.CONTROL_CHARACTER, u)
-                    }
-                }
-
-                //tell the ui about any updates to this player's claimed characters
-                const mergedClaimed = this.claimedCharacters.map((claimed) => {
-                    //look for each selected character in the list of characters
-                    const u = characters.find((c) => { return c.id == claimed.id })
-                    //if we didn't find it in the list of updated characters, then just use the current value
-                    return { ...claimed, ...u }
-                })
-                //tell the ui about the updates to the selected characters
-                this.emit(CONSTANTS.CLAIMED_CHARACTERS, mergedClaimed)
             })
         }
         catch (e) {
