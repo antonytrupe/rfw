@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io'
 import { JsonDB, Config } from 'node-json-db';
-import { SocketResponse } from '../../src/SocketResponse';
+import { SocketResponse } from '../../SocketResponse';
 import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/CONSTANTS';
 import { CONNECTION } from '@/CONSTANTS';
   

@@ -17,13 +17,13 @@ export default function CharacterUI({ character, position, children = undefined 
                 <div> {character?.hp} / {character?.maxHp} HP</div>
                 <div> Direction:{character?.direction}ft</div>
                 <div> Speed:{character?.maxSpeed}ft</div>
-                <div> Actions:{character?.actionsRemaining}</div>
-                <div> XP:{character?.xp}</div>
+                
+                <div> XsssP:{character?.xp}</div>
                 <div> Level:{character?.level}</div>
                 <div> Target:{character?.target}</div>
                 {
                     /*
-                   
+                   <div> Actions:{character?.actionsRemaining}</div>
                     <div> size:{character.size}</div>
                     <div> direction:{character.direction.toFixed(2)}</div>
                     <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>

@@ -1,7 +1,7 @@
 import EventEmitter from "events"
 import * as CONSTANTS from "./CONSTANTS";
 import ClientEngine from "./ClientEngine";
-import ClientUI from "../app/ClientUI";
+import ClientUI from "./app/ClientUI";
 import { render, screen, } from '@testing-library/react'
 
 describe('ClientEngine', () => {

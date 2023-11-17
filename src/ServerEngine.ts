@@ -30,8 +30,8 @@ export default class ServerEngine {
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        this.worldDB = new JsonDB(new Config("world", true, true, '/'))
-        this.playerDB = new JsonDB(new Config("player", true, true, '/'))
+        this.worldDB = new JsonDB(new Config("data/world", true, true, '/'))
+        this.playerDB = new JsonDB(new Config("data/player", true, true, '/'))
         this.loadWorld()
         //this.loadPlayers()
 
