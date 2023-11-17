@@ -29,7 +29,7 @@ export default class Character {
     xp: number
 
     constructor({
-        id = "undefined",
+        id = "__test__",
         playerId = "",
         size = 5,
         direction = 0,

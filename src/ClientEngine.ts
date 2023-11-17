@@ -559,7 +559,7 @@ export default class ClientEngine {
     }
     move(characterId: string, location: Point) {
         //TODO
-        //this.gameEngine.moveCharacter(characterId, location)
+        this.gameEngine.moveCharacter(characterId, location)
     }
 
     doubleClickHandler(e: MouseEvent) {

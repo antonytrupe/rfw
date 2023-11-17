@@ -6,8 +6,9 @@ import { roll } from "./utility"
 import { GameEvent } from "./GameEvent"
 import * as LEVELS from "./LEVELS.json"
 import { Point } from "./Point"
-import { Action } from "./Action"
 
+const LEFT = 1
+const RIGHT = -1
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
@@ -168,29 +169,22 @@ export default class GameEngine {
                 else if (action.action == 'move' && !!action.location) {
                     //console.log('turn/accelerate/stop')
                     const targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
-                    console.log('targetDirection', targetDirection)
-                    console.log('character.direction', character.direction)
-                    const delta = (character.direction - targetDirection) % (Math.PI * 2)
-                    console.log('delta', delta)
 
                     //TODO turn right or left
-                    //TODO accelerate or stop accelerating
-                    if (Math.abs(delta) < .2) {
-                        character = this.updateCharacter({ id: character.id, directionAcceleration: 0 }).getCharacter(character.id)!
+                    const turnDirection = this.calculateDirectionAcceleration(character.direction, targetDirection)
+
+
+                    if (turnDirection == 0) {
                         this.updateCharacter({ id: character.id, actions: [] })
                     }
-                    else if (delta < 0) {
-                        character = this.updateCharacter({ id: character.id, directionAcceleration: -1 }).getCharacter(character.id)!
-                        console.log('turning right')
-                    }
-                    else {
-                        character = this.updateCharacter({ id: character.id, directionAcceleration: 1 }).getCharacter(character.id)!
-                        console.log('turning left')
 
-                    }
+                    character = this.updateCharacter({ id: character.id, directionAcceleration: turnDirection }).getCharacter(character.id)!
+
+                    //TODO accelerate or stop accelerating
+                    //const acceleration=this.calculateAcceleration()
+
                 }
             }
-
 
             //calculate the new angle
             let newDirection = this.calculateDirection(character, dt)
@@ -241,13 +235,26 @@ export default class GameEngine {
         return updatedCharacters
     }
 
+    calculateDirectionAcceleration(current: number, target: number) {
+        let t = (target - current + (Math.PI * 8 / 4)) % (Math.PI * 2)
+
+        if (t < .05)
+            return 0
+        else if (t <= Math.PI)
+            return 1
+        else if (t > Math.PI * 2 - .05)
+            return 0
+        else if (t > Math.PI)
+            return -1
+        else
+            return 0
+    }
+
     getDirection(src: Point, dest: Point) {
-        return (Math.atan2(src.y - dest.y, src.x - dest.x) + (0 / 2 * Math.PI)) % (Math.PI * 2)
+        return (Math.atan2(-dest.y - -src.y, dest.x - src.x) + (4 / 2 * Math.PI)) % (Math.PI * 2)
     }
 
     moveCharacter(characterId: string, location: Point) {
-        console.log('move')
-        console.log(location)
         this.updateCharacter({ id: characterId, actions: [{ action: 'move', location: location }] })
     }
 
@@ -370,7 +377,7 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return undefined
         }
-        this.updateCharacter({ id: character.id, directionAcceleration: 1 })
+        this.updateCharacter({ id: character.id, directionAcceleration: LEFT })
         return this.getCharacter(character.id)
     }
 
@@ -384,7 +391,7 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return undefined
         }
-        return this.updateCharacter({ id: characterId, directionAcceleration: -1 })
+        return this.updateCharacter({ id: characterId, directionAcceleration: RIGHT })
             .getCharacter(characterId)
     }
 
@@ -582,11 +589,11 @@ export default class GameEngine {
         if (character.directionAcceleration != 0) {
             newAngle = character.direction + character.directionAcceleration * dt / this.turnMultiplier
         }
-        //bound it to between -2pi and 2pi
+        //normalize it to between -2pi and 2pi
         newAngle %= (Math.PI * 2)
-        //keep it positive
+        //normalize it to 0 to 4pi
         newAngle += Math.PI * 2
-        //keep it from growing
+        //normalize to 0 to 2pi
         newAngle %= (Math.PI * 2)
         return newAngle
     }
