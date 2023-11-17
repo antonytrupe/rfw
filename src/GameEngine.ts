@@ -597,8 +597,8 @@ export default class GameEngine {
         let y: number = character.y
         if (character.speed != 0) {
             //calculate new position
-            x = character.x + character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
-            y = character.y - character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
+            x = character.x + character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
+            y = character.y + character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
         }
         return { x, y }
     }

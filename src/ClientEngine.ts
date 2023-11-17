@@ -530,8 +530,8 @@ export default class ClientEngine {
         ctx.beginPath()
         ctx.strokeStyle = '#FFFFFF'
 
-        ctx.moveTo(0, -(character.size) + 1)
-        ctx.lineTo(0, (character.size) - 1)
+        ctx.moveTo(0, 0)
+        ctx.lineTo((character.size) * .4 * this.PIXELS_PER_FOOT, 0)
 
         ctx.stroke()
         drawHealth()
@@ -559,7 +559,7 @@ export default class ClientEngine {
     }
     move(characterId: string, location: Point) {
         //TODO
-        this.gameEngine.moveCharacter(characterId, location)
+        //this.gameEngine.moveCharacter(characterId, location)
     }
 
     doubleClickHandler(e: MouseEvent) {
@@ -640,7 +640,7 @@ export default class ClientEngine {
         return { x: x, y: y }
     }
 
-    getCharacterAt(position:Point) {
+    getCharacterAt(position: Point) {
         return this.gameEngine.gameWorld.getCharacterAt(position)
     }
 
