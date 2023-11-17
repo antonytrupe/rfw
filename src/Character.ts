@@ -1,3 +1,4 @@
+import { Action } from "./Action"
 
 
 export default class Character {
@@ -107,9 +108,4 @@ interface CharacterInterface {
     actionsRemaining?: number
     age?: number
     race?: string
-}
-
-export class Action {
-    action: string = ''
-    target: string = ''
 }

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react'
 import './CharacterUI.scss'
 
 import Character from "@/Character"
+import { Point } from '@/Point'
 
 export default function CharacterUI({ character, position, children = undefined }: {
-    character: Character | undefined, position: { x: number, y: number }|undefined, children?: any
+    character: Character | undefined, position: Point | undefined, children?: any
 }) {
 
     return (
@@ -14,6 +15,7 @@ export default function CharacterUI({ character, position, children = undefined 
             <div className="stats" >
                 <div> level {character?.level} {character?.characterClass}</div>
                 <div> {character?.hp} / {character?.maxHp} HP</div>
+                <div> Direction:{character?.direction}ft</div>
                 <div> Speed:{character?.maxSpeed}ft</div>
                 <div> Actions:{character?.actionsRemaining}</div>
                 <div> XP:{character?.xp}</div>

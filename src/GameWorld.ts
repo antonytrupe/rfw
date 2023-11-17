@@ -1,6 +1,7 @@
 import isEqual from "lodash.isequal"
 import Character from "./Character"
 import { Zones, Zone } from "./Zones"
+import { Point } from "./Point"
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
@@ -52,7 +53,7 @@ export default class GameWorld {
         return this.characters.get(characterId)
     }
 
-    getTacticalZoneName({ x, y }: { x: number, y: number }) {
+    getTacticalZoneName({ x, y }:Point) {
         //T tactical/one turn
         //M local/10 turns/1 minute
         //H overland/one hour
@@ -132,7 +133,7 @@ export default class GameWorld {
         //TODO getAdjacentTacticalZoneNames
     }
 
-    getCharacterAt(position: { x: number, y: number }): Character | undefined {
+    getCharacterAt(position: Point): Character | undefined {
         const l = this.getCharactersAt(position)
         if (l.length > 0) {
             return l[0]
@@ -140,7 +141,7 @@ export default class GameWorld {
         return undefined
     }
 
-    getCharactersAt(position: { x: number, y: number }): Character[] {
+    getCharactersAt(position: Point): Character[] {
         //TODO take into account characters that overlap into adjacent zones
         //get the zone that includes this point
         const zoneName = this.getTacticalZoneName(position)

@@ -8,11 +8,12 @@ import { Server } from "socket.io"
 import { Zones } from "./Zones"
 import { getSession } from "next-auth/react"
 import Player from "./Player"
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 import { getRandomPoint, roll } from "./utility"
 import { GameEvent } from "./GameEvent"
 import * as CLASSES from "./CLASSES.json"
 import * as LEVELS from "./LEVELS.json"
+import { Point } from "./Point"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -142,7 +143,7 @@ export default class ServerEngine {
                 io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
-            socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: { x: number, y: number } }) => {
+            socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: Point }) => {
                 //console.log('options', options)
                 //console.log('location', location)
                 //console.log('targets',targets) 
@@ -350,7 +351,7 @@ export default class ServerEngine {
         //console.log(player)
         if (!player) {
             //console.log('make a new player')
-            const id = uuidv4();
+            const id = uuidv4()
             player = await this.savePlayer({ email: playerEmail, id: id })
             //console.log(player)
         }
@@ -396,7 +397,7 @@ export default class ServerEngine {
         //console.log(player)
         if (!player) {
             //console.log('make a new player')
-            const id = uuidv4();
+            const id = uuidv4()
             player = await this.savePlayer({ email: playerEmail, id: id })
             //console.log(player)
         }
@@ -458,7 +459,7 @@ export default class ServerEngine {
         })
     }
 
-    createCommunity({ size, race, location }: { size: string, race: string, location: { x: number, y: number } }) {
+    createCommunity({ size, race, location }: { size: string, race: string, location: Point }) {
         //console.log('createCommunity')
         //console.log(size)
         //let updatedZones: Zones = new Map<string, Set<string>>()
@@ -653,7 +654,7 @@ export default class ServerEngine {
             className: 'EXPERT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        });
+        })
         createdCount += characters.length
         this.sendAndSaveCharacterUpdates(characters);
 
@@ -662,9 +663,9 @@ export default class ServerEngine {
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        });
+        })
         createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        this.sendAndSaveCharacterUpdates(characters)
 
         const buffer = 10
 
@@ -674,10 +675,10 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5;
+                radius += 5
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y })
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
@@ -686,10 +687,10 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5;
+                radius += 5
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y });
+            const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y })
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
@@ -697,10 +698,10 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5;
+                radius += 5
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y })
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
@@ -708,10 +709,10 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5;
+                radius += 5
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y })
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
@@ -721,10 +722,10 @@ export default class ServerEngine {
         for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5;
+                radius += 5
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y });
+            const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y })
             createdCount++
             this.sendAndSaveCharacterUpdates([c])
         }
@@ -740,7 +741,7 @@ export default class ServerEngine {
         //console.log(className, highestLevel)
         //work our way down from highest level
         for (let l = highestLevel; l >= 1; l /= 2) {
-            //console.log('level', level);
+            //console.log('level', level)
             //make the right amount of each level
             for (let i = 0; i < highestLevel / l; i++) {
 
@@ -770,7 +771,7 @@ export default class ServerEngine {
         const hp = roll({ size: hitDie, count: character.level! - 1, modifier: hitDie })
         let x = roll({ size: 60, modifier: -30 })
         let y = roll({ size: 60, modifier: -30 })
-        const id = uuidv4();
+        const id = uuidv4()
         const age = 30
         this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
         return id

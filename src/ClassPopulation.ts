@@ -1,11 +1,10 @@
+import { Point } from "./Point";
+
 export interface ClassPopulation {
     className: string;
     diceCount: number;
     diceSize: number;
     modifier: number;
-    origin: {
-        x: number;
-        y: number;
-    };
+    origin: Point;
     radius: number;
 }

@@ -6,6 +6,7 @@ import Character from "./Character"
 import * as CONSTANTS from "@/CONSTANTS"
 import Player from "./Player"
 import { GameEvent } from "./GameEvent"
+import { Point } from "./Point"
 
 export default class ClientEngine {
 
@@ -28,7 +29,7 @@ export default class ClientEngine {
     private scale: number = 1
     private translateX = -20 * this.scale
     private translateY = -20 * this.scale
-    private mousePosition: { x: number, y: number, } = { x: 0, y: 0 }
+    private mousePosition: Point = { x: 0, y: 0 }
     game_events: GameEvent[] = []
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
@@ -551,16 +552,14 @@ export default class ClientEngine {
     }
 
     clickHandler(e: MouseEvent) {
-
-        //const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
-        //just the first character
-        //this.selectedCharacter = characters[0]
-        //tell the ui about the selected character
-        //this.emit(CONSTANTS.SELECTED_CHARACTER, this.selectedCharacter)
-
-        if (this.player?.controlledCharacter) {
-            //TODO
+        if (!!this.player?.controlledCharacter) {
+            const location = this.getMousePosition(e)
+            this.move(this.player.controlledCharacter, location)
         }
+    }
+    move(characterId: string, location: Point) {
+        //TODO
+        this.gameEngine.moveCharacter(characterId, location)
     }
 
     doubleClickHandler(e: MouseEvent) {
@@ -634,14 +633,14 @@ export default class ClientEngine {
         return { x, y }
     }
 
-    getScreenPosition(p: { x: number, y: number }) {
+    getScreenPosition(p: Point) {
         const rect = this.getCanvas().getBoundingClientRect()
         const y = p.y * this.PIXELS_PER_FOOT / this.scale - (this.translateY * this.PIXELS_PER_FOOT / this.scale) + rect.top
         const x = p.x * this.PIXELS_PER_FOOT / this.scale - (this.translateX * this.PIXELS_PER_FOOT / this.scale) + rect.left
         return { x: x, y: y }
     }
 
-    getCharacterAt(position: { x: number, y: number }) {
+    getCharacterAt(position:Point) {
         return this.gameEngine.gameWorld.getCharacterAt(position)
     }
 

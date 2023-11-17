@@ -5,6 +5,8 @@ import GameWorld from "./GameWorld"
 import { roll } from "./utility"
 import { GameEvent } from "./GameEvent"
 import * as LEVELS from "./LEVELS.json"
+import { Point } from "./Point"
+import { Action } from "./Action"
 
 //processes game logic
 //interacts with the gameworld object and updates it
@@ -80,56 +82,33 @@ export default class GameEngine {
         const gameEvents: GameEvent[] = []
 
         //TODO get them in initiative order
+        //TODO put different initiatives at different ticks in the turn
         this.activeCharacters.forEach((id) => {
-            const character = this.getCharacter(id)!
-
-            // Array.from(this.gameWorld.getAllCharacters().values())
-            // .forEach((character: Character) => {
+            let character = this.getCharacter(id)!
 
             if (newTurn) {
-                this.updateCharacter({ id: character.id, actionsRemaining: 1 })
+                character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)!
                 if (character.actionsRemaining != 1) {
                     updatedCharacters.add(character.id)
                 }
             }
-            //calculate the new angle
-            let newDirection = this.calculateDirection(character, dt)
 
-            //TODO if they went over their walk speed or they went over their walk distance, then no action
-            let newSpeed = this.calculateSpeed(character, dt)
-
-            //pass the new speed to the location calculatin or not?
-            let newPosition: { x: number, y: number } = this.calculatePosition(character, dt)
-            //check for collisions
-            const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .8 })
-            if (collisions.length > 1) {
-                newPosition = { x: character.x, y: character.y }
-                //console.log('collision')
-            }
-            //TODO figure out how to slide
-
-
-            this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
-            if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
-                updatedCharacters.add(character.id)
-            }
-
-            //actions that are only done on the server(attack/damage)
-            //TODO put different initiatives at different ticks in the turn
-            if (character.actions.length > 0 && character.actionsRemaining > 0 && this.doGameLogic) {
+            if (character.actions.length > 0 && character.actionsRemaining > 0) {
                 //console.log('doing an action')
                 const action = character.actions[0]
                 //combat
-                if (action.action == 'attack' && action.target) {
+                //actions that are only done on the server(attack/damage)
+                if (action.action == 'attack' && this.doGameLogic && !!action.targetId) {
                     //get the target
-                    const target = this.getCharacter(action.target)
+                    const target = this.getCharacter(action.targetId)
                     if (target && target.id) {
                         //check range
                         const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
                         if (distance <= (target.size / 2 + character.size / 2) * 1.1) {
                             //console.log('distance', distance)
                             //always spend an action
-                            this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
+                            character = this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
+                                .getCharacter(character.id)!
                             updatedCharacters.add(character.id)
 
                             //handle multiple attacks
@@ -147,11 +126,13 @@ export default class GameEngine {
                                     //if the target was alive but now its not alive
                                     if (target.hp > 0 && target.hp <= damage) {
                                         //give xp
-                                        this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
+                                        character = this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
+                                            .getCharacter(character.id)!
                                         updatedCharacters.add(character.id)
 
                                         if (character.xp >= LEVELS[(character.level + 1).toString() as keyof typeof LEVELS]) {
-                                            this.updateCharacter({ id: character.id, level: character.level + 1 })
+                                            character = this.updateCharacter({ id: character.id, level: character.level + 1 })
+                                                .getCharacter(character.id)!
                                             updatedCharacters.add(character.id)
                                         }
                                         //its (almost)dead, Jim
@@ -184,6 +165,52 @@ export default class GameEngine {
                         }
                     }
                 }
+                else if (action.action == 'move' && !!action.location) {
+                    //console.log('turn/accelerate/stop')
+                    const targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
+                    console.log('targetDirection', targetDirection)
+                    console.log('character.direction', character.direction)
+                    const delta = (character.direction - targetDirection) % (Math.PI * 2)
+                    console.log('delta', delta)
+
+                    //TODO turn right or left
+                    //TODO accelerate or stop accelerating
+                    if (Math.abs(delta) < .2) {
+                        character = this.updateCharacter({ id: character.id, directionAcceleration: 0 }).getCharacter(character.id)!
+                        this.updateCharacter({ id: character.id, actions: [] })
+                    }
+                    else if (delta < 0) {
+                        character = this.updateCharacter({ id: character.id, directionAcceleration: -1 }).getCharacter(character.id)!
+                        console.log('turning right')
+                    }
+                    else {
+                        character = this.updateCharacter({ id: character.id, directionAcceleration: 1 }).getCharacter(character.id)!
+                        console.log('turning left')
+
+                    }
+                }
+            }
+
+
+            //calculate the new angle
+            let newDirection = this.calculateDirection(character, dt)
+
+            //TODO if they went over their walk speed or they went over their walk distance, then no action
+            let newSpeed = this.calculateSpeed(character, dt)
+
+            //pass the new speed to the location calculatin or not?
+            let newPosition: Point = this.calculatePosition(character, dt)
+            //check for collisions
+            const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .8 })
+            if (collisions.length > 1) {
+                newPosition = { x: character.x, y: character.y }
+                //console.log('collision')
+            }
+            //TODO figure out how to slide
+
+            this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
+            if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
+                updatedCharacters.add(character.id)
             }
 
             //if below 0 hps and not dead 
@@ -214,6 +241,16 @@ export default class GameEngine {
         return updatedCharacters
     }
 
+    getDirection(src: Point, dest: Point) {
+        return (Math.atan2(src.y - dest.y, src.x - dest.x) + (1 / 2 * Math.PI)) % (Math.PI * 2)
+    }
+
+    moveCharacter(characterId: string, location: Point) {
+        console.log('move')
+        console.log(location)
+        this.updateCharacter({ id: characterId, actions: [{ action: 'move', location: location }] })
+    }
+
     attackStop(attackerId: string): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)
@@ -231,7 +268,7 @@ export default class GameEngine {
 
     attack(attackerId: string, attackeeId: string): GameEngine {
         //TODO attacker owner check
-        this.updateCharacter({ id: attackerId, target: attackeeId, actions: [{ action: 'attack', target: attackeeId }] })
+        this.updateCharacter({ id: attackerId, target: attackeeId, actions: [{ action: 'attack', targetId: attackeeId }] })
         if (attackeeId) {
             let attackee = this.getCharacter(attackeeId)
             if (attackee) {
@@ -362,7 +399,7 @@ export default class GameEngine {
     updateCharacter(updates: Partial<Character>): GameEngine {
         const character = this.gameWorld.updateCharacter(updates)
             .getCharacter(updates.id)
-        // console.log(character)
+        //console.log(character)
 
         if (!!character && (
             character.directionAcceleration != 0 ||
@@ -426,7 +463,7 @@ export default class GameEngine {
         return Math.max(min, Math.min(number, max))
     }
 
-    getDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
+    getDistance(p1: Point, p2: Point) {
         const deltaX = p2.x - p1.x
         const deltaY = p2.y - p1.y
         const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
@@ -537,8 +574,6 @@ export default class GameEngine {
         else {
             //if we started outside the softcaps
         }
-
-
         return newSpeed
     }
 
@@ -547,6 +582,10 @@ export default class GameEngine {
         if (character.directionAcceleration != 0) {
             newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier
         }
+        //bound it to between -2pi and 2pi
+        newAngle %= (Math.PI * 2)
+        //keep it positive
+        newAngle += Math.PI * 2
         //keep it from growing
         newAngle %= (Math.PI * 2)
         return newAngle
