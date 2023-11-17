@@ -446,7 +446,7 @@ export default class ClientEngine {
 
         ctx.save()
         ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
-        ctx.rotate(character.direction)
+        ctx.rotate(-character.direction)
 
         const claimed = this.player?.claimedCharacters.some((id) => {
             return id == character.id

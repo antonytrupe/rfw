@@ -13,29 +13,37 @@ describe('GameEngine', () => {
 
     describe("getDirection", () => {
         test('N', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 0, y: -1 })).toBe(0*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 0, y: -1 })).toBe(6 / 4 * Math.PI)
         })
+
         test('NE', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 1, y: -1 })).toBe(1/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 1, y: -1 })).toBe(7 / 4 * Math.PI)
         })
+
         test('E', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 1, y: 0 })).toBe(2/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 1, y: 0 })).toBe(0 / 4 * Math.PI)
         })
+
         test('SE', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 1, y: 1 })).toBe(3/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 1, y: 1 })).toBe(1 / 4 * Math.PI)
         })
+
         test('S', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 0, y: 1 })).toBe(4/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: 0, y: 1 })).toBe(2 / 4 * Math.PI)
         })
+
         test('SW', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: -1, y: 1 })).toBe(5/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: -1, y: 1 })).toBe(3 / 4 * Math.PI)
         })
+
         test('W', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: -1, y: 0 })).toBe(6/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: -1, y: 0 })).toBe(4 / 4 * Math.PI)
         })
+
         test('NW', () => {
-            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: -1, y: -1 })).toBe(7/4*Math.PI)
+            expect(gameEngine.getDirection({ x: 0, y: 0 }, { x: -1, y: -1 })).toBe(5 / 4 * Math.PI)
         })
+
     })
     describe("actions", () => {
         beforeEach(() => {

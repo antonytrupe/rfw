@@ -242,7 +242,7 @@ export default class GameEngine {
     }
 
     getDirection(src: Point, dest: Point) {
-        return (Math.atan2(src.y - dest.y, src.x - dest.x) + (1 / 2 * Math.PI)) % (Math.PI * 2)
+        return (Math.atan2(src.y - dest.y, src.x - dest.x) + (0 / 2 * Math.PI)) % (Math.PI * 2)
     }
 
     moveCharacter(characterId: string, location: Point) {
@@ -580,7 +580,7 @@ export default class GameEngine {
     private calculateDirection(character: Character, dt: number) {
         let newAngle = character.direction
         if (character.directionAcceleration != 0) {
-            newAngle = character.direction - character.directionAcceleration * dt / this.turnMultiplier
+            newAngle = character.direction + character.directionAcceleration * dt / this.turnMultiplier
         }
         //bound it to between -2pi and 2pi
         newAngle %= (Math.PI * 2)
@@ -598,7 +598,7 @@ export default class GameEngine {
         if (character.speed != 0) {
             //calculate new position
             x = character.x + character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
-            y = character.y + character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
+            y = character.y - character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
         }
         return { x, y }
     }
