@@ -167,7 +167,6 @@ export default class GameEngine {
                     }
                 }
                 else if (action.action == 'move' && !!action.location) {
-                    //TODO figure out how to stop cleanly when we get close
                     const dist = this.getDistance(action.location, { x: character.x, y: character.y })
                     let targetDirection
                     let turnDirection = 0

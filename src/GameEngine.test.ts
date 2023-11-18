@@ -354,15 +354,15 @@ describe('GameEngine', () => {
 
                 test('should turn S/right', () => {
                     gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 0, y: 40 } }] })
-                    console.log('step 1')
+                    //console.log('step 1')
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.directionAcceleration).toBe(RIGHT)
-                    console.log('step 2')
+                    //console.log('step 2')
                     gameEngine.step(2 / 4 * 1000, 0)
                     u = gameEngine.getCharacter('1')
                     expect(u?.direction).toBe(S)
-                    console.log('step 3')
+                    //console.log('step 3')
                     gameEngine.step(0, 0)
                     u = gameEngine.getCharacter('1')
                     expect(u?.directionAcceleration).toBe(0)
