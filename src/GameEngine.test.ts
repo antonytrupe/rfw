@@ -264,7 +264,7 @@ describe('GameEngine', () => {
                     gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: -40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
-                    expect(u?.directionAcceleration).toBe(LEFT)
+                    expect(u?.directionAcceleration).toBeCloseTo(LEFT)
                     gameEngine.step(1 / 4 * 1000, 0)
                     u = gameEngine.getCharacter('1')
                     expect(u?.direction).toBeCloseTo(NW)

@@ -181,7 +181,7 @@ export default class GameEngine {
 
                         //accelerate or stop accelerating
                         speedAcceleration = this.calculateAcceleration(character, action.location)
-                    } 
+                    }
 
                     if (turnDirection == 0 && speedAcceleration == 0) {
                         character = this.updateCharacter({ id: character.id, actions: [] }).getCharacter(character.id)!
@@ -191,7 +191,7 @@ export default class GameEngine {
                         id: character.id,
                         directionAcceleration: turnDirection,
                         speedAcceleration: speedAcceleration
-                    }).getCharacter(character.id)! 
+                    }).getCharacter(character.id)!
                 }
             }
 
@@ -255,11 +255,11 @@ export default class GameEngine {
             acceleration = 1
         else
             acceleration = 0
- 
+
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
         const dist = this.getDistance(target, loc)
-         if (dist < .1) {
+        if (dist < .1) {
             acceleration = 0
         }
         return acceleration
@@ -267,13 +267,7 @@ export default class GameEngine {
 
     calculateDirectionAcceleration(current: number, target: number) {
         let delta = this.getDirectionDelta(current, target)
-
-        if (delta >= -.05 && delta < .05)
-            return 0
-        else if (delta > 0)
-            return 1
-        else
-            return -1
+        return this.clamp(delta / (Math.PI / 4), -1, 1)
     }
 
     getDirectionDelta(current: number, target: number) {
