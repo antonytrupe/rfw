@@ -85,32 +85,32 @@ describe('GameEngine', () => {
     describe("calculateAcceleration", () => {
         let c: Character
         beforeEach(() => {
-            c = gameEngine.createCharacter({ id: '1', x: 0, y: 0 }).getCharacter("1")!
+            c = gameEngine.createCharacter({ id: '1', x: 0, y: 0,hp:1 }).getCharacter("1")!
         })
         describe("facing east", () => {
             test('E', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: 1, y: 0 })).toBe(1)
+                expect(gameEngine.calculateAcceleration(c, { x: 6, y: 0 })).toBe(1)
             })
             test('NE', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: 1, y: -1 })).toBe(1)
+                expect(gameEngine.calculateAcceleration(c, { x: 6, y: -6 })).toBe(1)
             })
             test('N', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: 0, y: -1 })).toBe(0)
+                expect(gameEngine.calculateAcceleration(c, { x: 0, y: -6 })).toBe(0)
             })
             test('NW', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: -1, y: -1 })).toBe(0)
+                expect(gameEngine.calculateAcceleration(c, { x: -6, y: -6 })).toBe(0)
             })
             test('W', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: -1, y: 0 })).toBe(0)
+                expect(gameEngine.calculateAcceleration(c, { x: -6, y: 0 })).toBe(0)
             })
             test('SW', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: -1, y: 1 })).toBe(0)
+                expect(gameEngine.calculateAcceleration(c, { x: -6, y: 6 })).toBe(0)
             })
             test('S', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: 0, y: 1 })).toBe(0)
+                expect(gameEngine.calculateAcceleration(c, { x: 0, y: 6 })).toBe(0)
             })
             test('SE', () => {
-                expect(gameEngine.calculateAcceleration(c, { x: 1, y: 1 })).toBe(1)
+                expect(gameEngine.calculateAcceleration(c, { x: 6, y: 1 })).toBe(1)
             })
 
         })

@@ -87,7 +87,6 @@ export default class GameEngine {
         }
         const started = (new Date()).getTime()
 
-        //TODO keep track of characters that have their direction and speed acceleration changed separately from their position changed
         //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Set<string> = new Set()
         const gameEvents: GameEvent[] = []
@@ -95,7 +94,7 @@ export default class GameEngine {
         //TODO get them in initiative order
         //TODO put different initiatives at different ticks in the turn
         this.activeCharacters.forEach((id) => {
-            let character = this.getCharacter(id)!
+            let character:Character = this.getCharacter(id)!
 
             if (newTurn) {
                 character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)!

@@ -558,9 +558,8 @@ export default class ClientEngine {
         }
     }
     move(characterId: string, location: Point) {
-        //TODO
         this.gameEngine.moveCharacter(characterId, location)
-        this.socket?.emit(CONSTANTS.MOVE_TO,characterId,location)
+        this.socket?.emit(CONSTANTS.MOVE_TO, characterId, location)
     }
 
     doubleClickHandler(e: MouseEvent) {
@@ -591,6 +590,10 @@ export default class ClientEngine {
                 this.attackStop(this.player?.controlledCharacter)
             }
         }
+    }
+
+    rightClickHandler(e: MouseEvent) {
+        //TODO right click handler
     }
 
     attackStop(attackerId: string) {

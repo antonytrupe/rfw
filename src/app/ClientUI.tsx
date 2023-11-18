@@ -1,17 +1,17 @@
 "use client"
 import styles from './UI.module.scss'
 import { MutableRefObject, useEffect, useRef, useState, } from 'react'
-import ClientEngine from '@/ClientEngine';
-import EventEmitter from 'events';
-import * as CONSTANTS from '@/types/CONSTANTS';
-import Character from '@/types/Character';
-import CharacterUI from './CharacterUI';
-import CommunityCreation from './CommunityCreation';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import Clock from './components/clock/clock';
-import Player from '@/types/Player';
-//import steamworks from 'steamworks.js';
+import ClientEngine from '@/ClientEngine'
+import EventEmitter from 'events'
+import * as CONSTANTS from '@/types/CONSTANTS'
+import Character from '@/types/Character'
+import CharacterUI from './CharacterUI'
+import CommunityCreation from './CommunityCreation'
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import Clock from './components/clock/clock'
+import Player from '@/types/Player'
+//import steamworks from 'steamworks.js'
 
 //steamworks.electronEnableSteamOverlay()
 //const client = steamworks.init()
@@ -49,7 +49,7 @@ export default function ClientUI() {
       setConnecting(false)
     })
 
-    const ce = new ClientEngine(eventEmitter, getCanvas);
+    const ce = new ClientEngine(eventEmitter, getCanvas)
     setClientEngine(ce)
 
     return () => {
@@ -77,6 +77,10 @@ export default function ClientUI() {
 
   const onDoubleClick = (event: any) => {
     clientEngine?.doubleClickHandler(event)
+  } 
+  
+  function onRightClick(event: any ): void {
+    clientEngine?.rightClickHandler(event)
   }
 
   const onKeyDown = (e: any) => {
@@ -109,10 +113,10 @@ export default function ClientUI() {
 
   const createCommunity = (options: { size: string, race: string }) => {
     clientEngine?.createCommunity(options)
-  } 
-  
+  }
+
   const unClaim = (characterId: string) => {
-    //  unclaim
+    // unclaim
     clientEngine?.unClaim(characterId)
   }
 
@@ -120,7 +124,7 @@ export default function ClientUI() {
     clientEngine?.control(characterId)
   }
 
-  const { data: session } = useSession();
+  const { data: session } = useSession()
 
   return (
     <>
@@ -171,6 +175,7 @@ export default function ClientUI() {
           tabIndex={1}
           onWheel={onWheel}
           onClick={onClick}
+          onContextMenu={onRightClick}
           onDoubleClick={onDoubleClick}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
