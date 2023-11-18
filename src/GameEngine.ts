@@ -251,6 +251,7 @@ export default class GameEngine {
 
         let acceleration = 0
 
+        //TODO make this scale based on how close we are
         if (delta > -Math.PI / 2 && delta < Math.PI * 1 / 2)
             acceleration = 1
         else
