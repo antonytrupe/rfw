@@ -170,18 +170,22 @@ export default class GameEngine {
                     //console.log('turn/accelerate/stop')
                     const targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
 
-                    //TODO turn right or left
+                    //turn right or left
                     const turnDirection = this.calculateDirectionAcceleration(character.direction, targetDirection)
 
+                    //accelerate or stop accelerating
+                    const speedAcceleration = this.calculateAcceleration(character, action.location)
 
-                    if (turnDirection == 0) {
-                        this.updateCharacter({ id: character.id, actions: [] })
+                    //TODO figure out how to stop cleanly when we get close
+                    if (turnDirection == 0 && speedAcceleration == 0) {
+                        character = this.updateCharacter({ id: character.id, actions: [] }).getCharacter(character.id)!
                     }
 
-                    character = this.updateCharacter({ id: character.id, directionAcceleration: turnDirection }).getCharacter(character.id)!
-
-                    //TODO accelerate or stop accelerating
-                    //const acceleration=this.calculateAcceleration()
+                    character = this.updateCharacter({
+                        id: character.id,
+                        directionAcceleration: turnDirection,
+                        speedAcceleration: speedAcceleration
+                    }).getCharacter(character.id)!
 
                 }
             }
@@ -235,19 +239,47 @@ export default class GameEngine {
         return updatedCharacters
     }
 
-    calculateDirectionAcceleration(current: number, target: number) {
-        let t = (target - current + (Math.PI * 8 / 4)) % (Math.PI * 2)
+    calculateAcceleration(character: Character, target: Point): number {
+        const currentDirection = character.direction
+        const targetDirection = this.getDirection({ x: character.x, y: character.y }, target)
+        const delta = this.getDirectionDelta(currentDirection, targetDirection)
 
-        if (t < .05)
-            return 0
-        else if (t <= Math.PI)
-            return 1
-        else if (t > Math.PI * 2 - .05)
-            return 0
-        else if (t > Math.PI)
-            return -1
+        let acceleration = 0
+
+        if (delta > -Math.PI / 2 && delta < Math.PI * 1 / 2)
+            acceleration = 1
         else
+            acceleration = 0
+
+        //TODO slow down if we're close enough
+
+        //get our location in .6 seconds if we stopped accelerating now
+        const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
+        const dist = this.getDistance(target, loc)
+        console.log(dist)
+        if (dist < .1) {
+            acceleration = 0
+        }
+        return acceleration
+    }
+
+    calculateDirectionAcceleration(current: number, target: number) {
+        let delta = this.getDirectionDelta(current, target)
+
+        if (delta >= -.05 && delta < .05)
             return 0
+        else if (delta > 0)
+            return 1
+        else
+            return -1
+    }
+
+    getDirectionDelta(current: number, target: number) {
+        let delta = (target - current + (Math.PI * 8 / 4)) % (Math.PI * 2)
+        if (delta > Math.PI) {
+            delta = -(Math.PI * 2 - delta)
+        }
+        return delta
     }
 
     getDirection(src: Point, dest: Point) {
