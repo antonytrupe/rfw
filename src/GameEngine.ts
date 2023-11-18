@@ -363,8 +363,10 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return
         }
-        this.updateCharacter({ id: character.id, mode: 2 })
-        return this.getCharacter(character.id)
+         //clear any move actions
+         const actions = character.actions.filter((action) => { return action.action != 'move' })
+         return this.updateCharacter({ id: character.id, mode: 2, actions: actions })
+             .getCharacter(character.id)  
     }
 
     turnStop(characterId: string, playerId: string | undefined) {
@@ -389,10 +391,11 @@ export default class GameEngine {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
             return
-        }
-        return this
-            .updateCharacter({ id: character.id, speedAcceleration: 1 })
-            .getCharacter(character.id)
+        } 
+         //clear any move actions
+         const actions = character.actions.filter((action) => { return action.action != 'move' })
+         return this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
+             .getCharacter(character.id) 
     }
 
     /**
@@ -405,8 +408,10 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return undefined
         }
-        this.updateCharacter({ id: character.id, directionAcceleration: LEFT })
-        return this.getCharacter(character.id)
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        return this.updateCharacter({ id: character.id, directionAcceleration: LEFT, actions: actions })
+            .getCharacter(character.id)
     }
 
     /**
@@ -419,8 +424,10 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return undefined
         }
-        return this.updateCharacter({ id: characterId, directionAcceleration: RIGHT })
-            .getCharacter(characterId)
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        return this.updateCharacter({ id: character.id, directionAcceleration: RIGHT, actions: actions })
+            .getCharacter(character.id)
     }
 
     updateCharacters(characters: Character[]): GameEngine {

@@ -13,7 +13,6 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. make manual input override move action
 2. sliding around others
 3. pathing
 4. fight/flight/assist/social/factions
@@ -37,6 +36,7 @@ magical portals that let you fast travel but age you based on normal travel spee
 22. character health ui
 
 ## DONE
+make manual input override move action
 keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
 change the position calculation with respect to turning
 collision 
