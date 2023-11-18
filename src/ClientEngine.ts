@@ -2,11 +2,11 @@
 import EventEmitter from "events"
 import { Socket, io } from "socket.io-client"
 import GameEngine from "@/GameEngine"
-import Character from "./Character"
-import * as CONSTANTS from "@/CONSTANTS"
-import Player from "./Player"
-import { GameEvent } from "./GameEvent"
-import { Point } from "./Point"
+import Character from "./types/Character"
+import * as CONSTANTS from "@/types/CONSTANTS"
+import Player from "./types/Player"
+import { GameEvent } from "./types/GameEvent"
+import { Point } from "./types/Point"
 
 export default class ClientEngine {
 
@@ -560,6 +560,7 @@ export default class ClientEngine {
     move(characterId: string, location: Point) {
         //TODO
         this.gameEngine.moveCharacter(characterId, location)
+        this.socket?.emit(CONSTANTS.MOVE_TO,characterId,location)
     }
 
     doubleClickHandler(e: MouseEvent) {

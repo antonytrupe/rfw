@@ -3,14 +3,14 @@ import styles from './UI.module.scss'
 import { MutableRefObject, useEffect, useRef, useState, } from 'react'
 import ClientEngine from '@/ClientEngine';
 import EventEmitter from 'events';
-import * as CONSTANTS from '@/CONSTANTS';
-import Character from '@/Character';
+import * as CONSTANTS from '@/types/CONSTANTS';
+import Character from '@/types/Character';
 import CharacterUI from './CharacterUI';
 import CommunityCreation from './CommunityCreation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Clock from './components/clock/clock';
-import Player from '@/Player';
+import Player from '@/types/Player';
 //import steamworks from 'steamworks.js';
 
 //steamworks.electronEnableSteamOverlay()

@@ -1,6 +1,6 @@
 import EventEmitter from "events"
 import GameEngine from "./GameEngine"
-import Character from "./Character"
+import Character from "./types/Character"
 
 
 describe('GameEngine', () => {

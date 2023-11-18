@@ -1,11 +1,11 @@
 import EventEmitter from "events"
-import Character from "./Character"
-import * as CONSTANTS from "./CONSTANTS"
+import Character from "./types/Character"
+import * as CONSTANTS from "./types/CONSTANTS"
 import GameWorld from "./GameWorld"
 import { roll } from "./utility"
-import { GameEvent } from "./GameEvent"
-import * as LEVELS from "./LEVELS.json"
-import { Point } from "./Point"
+import { GameEvent } from "./types/GameEvent"
+import * as LEVELS from "./types/LEVELS.json"
+import { Point } from "./types/Point"
 
 const LEFT = 1
 const RIGHT = -1
@@ -167,16 +167,22 @@ export default class GameEngine {
                     }
                 }
                 else if (action.action == 'move' && !!action.location) {
-                    //console.log('turn/accelerate/stop')
-                    const targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
-
-                    //turn right or left
-                    const turnDirection = this.calculateDirectionAcceleration(character.direction, targetDirection)
-
-                    //accelerate or stop accelerating
-                    const speedAcceleration = this.calculateAcceleration(character, action.location)
-
                     //TODO figure out how to stop cleanly when we get close
+                    const dist = this.getDistance(action.location, { x: character.x, y: character.y })
+                    let targetDirection
+                    let turnDirection = 0
+                    let speedAcceleration = 0
+                    if (dist > .1) {
+                        //console.log('turn/accelerate/stop')
+                        targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
+
+                        //turn right or left
+                        turnDirection = this.calculateDirectionAcceleration(character.direction, targetDirection)
+
+                        //accelerate or stop accelerating
+                        speedAcceleration = this.calculateAcceleration(character, action.location)
+                    } 
+
                     if (turnDirection == 0 && speedAcceleration == 0) {
                         character = this.updateCharacter({ id: character.id, actions: [] }).getCharacter(character.id)!
                     }
@@ -185,8 +191,7 @@ export default class GameEngine {
                         id: character.id,
                         directionAcceleration: turnDirection,
                         speedAcceleration: speedAcceleration
-                    }).getCharacter(character.id)!
-
+                    }).getCharacter(character.id)! 
                 }
             }
 
@@ -250,14 +255,11 @@ export default class GameEngine {
             acceleration = 1
         else
             acceleration = 0
-
-        //TODO slow down if we're close enough
-
+ 
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
         const dist = this.getDistance(target, loc)
-        console.log(dist)
-        if (dist < .1) {
+         if (dist < .1) {
             acceleration = 0
         }
         return acceleration

@@ -1,7 +1,7 @@
 import isEqual from "lodash.isequal"
-import Character from "./Character"
-import { Zones, Zone } from "./Zones"
-import { Point } from "./Point"
+import Character from "./types/Character"
+import { Zones, Zone } from "./types/Zones"
+import { Point } from "./types/Point"
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them

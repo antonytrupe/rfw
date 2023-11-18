@@ -1,19 +1,19 @@
 import EventEmitter from "events"
 import GameEngine from "@/GameEngine"
-import { ClassPopulation } from "./ClassPopulation"
-import * as CONSTANTS from "@/CONSTANTS"
-import Character from "@/Character"
+import { ClassPopulation } from "./types/ClassPopulation"
+import * as CONSTANTS from "@/types/CONSTANTS"
+import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Server } from "socket.io"
-import { Zones } from "./Zones"
+import { Zones } from "./types/Zones"
 import { getSession } from "next-auth/react"
-import Player from "./Player"
+import Player from "./types/Player"
 import { v4 as uuidv4 } from 'uuid'
 import { getRandomPoint, roll } from "./utility"
-import { GameEvent } from "./GameEvent"
-import * as CLASSES from "./CLASSES.json"
-import * as LEVELS from "./LEVELS.json"
-import { Point } from "./Point"
+import { GameEvent } from "./types/GameEvent"
+import * as CLASSES from "./types/CLASSES.json"
+import * as LEVELS from "./types/LEVELS.json"
+import { Point } from "./types/Point"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -134,6 +134,10 @@ export default class ServerEngine {
                 this.accelerateDoubleStop(characterId, player)
             })
 
+            socket.on(CONSTANTS.MOVE_TO, async (characterId: string, location: Point) => {
+                this.move(characterId, location)
+            })
+
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
                 //console.log('spellName',spellName)
                 //console.log('casterId',casterId)
@@ -203,6 +207,11 @@ export default class ServerEngine {
         })
     }
 
+    move(characterId: string, location: Point) {
+        this.gameEngine.moveCharacter(characterId, location)
+        this.sendAndSaveCharacterUpdates([characterId])
+    }
+
     attackStop(attackerId: string) {
         this.gameEngine.attackStop(attackerId)
     }
@@ -251,7 +260,7 @@ export default class ServerEngine {
     accelerateDoubleStop(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.accelerateDoubleStop(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 

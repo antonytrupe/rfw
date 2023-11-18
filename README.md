@@ -21,7 +21,7 @@ magical portals that let you fast travel but age you based on normal travel spee
 6. character age
 7. teleport
 8. touch controls
-9.  random stats when spawning 
+9. random stats when spawning 
 10. no moving while incapacitated/dying/dead 
 11. strafing 
 12. package as exe/etc with electron

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import './CharacterUI.scss'
 
-import Character from "@/Character"
-import { Point } from '@/Point'
+import Character from "@/types/Character"
+import { Point } from '@/types/Point'
 
 export default function CharacterUI({ character, position, children = undefined }: {
     character: Character | undefined, position: Point | undefined, children?: any

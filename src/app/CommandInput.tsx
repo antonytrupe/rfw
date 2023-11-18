@@ -1,5 +1,5 @@
 "use client"
-import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/CONSTANTS';
+import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/types/CONSTANTS';
 import styles from './CommandInput.module.scss'
 import { useEffect, useState } from 'react';
 import io, { Socket } from 'socket.io-client';

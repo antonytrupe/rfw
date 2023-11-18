@@ -1,8 +1,8 @@
 import { Server, Socket } from 'socket.io'
 import { JsonDB, Config } from 'node-json-db';
 import { SocketResponse } from '../../SocketResponse';
-import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/CONSTANTS';
-import { CONNECTION } from '@/CONSTANTS';
+import { MESSAGE_CLIENT_SEND, MESSAGE_SERVER_BROADCAST } from '@/types/CONSTANTS';
+import { CONNECTION } from '@/types/CONSTANTS';
   
 var db = new JsonDB(new Config("myDataBase", true, true, '/'));
 db.load()
