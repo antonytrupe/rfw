@@ -63,6 +63,16 @@ export default class GameEngine {
         this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond)
     }
 
+    private takeDamage(character: Character, damage: number) {
+        character = this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - damage, -10, character.maxHp) }).getCharacter(character.id)!
+
+        //todo if its unconcious
+        if (character.hp <= 0) {
+            //clear acceleration and actions
+            this.updateCharacter({ id: character.id, actions: [], directionAcceleration: 0, speedAcceleration: 0 })
+        }
+    }
+
     //leave it public for testing
     step(dt: number, now: number) {
         //console.log('GameEngine.step')
@@ -122,7 +132,7 @@ export default class GameEngine {
                                     const damage = roll({ size: 6 })
 
                                     //update the target's hp, clamped to -10 and maxHp
-                                    this.updateCharacter({ id: target.id, hp: this.clamp(target!.hp - damage, -10, target!.maxHp) })
+                                    this.takeDamage(target, damage)
                                     updatedCharacters.add(target.id)
                                     //if the target was alive but now its not alive
                                     if (target.hp > 0 && target.hp <= damage) {
@@ -259,7 +269,7 @@ export default class GameEngine {
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
         const dist = this.getDistance(target, loc)
-        if (dist < .1) {
+        if (dist < character.size / 2) {
             acceleration = 0
         }
         return acceleration
@@ -283,6 +293,11 @@ export default class GameEngine {
     }
 
     moveCharacter(characterId: string, location: Point) {
+        //unconscious check
+        const character = this.getCharacter(characterId)
+        if (character?.hp! <= 0) {
+            return
+        }
         this.updateCharacter({ id: characterId, actions: [{ action: 'move', location: location }] })
     }
 
@@ -363,10 +378,10 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return
         }
-         //clear any move actions
-         const actions = character.actions.filter((action) => { return action.action != 'move' })
-         return this.updateCharacter({ id: character.id, mode: 2, actions: actions })
-             .getCharacter(character.id)  
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        return this.updateCharacter({ id: character.id, mode: 2, actions: actions })
+            .getCharacter(character.id)
     }
 
     turnStop(characterId: string, playerId: string | undefined) {
@@ -391,11 +406,14 @@ export default class GameEngine {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
             return
-        } 
-         //clear any move actions
-         const actions = character.actions.filter((action) => { return action.action != 'move' })
-         return this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
-             .getCharacter(character.id) 
+        }
+        if (character?.hp! <= 0) {
+            return
+        }
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        return this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
+            .getCharacter(character.id)
     }
 
     /**
@@ -407,6 +425,9 @@ export default class GameEngine {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
             return undefined
+        }
+        if (character?.hp! <= 0) {
+            return
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
@@ -423,6 +444,9 @@ export default class GameEngine {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
             return undefined
+        }
+        if (character?.hp! <= 0) {
+            return
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })

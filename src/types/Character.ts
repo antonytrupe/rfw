@@ -1,6 +1,5 @@
 import { Action } from "./Action"
 
-
 export default class Character {
     id: string
     playerId: string
