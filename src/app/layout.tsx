@@ -1,4 +1,4 @@
-import './globals.css'
+import './globals.scss'
 import NextAuthSessionProvider from './providers/SessionProvider';
 
 export default function RootLayout({ children  }:

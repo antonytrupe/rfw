@@ -134,43 +134,40 @@ export default function ClientUI() {
       {
         //header row
       }
-      <div style={{}}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: '128px', }}>
-          <div className={`${styles.hud} ${styles.flexRow} `}>
 
-            {session?.user?.email == 'antony.trupe@gmail.com' && (<>
-              <div>
-                {connected && (<button onClick={createCharacter}>Create Character</button>)}
-              </div>
-              <div>
-                {connected && (
-                  <CommunityCreation action={createCommunity}>
-                  </CommunityCreation>
-                )}
-              </div>
-            </>
-            )}
+      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: '128px', }}>
+        <div className={`${styles.hud} ${styles.flexRow} `}>
+          <Clock />
+          {session?.user?.email == 'antony.trupe@gmail.com' && (<>
+            <div>
+              {connected && (<button onClick={createCharacter}>Create Character</button>)}
+            </div>
+            <div>
+              {connected && (
+                <CommunityCreation action={createCommunity}>
+                </CommunityCreation>
+              )}
+            </div>
+          </>
+          )} 
+        </div>
+        {
+          //the right side header stuff
+        }
+        <div className='actions'>
+          {!session?.user && <Link href={'/api/auth/signin'}>Sign In</Link>}
+          {!!session?.user &&
+            <Link href={'/api/auth/signout'}  >
+              <div>Sign Out</div>
+              <div style={{ fontSize: "x-small" }}>{session.user.email?.slice(0, session.user.email.indexOf('@'))}</div>
+            </Link>}
 
-            <Clock />
-          </div>
-          {
-            //the right side header stuff
-          }
-          <div className='actions'>
-            {!session?.user && <Link href={'/api/auth/signin'}>Sign In</Link>}
-            {!!session?.user && <><span >{session.user.email}</span>
-              <Link href={'/api/auth/signout'}  >Sign Out</Link></>}
-            {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
-            {
-              /*
-              connected && (<button onClick={disconnect}>Disconnect</button>)
-              */
-            }
-            {connected && player?.controlledCharacter && (<button onClick={() => { controlCharacter("") }}>Un Control</button>)}
-            {connected && player?.controlledCharacter && (<button onClick={() => { unClaim(player.controlledCharacter) }}>Abandon</button>)}
-          </div>
+          {connected && player?.controlledCharacter && (<button onClick={() => { }}>Patrol</button>)}
+          {connected && player?.controlledCharacter && (<button onClick={() => { controlCharacter("") }}>Un Control</button>)}
+          {connected && player?.controlledCharacter && (<button onClick={() => { unClaim(player.controlledCharacter) }}>Abandon</button>)}
         </div>
       </div>
+
       {
         //middle row
       }

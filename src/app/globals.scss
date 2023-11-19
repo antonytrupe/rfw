@@ -2,8 +2,12 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+html {
+    overflow: hidden;
+}
+
 body {
     display: flex;
-    overflow: hidden;
+    //overflow: hidden;
     flex-direction: column;
 }
