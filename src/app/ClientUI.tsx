@@ -29,13 +29,11 @@ export default function ClientUI() {
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
-  const [connecting, setConnecting] = useState(false)
   const [player, setPlayer] = useState<Player>()
   const [hoveredCharacter, setHoveredCharacter] = useState<Character>()
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
-
 
     eventEmitter.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
       setPlayer(player)
@@ -43,22 +41,19 @@ export default function ClientUI() {
 
     eventEmitter.on(CONSTANTS.DISCONNECT, () => {
       setConnected(false)
-      setConnecting(false)
     })
 
     eventEmitter.on(CONSTANTS.CONNECT, () => {
       setConnected(true)
-      setConnecting(false)
     })
 
     const ce = new ClientEngine(eventEmitter, getCanvas)
     setClientEngine(ce)
 
     return () => {
-      disconnect()
-
+      ce.disconnect()
+      setConnected(false)
       //stop the current client engine's draw loop/flag
-      //ce.stopped = true
       ce.stop()
     }
   }, [])
@@ -69,7 +64,7 @@ export default function ClientUI() {
   }, [clientEngine])
 
   function connect() {
-    setConnecting(true)
+    //setConnecting(true)
     clientEngine?.connect()
   }
 
@@ -102,11 +97,6 @@ export default function ClientUI() {
 
   const onWheel = (e: any) => {
     clientEngine?.wheelHandler(e)
-  }
-
-  function disconnect() {
-    clientEngine?.disconnect()
-    setConnected(false)
   }
 
   const createCharacter = () => {
@@ -149,7 +139,7 @@ export default function ClientUI() {
               )}
             </div>
           </>
-          )} 
+          )}
         </div>
         {
           //the right side header stuff
