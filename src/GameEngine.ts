@@ -215,24 +215,20 @@ export default class GameEngine {
             //pass the new speed to the location calculatin or not?
             let newPosition: Point = this.calculatePosition(character, dt)
             //check for collisions
-            const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .8 })
+            const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .9 })
             if (collisions.length > 1) {
-                //TODO figure out how to slide
+                //make sure we're not colliding with ourself
+                const c = collisions.find((it) => { return it.id != character.id })!
 
-                /*
-                double vX = pX - cX;
-                double vY = pY - cY;
-                double magV = sqrt(vX*vX + vY*vY);
-                double aX = cX + vX / magV * R;
-                double aY = cY + vY / magV * R;
-                
-                */
+                //get the direction to the colliding object, normalized(shouldn't matter though)
+                const d = this.getDirection({ x: c.x, y: c.y }, newPosition)
 
+                //get the distance along that path of both objects size/2
+                const x = c.x + Math.cos(d) * (character.size + c.size) / 2 * .9
+                const y = c.y - Math.sin(d) * (character.size + c.size) / 2 * .9
 
-                newPosition = { x: character.x, y: character.y }
-                //console.log('collision')
+                newPosition = { x: x, y: y }
             }
-
 
             this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
             if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {

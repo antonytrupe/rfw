@@ -31,6 +31,7 @@ export default function ClientUI() {
   const [connected, setConnected] = useState(false)
   const [player, setPlayer] = useState<Player>()
   const [hoveredCharacter, setHoveredCharacter] = useState<Character>()
+  const { data: session } = useSession()
 
   useEffect(() => {
     let eventEmitter: EventEmitter = new EventEmitter()
@@ -115,8 +116,11 @@ export default function ClientUI() {
   function controlCharacter(characterId: string) {
     clientEngine?.control(characterId)
   }
-
-  const { data: session } = useSession()
+  
+  function patrol() {
+    //TODO clientui patrol
+    //clientEngine?.patrol()
+  }
 
   return (
     <>
@@ -152,7 +156,7 @@ export default function ClientUI() {
               <div style={{ fontSize: "x-small" }}>{session.user.email?.slice(0, session.user.email.indexOf('@'))}</div>
             </Link>}
 
-          {connected && player?.controlledCharacter && (<button onClick={() => { }}>Patrol</button>)}
+          {connected && player?.controlledCharacter && (<button onClick={() => { patrol() }}>Patrol</button>)}
           {connected && player?.controlledCharacter && (<button onClick={() => { controlCharacter("") }}>Un Control</button>)}
           {connected && player?.controlledCharacter && (<button onClick={() => { unClaim(player.controlledCharacter) }}>Abandon</button>)}
         </div>
