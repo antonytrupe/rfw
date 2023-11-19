@@ -58,7 +58,6 @@ export default class ClientEngine {
     }
 
     chat(message: string) {
-        //TODO 
         if (!!this.player?.controlledCharacter) {
             this.game_events.push({
                 target: this.player?.controlledCharacter,
@@ -66,7 +65,13 @@ export default class ClientEngine {
                 type: 'say',
                 time: new Date().getTime()
             })
-            this.socket?.send(CONSTANTS.CHAT, message)
+            //console.log('sending chat event to the server')
+            this.socket?.emit(CONSTANTS.CHAT, {
+                target: this.player?.controlledCharacter,
+                message: message,
+                type: 'say',
+                time: new Date().getTime()
+            })
         }
     }
 

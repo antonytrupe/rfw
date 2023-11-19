@@ -68,6 +68,14 @@ export default class ServerEngine {
                 }
             })
 
+            //CONSTANTS.CHAT
+            socket.on(CONSTANTS.CHAT, async (event: GameEvent) => {
+                //console.log('CONSTANTS.CHAT', event)
+                //just send it back to everyone
+                //TODO only send it to clients in range
+                socket.broadcast.emit(CONSTANTS.CHAT, event)
+            })
+
             //CONSTANTS.CLIENT_INITIAL
             socket.on(CONSTANTS.CLIENT_INITIAL, async (viewPort: CONSTANTS.CLIENT_INITIAL_INTERFACE) => {
                 //TODO join the right zone channels given the viewPort
