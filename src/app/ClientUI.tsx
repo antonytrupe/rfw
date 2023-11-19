@@ -1,4 +1,6 @@
 "use client"
+import './ClientUI.scss'
+
 import styles from './UI.module.scss'
 import { MutableRefObject, useEffect, useRef, useState, } from 'react'
 import ClientEngine from '@/ClientEngine'
@@ -77,9 +79,9 @@ export default function ClientUI() {
 
   const onDoubleClick = (event: any) => {
     clientEngine?.doubleClickHandler(event)
-  } 
-  
-  function onRightClick(event: any ): void {
+  }
+
+  function onRightClick(event: any): void {
     clientEngine?.rightClickHandler(event)
   }
 
@@ -135,32 +137,37 @@ export default function ClientUI() {
       <div style={{}}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: '128px', }}>
           <div className={`${styles.hud} ${styles.flexRow} `}>
-            <div>
-              {connected && (<button onClick={createCharacter}>Create Character</button>)}
-            </div>
-            <div>
-              {connected && (
-                <CommunityCreation action={createCommunity}>
-                </CommunityCreation>
-              )}
-            </div>
+
+            {session?.user?.email == 'antony.trupe@gmail.com' && (<>
+              <div>
+                {connected && (<button onClick={createCharacter}>Create Character</button>)}
+              </div>
+              <div>
+                {connected && (
+                  <CommunityCreation action={createCommunity}>
+                  </CommunityCreation>
+                )}
+              </div>
+            </>
+            )}
+
             <Clock />
           </div>
           {
             //the right side header stuff
           }
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '4px' }}>
+          <div className='actions'>
             {!session?.user && <Link href={'/api/auth/signin'}>Sign In</Link>}
-            {!!session?.user && <><span style={{}}>{session.user.email}</span>
-              <Link href={'/api/auth/signout'} style={{ border: ' thin black solid', borderRadius: '6px' }}>Sign Out</Link></>}
+            {!!session?.user && <><span >{session.user.email}</span>
+              <Link href={'/api/auth/signout'}  >Sign Out</Link></>}
             {!connected && (<button disabled={connecting} onClick={connect}>connect</button>)}
             {
               /*
               connected && (<button onClick={disconnect}>Disconnect</button>)
               */
             }
-            {connected && player?.controlledCharacter && (<button onClick={() => { controlCharacter("") }}>Uncontrol</button>)}
-            {connected && player?.controlledCharacter && (<button onClick={() => { unClaim(player.controlledCharacter) }}>Unclaim</button>)}
+            {connected && player?.controlledCharacter && (<button onClick={() => { controlCharacter("") }}>Un Control</button>)}
+            {connected && player?.controlledCharacter && (<button onClick={() => { unClaim(player.controlledCharacter) }}>Abandon</button>)}
           </div>
         </div>
       </div>

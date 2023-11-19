@@ -7,11 +7,3 @@ body {
     overflow: hidden;
     flex-direction: column;
 }
-
-button, a {
-    border: thin black solid;
-    border-radius: 5px;
-    padding: 0px 4px 0px 4px;
-    margin: 2px;
-
-}

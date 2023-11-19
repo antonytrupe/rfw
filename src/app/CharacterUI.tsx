@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import './CharacterUI.scss'
+ import './CharacterUI.scss'
 
 import Character from "@/types/Character"
 import { Point } from '@/types/Point'
