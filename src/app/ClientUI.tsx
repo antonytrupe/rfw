@@ -92,7 +92,6 @@ export default function ClientUI() {
   }
 
   function onKeyDown(e: any) {
-    //console.log(e.code)
 
     if (e.code == 'Enter') {
 
@@ -130,7 +129,9 @@ export default function ClientUI() {
   }
 
   const onKeyUp = (e: any) => {
-    clientEngine?.keyUpHandler(e)
+    if (!chatMode) {
+      clientEngine?.keyUpHandler(e)
+    }
   }
 
   const onWheel = (e: any) => {
@@ -225,7 +226,7 @@ export default function ClientUI() {
         </div >
         {chatMode && (<div
           className={`${styles.chatContainer} chatContainer`}>
-          <input autoFocus onKeyDown={onKeyDown} value={chat} onChange={e => setChat(e.target.value)}></input>
+          <input autoFocus value={chat} onChange={e => setChat(e.target.value)}></input>
         </div>)}
       </div>
     </>

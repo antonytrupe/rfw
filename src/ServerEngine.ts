@@ -54,14 +54,13 @@ export default class ServerEngine {
             let player: Player | undefined
             //let session: Session | null
             getSession({ req: socket.conn.request, }).then(async (session) => {
-                //session = s
-
+ 
                 if (session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     if (!player) {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
                     }
-                    console.log(player.email, ' joined')
+                    console.log(player.email, 'joined')
                     socket.join(player.id)
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)

@@ -278,7 +278,7 @@ export default class GameEngine {
 
         let acceleration = 0
 
-        //TODO make this scale based on how close we are
+        //make this scale based on how close we are
         if (delta > -Math.PI / 2 && delta < Math.PI * 1 / 2)
             acceleration = 1
         else
@@ -295,7 +295,7 @@ export default class GameEngine {
 
     calculateDirectionAcceleration(current: number, target: number) {
         let delta = this.getDirectionDelta(current, target)
-        //TODO do something about creeping up on 0
+        //do something about creeping up on 0
         let a = this.clamp(delta / (Math.PI / 4), -1, 1)
         if (Math.abs(a) > .01 || a == 0)
             return a
@@ -425,18 +425,21 @@ export default class GameEngine {
         return this.getCharacter(character.id)
     }
 
-    accelerate(characterId: string, playerId: string | undefined) {
+    accelerate(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return
+            return false
         }
         if (character?.hp! <= 0) {
-            return
+            return false
+        }
+        if (character.speedAcceleration == 1) {
+            return false
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
-        return this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
-            .getCharacter(character.id)
+        this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
+        return true
     }
 
     /**

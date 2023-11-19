@@ -383,7 +383,7 @@ export default class ClientEngine {
     }
 
     private drawSay(ctx: CanvasRenderingContext2D, event: GameEvent) {
-        console.log('drawSay')
+        //console.log('drawSay')
         const character = this.getCharacter(event.target)
         if (character && !!event.message) {
             //TODO get this time in sync with the expiration time
@@ -740,8 +740,9 @@ export default class ClientEngine {
     }
 
     private accelerate(characterId: string) {
-        const character = this.gameEngine.accelerate(characterId, this.player?.id)
-        if (!!character) {
+        const change: boolean = this.gameEngine.accelerate(characterId, this.player?.id)
+        if (change) {
+            //TODO only send this if not already accelerating
             this.socket?.emit(CONSTANTS.ACCELERATE, characterId)
         }
     }
@@ -873,7 +874,7 @@ export default class ClientEngine {
     }
 
     private onConnect() {
-        console.log('connected')
+        console.log('successfully connected to the server')
         this.connected = true
         //tell the ui we connected
         this.emit(CONSTANTS.CONNECT)

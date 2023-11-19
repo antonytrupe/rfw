@@ -18,9 +18,10 @@ magical portals that let you fast travel but age you based on normal travel spee
 3. healing/long/short rest
 4. running away
 5. character age
-6. teleport
-7. touch controls
-8. random stats when spawning 
+6. say/yell/whisper
+7. teleport
+8. touch controls
+9. random stats when spawning 
 10. strafing 
 11. package as exe/etc with electron
 12. add steam support
@@ -28,12 +29,12 @@ magical portals that let you fast travel but age you based on normal travel spee
 14. stay centered on selected characters
 15. rightclick move the screen
 16. change selected character stats
-17. chat
-18. randomly spawn new characters
-19. randomly move characters
-20. character health ui
+17. randomly spawn new characters
+18. randomly move characters
+19. character health ui
 
 ## DONE
+basic chat
 no moving while incapacitated/dying/dead 
 sliding around more then one object
 make manual input override move action
