@@ -217,10 +217,22 @@ export default class GameEngine {
             //check for collisions
             const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .8 })
             if (collisions.length > 1) {
+                //TODO figure out how to slide
+
+                /*
+                double vX = pX - cX;
+                double vY = pY - cY;
+                double magV = sqrt(vX*vX + vY*vY);
+                double aX = cX + vX / magV * R;
+                double aY = cY + vY / magV * R;
+                
+                */
+
+
                 newPosition = { x: character.x, y: character.y }
                 //console.log('collision')
             }
-            //TODO figure out how to slide
+
 
             this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
             if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
