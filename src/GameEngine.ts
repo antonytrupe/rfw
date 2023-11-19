@@ -94,7 +94,7 @@ export default class GameEngine {
         //TODO get them in initiative order
         //TODO put different initiatives at different ticks in the turn
         this.activeCharacters.forEach((id) => {
-            let character:Character = this.getCharacter(id)!
+            let character: Character = this.getCharacter(id)!
 
             if (newTurn) {
                 character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)!
@@ -180,7 +180,7 @@ export default class GameEngine {
                     let targetDirection
                     let turnDirection = 0
                     let speedAcceleration = 0
-                    if (dist > .1) {
+                    if (dist > character.size / 2) {
                         //console.log('turn/accelerate/stop')
                         targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
 
@@ -189,6 +189,9 @@ export default class GameEngine {
 
                         //accelerate or stop accelerating
                         speedAcceleration = this.calculateAcceleration(character, action.location)
+                    }
+                    else {
+                        character = this.updateCharacter({ id: character.id, actions: [] }).getCharacter(character.id)!
                     }
 
                     if (turnDirection == 0 && speedAcceleration == 0) {
@@ -268,7 +271,7 @@ export default class GameEngine {
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
         const dist = this.getDistance(target, loc)
-        if (dist < character.size / 2) {
+        if (dist <= character.size / 2) {
             acceleration = 0
         }
         return acceleration
@@ -276,7 +279,12 @@ export default class GameEngine {
 
     calculateDirectionAcceleration(current: number, target: number) {
         let delta = this.getDirectionDelta(current, target)
-        return this.clamp(delta / (Math.PI / 4), -1, 1)
+        //TODO do something about creeping up on 0
+        let a = this.clamp(delta / (Math.PI / 4), -1, 1)
+        if (Math.abs(a) > .01 || a == 0)
+            return a
+        else
+            return Math.abs(a) / a * .01
     }
 
     getDirectionDelta(current: number, target: number) {
