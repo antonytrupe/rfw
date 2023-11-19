@@ -13,29 +13,29 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-2. sliding around others
-3. pathing
-4. fight/flight/assist/social/factions
-5. healing/long/short rest
-6. running away
-7. character age
-8. teleport
-9. touch controls
-10. random stats when spawning 
-11. no moving while incapacitated/dying/dead 
-12. strafing 
-13. package as exe/etc with electron
-14. add steam support
-15. admin tool to interact with world
-16. stay centered on selected characters
-17. rightclick move the screen
-18. change selected character stats
-19. chat
-20. randomly spawn new characters
-21. randomly move characters
-22. character health ui
+1. pathing/patrol
+2. fight/flight/assist/social/factions
+3. healing/long/short rest
+4. running away
+5. character age
+6. teleport
+7. touch controls
+8.  random stats when spawning 
+9.  no moving while incapacitated/dying/dead 
+10. strafing 
+11. package as exe/etc with electron
+12. add steam support
+13. admin tool to interact with world
+14. stay centered on selected characters
+15. rightclick move the screen
+16. change selected character stats
+17. chat
+18. randomly spawn new characters
+19. randomly move characters
+20. character health ui
 
 ## DONE
+sliding around more then one object
 make manual input override move action
 keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)
 change the position calculation with respect to turning

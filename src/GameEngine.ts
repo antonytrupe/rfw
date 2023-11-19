@@ -215,19 +215,27 @@ export default class GameEngine {
             //pass the new speed to the location calculatin or not?
             let newPosition: Point = this.calculatePosition(character, dt)
             //check for collisions
-            const collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .9 })
+            let collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .9 })
             if (collisions.length > 1) {
                 //make sure we're not colliding with ourself
-                const c = collisions.find((it) => { return it.id != character.id })!
+                collisions = collisions.filter((it) => { return it.id != character.id })!
 
-                //get the direction to the colliding object, normalized(shouldn't matter though)
-                const d = this.getDirection({ x: c.x, y: c.y }, newPosition)
+                //"sum" up all the new positions from colliding objects
+                const c = collisions.reduce((t, p) => {
 
-                //get the distance along that path of both objects size/2
-                const x = c.x + Math.cos(d) * (character.size + c.size) / 2 * .9
-                const y = c.y - Math.sin(d) * (character.size + c.size) / 2 * .9
+                    //get the direction to the colliding object, normalized(shouldn't matter though)
+                    const d = this.getDirection({ x: p.x, y: p.y }, newPosition)
 
-                newPosition = { x: x, y: y }
+                    //get the distance along that path of both objects size/2
+                    const x = p.x + Math.cos(d) * (character.size + p.size) / 2 * .9
+                    const y = p.y - Math.sin(d) * (character.size + p.size) / 2 * .9
+
+                    t.x += x
+                    t.y += y
+                    return t
+                }, { x: 0, y: 0 })
+                //then get the average position
+                newPosition = { x: c.x / collisions.length, y: c.y / collisions.length }
             }
 
             this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
