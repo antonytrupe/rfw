@@ -39,14 +39,12 @@ export default class ClientEngine {
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
-
         const observer = new ResizeObserver(() => {
             const canvas = getCanvas()
             canvas.width = canvas.clientWidth
             canvas.height = canvas.clientHeight
         })
         observer.observe(getCanvas())
-
 
         let renderLoop = () => {
             if (this.stopped) {
@@ -57,6 +55,19 @@ export default class ClientEngine {
         }
         this.gameEngine.start()
         window.requestAnimationFrame(renderLoop.bind(this))
+    }
+
+    chat(message: string) {
+        //TODO 
+        if (!!this.player?.controlledCharacter) {
+            this.game_events.push({
+                target: this.player?.controlledCharacter,
+                message: message,
+                type: 'say',
+                time: new Date().getTime()
+            })
+            this.socket?.send(CONSTANTS.CHAT, message)
+        }
     }
 
     stop() {
@@ -342,21 +353,63 @@ export default class ClientEngine {
         //TODO somewhere handle multiple events for the same target not overlapping
         const now = (new Date()).getTime()
         this.game_events.forEach((event, i) => {
+
             //if its a recent event
-            if (now - event.time < 2 * 1000) {
-                this.drawEvent(ctx, event)
+            if (event.type == 'attack' && !!event.amount) {
+                if (now - event.time < 2 * 1000) {
+                    this.drawDamage(ctx, event)
+                }
+                else {
+                    //drop off old events
+                    this.game_events.splice(i, 1)
+                }
             }
-            else {
-                //drop off old events
-                this.game_events.splice(i, 1)
+            else if (event.type == 'say') {
+                //TODO get this time in sync with the draw timer
+                if (now - event.time < 6 * 1000) {
+                    this.drawSay(ctx, event)
+                }
+                else {
+                    //drop off old events
+                    this.game_events.splice(i, 1)
+                }
             }
         })
     }
 
-    private drawEvent(ctx: CanvasRenderingContext2D, event: GameEvent) {
-        //console.log(event) 
+    private drawSay(ctx: CanvasRenderingContext2D, event: GameEvent) {
+        console.log('drawSay')
         const character = this.getCharacter(event.target)
-        if (character) {
+        if (character && !!event.message) {
+            //TODO get this time in sync with the expiration time
+            const duration = 6
+            const distance = 120
+
+            const now = (new Date()).getTime()
+            const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
+
+            ctx.save()
+            ctx.translate(character.x * this.PIXELS_PER_FOOT, (character.y - character.size / 2) * this.PIXELS_PER_FOOT)
+
+            ctx.font = 30 + "px Arial"
+            ctx.fillStyle = `rgba(0,0,0,${a})`
+            ctx.lineWidth = 2 * this.scale
+            const textSize = ctx.measureText(event.message)
+            ctx.translate(0, -10 - ((1 - a) * distance))
+
+            //console.log(width)
+            ctx.translate(-textSize.width / 2, 0)
+
+            ctx.fillText(event.message, 0, 0)
+            ctx.restore()
+
+
+        }
+    }
+
+    private drawDamage(ctx: CanvasRenderingContext2D, event: GameEvent) {
+        const character = this.getCharacter(event.target)
+        if (character && !!event.amount) {
             const duration = 2
             const distance = 60
 
@@ -776,7 +829,13 @@ export default class ClientEngine {
                 this.onDisconnect(reason)
             })
 
+            this.socket?.on(CONSTANTS.CHAT, (chat: GameEvent) => {
+                console.log(chat)
+                this.game_events = this.game_events.concat(chat)
+            })
+
             this.socket?.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
+                console.log(events)
                 this.game_events = this.game_events.concat(events)
             })
 

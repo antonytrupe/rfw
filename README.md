@@ -20,8 +20,7 @@ magical portals that let you fast travel but age you based on normal travel spee
 5. character age
 6. teleport
 7. touch controls
-8.  random stats when spawning 
-9.  no moving while incapacitated/dying/dead 
+8. random stats when spawning 
 10. strafing 
 11. package as exe/etc with electron
 12. add steam support
@@ -35,6 +34,7 @@ magical portals that let you fast travel but age you based on normal travel spee
 20. character health ui
 
 ## DONE
+no moving while incapacitated/dying/dead 
 sliding around more then one object
 make manual input override move action
 keep a list of only characters that need processed by the server(lots of still characters shouldnt increase tick time)

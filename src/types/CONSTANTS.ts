@@ -1,5 +1,5 @@
-import Character from "./Character"
 
+export const CHAT = 'chat'
 //client connect
 export const CONNECT = 'connect'
 //server connect

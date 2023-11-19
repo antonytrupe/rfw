@@ -17,3 +17,16 @@
         text-align: center;
     }
 }
+
+.chatContainer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    input {
+        width: 100%;
+        border: thin black solid;
+        padding: 1px 1px 1px 4px;
+    }
+}
