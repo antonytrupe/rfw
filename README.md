@@ -13,26 +13,27 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. fight/flight/assist/social/factions
-2. pathing/patrol
-3. healing/long/short rest
-4. running away
-5. character age
-6. attack of opportunities
-7. say/yell/whisper
-8. teleport
-9.  touch controls
-10. random stats when spawning 
-11. strafing 
-12. package as exe/etc with electron
-13. add steam support
-14. admin tool to interact with world
-15. stay centered on selected characters
-16. rightclick move the screen
-17. change selected character stats
-18. randomly spawn new characters
-19. randomly move characters
-20. character health ui
+1. turn dead characters into tombstones
+2. fight/flight/assist/social/factions
+3. pathing/patrol
+4. healing/long/short rest
+5. running away
+6. character age
+7. attack of opportunities
+8. say/yell/whisper
+9. teleport
+10. touch controls
+11. random stats when spawning 
+12. strafing 
+13. package as exe/etc with electron
+14. add steam support
+15. admin tool to interact with world
+16. stay centered on selected characters
+17. rightclick move the screen
+18. change selected character stats
+19. randomly spawn new characters
+20. randomly move characters
+21. character health ui
 
 ## DONE
 basic chat

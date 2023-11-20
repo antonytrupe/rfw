@@ -369,6 +369,15 @@ export default class ClientEngine {
                     this.game_events.splice(i, 1)
                 }
             }
+            if (event.type == 'miss') {
+                if (now - event.time < 2 * 1000) {
+                    this.drawDamage(ctx, event)
+                }
+                else {
+                    //drop off old events
+                    this.game_events.splice(i, 1)
+                }
+            }
             else if (event.type == 'say') {
                 //TODO get this time in sync with the draw timer
                 if (now - event.time < 6 * 1000) {
@@ -407,14 +416,12 @@ export default class ClientEngine {
 
             ctx.fillText(event.message, 0, 0)
             ctx.restore()
-
-
         }
     }
 
     private drawDamage(ctx: CanvasRenderingContext2D, event: GameEvent) {
         const character = this.getCharacter(event.target)
-        if (character && !!event.amount) {
+        if (character) {
             const duration = 2
             const distance = 60
 
@@ -427,14 +434,14 @@ export default class ClientEngine {
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(255,0,0,${a})`
             ctx.lineWidth = 2 * this.scale
-            const textSize = ctx.measureText(event.amount.toString())
+            const textSize = ctx.measureText(event.amount!.toString())
             ctx.translate(0, -10 - ((1 - a) * distance))
 
             this.drawHeart(ctx, -0, -40, 50, 60, `rgba(255,255,255,${a})`, `rgba(255,0,0,${a})`)
             //console.log(width)
             ctx.translate(-textSize.width / 2, 0)
 
-            ctx.fillText(event.amount.toString(), 0, 0)
+            ctx.fillText(event.amount!.toString(), 0, 0)
             ctx.restore()
         }
     }

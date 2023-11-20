@@ -101,6 +101,18 @@ export default class GameEngine {
                 }
             }
 
+            if (character.hp <= 0) {
+                //we're dead, stop trying to do things
+                character = this.updateCharacter({
+                    id: character.id,
+                    speedAcceleration: 0,
+                    directionAcceleration: 0,
+                    actions: [],
+                    target: ''
+                }).getCharacter(character.id)!
+                updatedCharacters.add(character.id)
+            }
+
             if (character.actions.length > 0 && character.actionsRemaining > 0) {
                 //console.log('doing an action')
                 const action = character.actions[0]
@@ -110,6 +122,13 @@ export default class GameEngine {
                     //get the target
                     const target = this.getCharacter(action.targetId)
                     if (target && !!target.id) {
+                        //if the target is dead already, stop attacking it
+                        //TODO this might not belong here
+                        if (target.hp <= -10) {
+                            this.attackStop(character.id)
+                            updatedCharacters.add(character.id)
+                        }
+
                         //check range
                         const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
                         if (distance <= (target.size / 2 + character.size / 2) * 1.1) {
@@ -137,7 +156,7 @@ export default class GameEngine {
                                         character = this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
                                             .getCharacter(character.id)!
                                         updatedCharacters.add(character.id)
-
+                                        //levelup check
                                         if (character.xp >= LEVELS[(character.level + 1).toString() as keyof typeof LEVELS]) {
                                             character = this.updateCharacter({ id: character.id, level: character.level + 1 })
                                                 .getCharacter(character.id)!
@@ -396,7 +415,7 @@ export default class GameEngine {
     attack(attackerId: string, attackeeId: string): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
-        const actions = [...attacker.actions, { action: 'attack', targetId: attackeeId }]
+        const actions = [...attacker.actions.filter((action) => { return action.action != 'attack' }), { action: 'attack', targetId: attackeeId }]
 
         this.updateCharacter({ id: attackerId, target: attackeeId, actions: actions })
         if (attackeeId) {
