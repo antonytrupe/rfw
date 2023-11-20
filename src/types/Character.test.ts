@@ -1,4 +1,4 @@
-import Character from "./types/Character";
+import Character from "./Character";
 
 describe('Character', () => {
     test('should have a default direction of 0', () => {

@@ -841,7 +841,6 @@ export default class ClientEngine {
             })
 
             this.socket?.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
-                console.log(events)
                 this.game_events = this.game_events.concat(events)
             })
 

@@ -1,4 +1,4 @@
- import './CharacterUI.scss'
+import './CharacterUI.scss'
 
 import Character from "@/types/Character"
 import { Point } from '@/types/Point'
@@ -14,15 +14,18 @@ export default function CharacterUI({ character, position, children = undefined 
             <div className="stats" >
                 <div> level {character?.level} {character?.characterClass}</div>
                 <div> {character?.hp} / {character?.maxHp} HP</div>
-                <div> Direction:{character?.direction}ft</div>
+                <div> Direction:{Math.round(character?.direction)}ft</div>
                 <div> Speed:{character?.maxSpeed}ft</div>
-                
-                <div> XsssP:{character?.xp}</div>
+                <div> Action:{character?.actions[0]?.action}</div>
+
+                <div> XP:{character?.xp}</div>
                 <div> Level:{character?.level}</div>
-                <div> Target:{character?.target}</div>
+
                 {
                     /*
                    <div> Actions:{character?.actionsRemaining}</div>
+                   <div> Target:{character?.target}</div>
+                <div> Targeters:{character?.targeters}</div>
                     <div> size:{character.size}</div>
                     <div> direction:{character.direction.toFixed(2)}</div>
                     <div> Run/walk:{character.mode == 1 ? 'Running' : character.mode == 2 ? 'Sprinting' : 'Wat'}</div>

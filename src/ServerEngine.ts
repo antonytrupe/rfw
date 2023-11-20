@@ -14,6 +14,7 @@ import { GameEvent } from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
+import "./console"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -54,7 +55,6 @@ export default class ServerEngine {
             let player: Player | undefined
             //let session: Session | null
             getSession({ req: socket.conn.request, }).then(async (session) => {
- 
                 if (session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     if (!player) {
@@ -332,26 +332,21 @@ export default class ServerEngine {
         if (!player) {
             return player
         }
-
-        const character = this.gameEngine.gameWorld.getCharacter(characterId)
-        if (!character) {
-            console.log('bailing on unclaim character: no character')
-            return player
-        }
-
         //we've got a player now
         const c = this.gameEngine.unClaimCharacter(characterId)
         //console.log('claimed character', c)
-        if (c) {
-            player.claimedCharacters.splice(player.claimedCharacters.indexOf(c.id), 1)
-            player = await this.savePlayer({
-                email: player.email, claimedCharacters: player.claimedCharacters,
-                //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
-                controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
-            })
 
-            //tell the client it worked
-            this.io.to(player.id).emit(CONSTANTS.CURRENT_PLAYER, player)
+        player.claimedCharacters.splice(player.claimedCharacters.indexOf(characterId), 1)
+
+        player = await this.savePlayer({
+            email: player.email, claimedCharacters: player.claimedCharacters,
+            //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
+            controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
+        })
+
+        //tell the client it worked
+        this.io.to(player.id).emit(CONSTANTS.CURRENT_PLAYER, player)
+        if (c) {
             this.sendAndSaveCharacterUpdates([c.id], undefined)
         }
         return player
@@ -437,14 +432,9 @@ export default class ServerEngine {
             this.worldDB.load()
                 .then(() => {
                     this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                        //console.log(c)
-                        //[index: string]: string
                         const characters: Character[] = []
-
-                        //@ts-check
                         Object.entries(c).map(([id, character]: [id: string, character: any]) => {
                             characters.push(character)
-
                         })
                         this.gameEngine.updateCharacters(characters)
                     }).catch(err => {

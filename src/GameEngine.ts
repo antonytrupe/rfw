@@ -51,6 +51,15 @@ export default class GameEngine {
         this.doGameLogic = doGameLogic
     }
 
+    private takeDamage(character: Character, damage: number) {
+        character = this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - damage, -10, character.maxHp) }).getCharacter(character.id)!
+
+        //todo if its unconcious
+        if (character.hp <= 0) {
+            //clear accelerations and all actions
+            this.updateCharacter({ id: character.id, actions: [], directionAcceleration: 0, speedAcceleration: 0 })
+        }
+    }
 
     //this is the wrapper and callback function that calls step
     private tick() {
@@ -63,16 +72,6 @@ export default class GameEngine {
         this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond)
     }
 
-    private takeDamage(character: Character, damage: number) {
-        character = this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - damage, -10, character.maxHp) }).getCharacter(character.id)!
-
-        //todo if its unconcious
-        if (character.hp <= 0) {
-            //clear acceleration and actions
-            this.updateCharacter({ id: character.id, actions: [], directionAcceleration: 0, speedAcceleration: 0 })
-        }
-    }
-
     //leave it public for testing
     step(dt: number, now: number) {
         //console.log('GameEngine.step')
@@ -82,7 +81,6 @@ export default class GameEngine {
         const currentTurn = Math.floor(now / 1000 / 6)
         let newTurn = false
         if (lastTurn != currentTurn) {
-            //console.log('new turn', currentTurn)
             newTurn = true
         }
         const started = (new Date()).getTime()
@@ -111,7 +109,7 @@ export default class GameEngine {
                 if (action.action == 'attack' && this.doGameLogic && !!action.targetId) {
                     //get the target
                     const target = this.getCharacter(action.targetId)
-                    if (target && target.id) {
+                    if (target && !!target.id) {
                         //check range
                         const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
                         if (distance <= (target.size / 2 + character.size / 2) * 1.1) {
@@ -145,13 +143,14 @@ export default class GameEngine {
                                                 .getCharacter(character.id)!
                                             updatedCharacters.add(character.id)
                                         }
-                                        //its (almost)dead, Jim
+                                        //its(the target) (almost)dead, Jim
                                         //both characters stop attacking
                                         this.attackStop(character.id)
-                                        this.attackStop(target.id)
                                         updatedCharacters.add(character.id)
-                                        updatedCharacters.add(target.id)
 
+                                        //TODO this can probably go in a more general place when its the target's turn
+                                        this.attackStop(target.id)
+                                        updatedCharacters.add(target.id)
                                     }
                                     gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
 
@@ -161,9 +160,12 @@ export default class GameEngine {
                                     gameEvents.push({ target: target!.id, type: 'miss', amount: 0, time: now })
                                 }
                             })
-                            //fight back
+                            //done doing attacks
+                            console.log('call for help')
+                            //call for help 
+                            this.recruitHelp(target)
                             if (!target.target) {
-                                console.log('start fighting back')
+                                //fight back
                                 this.attack(target.id, character.id)
                                 updatedCharacters.add(target.id)
                             }
@@ -180,6 +182,7 @@ export default class GameEngine {
                     let targetDirection
                     let turnDirection = 0
                     let speedAcceleration = 0
+                    let actions = character.actions
                     if (dist > character.size / 2) {
                         //console.log('turn/accelerate/stop')
                         targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
@@ -190,19 +193,33 @@ export default class GameEngine {
                         //accelerate or stop accelerating
                         speedAcceleration = this.calculateAcceleration(character, action.location)
                     }
-                    else {
-                        character = this.updateCharacter({ id: character.id, actions: [] }).getCharacter(character.id)!
+
+                    //if the target is inside another character and we've collided, then stop trying to move any more
+                    //check for collisions
+                    let charactersAtTarget = this.gameWorld.getCharactersNearby({ x: action.location.x, y: action.location.y, r: 5 })
+                    if (charactersAtTarget.filter((it) => { return it.id != character.id }).length > 0) {
+                        //console.log('characters at target')
+                        const dist = this.getDistance({ x: character.x, y: character.y }, { x: charactersAtTarget[0].x, y: charactersAtTarget[0].y })
+                        if (dist < (character.size + charactersAtTarget[0].size) / 2) {
+                            //console.log('colliding with characters at target')
+                            turnDirection = 0
+                            speedAcceleration = 0
+                        }
                     }
 
                     if (turnDirection == 0 && speedAcceleration == 0) {
-                        character = this.updateCharacter({ id: character.id, actions: [] }).getCharacter(character.id)!
+                        //we got there, so clear all move actions
+                        actions = actions.filter((action) => { return action.action != 'move' })
                     }
 
                     character = this.updateCharacter({
                         id: character.id,
                         directionAcceleration: turnDirection,
-                        speedAcceleration: speedAcceleration
+                        speedAcceleration: speedAcceleration,
+                        actions: actions
                     }).getCharacter(character.id)!
+
+                    updatedCharacters.add(character.id)
                 }
             }
 
@@ -271,6 +288,36 @@ export default class GameEngine {
         return updatedCharacters
     }
 
+    private recruitHelp(character: Character) {
+        console.log('recruitHelp')
+        //TODO call for help 
+        //just get the nearest level character that's nearby to attack
+        const nearby = this.gameWorld.getCharactersNearby({ x: character.x, y: character.y, r: 60 })
+            //get rid of the two already fighting
+            .filter((it) => {
+                return it.id != character.id && !character.targeters.includes(it.id) &&
+                    //get rid of any dead/dying characters
+                    it.hp > 0
+            })
+            //sort them by distance
+            .sort((a, b) => {
+                const distancetoA = this.getDistance({ x: character.x, y: character.y }, { x: a.x, y: a.y })
+                const distancetoB = this.getDistance({ x: character.x, y: character.y }, { x: b.x, y: b.y })
+                return distancetoA == distancetoB ? 0 : distancetoA > distancetoB ? 1 : -1
+
+            })
+        //console.log('nearby', nearby)
+        const aggressor = this.getCharacter(character.targeters[0])
+        if (!!aggressor) {
+            //console.log('aggressor', aggressor)
+            console.log('found someone to help')
+            //move first, then attack. order matters    
+            this.moveCharacter(nearby[0].id, { x: aggressor.x, y: aggressor.y })
+            this.attack(nearby[0].id, aggressor.id)
+        }
+        //throw new Error("Method not implemented.")
+    }
+
     calculateAcceleration(character: Character, target: Point): number {
         const currentDirection = character.direction
         const targetDirection = this.getDirection({ x: character.x, y: character.y }, target)
@@ -318,22 +365,29 @@ export default class GameEngine {
     moveCharacter(characterId: string, location: Point) {
         //unconscious check
         const character = this.getCharacter(characterId)
-        if (character?.hp! <= 0) {
+        if (!character || character?.hp! <= 0) {
             return
         }
-        this.updateCharacter({ id: characterId, actions: [{ action: 'move', location: location }] })
+        //clear other move actions and add new move action
+        const actions = [...character.actions.filter((action) => { return action.action != 'move' }), { action: 'move', location: location }]
+
+        this.updateCharacter({ id: characterId, actions: actions })
     }
 
     attackStop(attackerId: string): GameEngine {
         //TODO attacker owner check
-        const attacker = this.getCharacter(attackerId)
+        const attacker = this.getCharacter(attackerId)!
         const attackeeId = attacker?.target
-        this.updateCharacter({ id: attackerId, target: "", actions: [] })
 
-        if (attackeeId) {
+        const actions = attacker.actions.filter((action) => { return action.action != 'attack' })
+        this.updateCharacter({ id: attackerId, target: "", actions: actions })
+
+        if (!!attackeeId) {
             let attackee = this.getCharacter(attackeeId)
-            if (attackee) {
-                this.updateCharacter({ id: attackeeId, targeters: attackee.targeters.splice(attackee.targeters.indexOf(attackerId), 1) })
+            if (!!attackee) {
+                const t = new Set(attackee.targeters)
+                t.delete(attackerId)
+                this.updateCharacter({ id: attackeeId, targeters: Array.from(t.values()) })
             }
         }
         return this
@@ -341,11 +395,15 @@ export default class GameEngine {
 
     attack(attackerId: string, attackeeId: string): GameEngine {
         //TODO attacker owner check
-        this.updateCharacter({ id: attackerId, target: attackeeId, actions: [{ action: 'attack', targetId: attackeeId }] })
+        const attacker = this.getCharacter(attackerId)!
+        const actions = [...attacker.actions, { action: 'attack', targetId: attackeeId }]
+
+        this.updateCharacter({ id: attackerId, target: attackeeId, actions: actions })
         if (attackeeId) {
             let attackee = this.getCharacter(attackeeId)
-            if (attackee) {
-                this.updateCharacter({ id: attackeeId, targeters: [...attackee.targeters, attackerId] })
+            if (!!attackee) {
+                const t = new Set(attackee.targeters).add(attackerId)
+                this.updateCharacter({ id: attackeeId, targeters: Array.from(t.values()) })
             }
         }
         else {
@@ -369,15 +427,19 @@ export default class GameEngine {
     }
 
     /**
-     * @deprecated
-     * @param characterId 
+    * @param characterId 
      * @returns 
      */
     unClaimCharacter(characterId: string) {
+        const character = this.getCharacter(characterId)
+        if (!character) {
+            return
+        }
         return this.updateCharacter({ id: characterId, playerId: "" })
             .getCharacter(characterId)
     }
 
+    /////////movement stuff///////
     accelerateDoubleStop(characterId: string, playerId: string | undefined) {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
@@ -407,22 +469,38 @@ export default class GameEngine {
             .getCharacter(character.id)
     }
 
-    turnStop(characterId: string, playerId: string | undefined) {
+    turnStop(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return
+            return false
         }
-        this.updateCharacter({ id: character.id, directionAcceleration: 0 })
-        return this.getCharacter(character.id)
+        if (character?.hp! <= 0) {
+            return false
+        }
+        if (character.directionAcceleration == 0) {
+            return false
+        }
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        this.updateCharacter({ id: character.id, directionAcceleration: 0, actions: actions })
+        return true
     }
 
-    decelerate(characterId: string, playerId: string | undefined) {
+    decelerate(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return
+            return false
         }
-        this.updateCharacter({ id: character.id, speedAcceleration: -1 })
-        return this.getCharacter(character.id)
+        if (character?.hp! <= 0) {
+            return false
+        }
+        if (character.speedAcceleration == -1) {
+            return false
+        }
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        this.updateCharacter({ id: character.id, speedAcceleration: -1, actions: actions })
+        return true
     }
 
     accelerate(characterId: string, playerId: string | undefined): boolean {
@@ -494,11 +572,17 @@ export default class GameEngine {
         //console.log(character)
 
         if (!!character && (
+            //has any direction acceleration
             character.directionAcceleration != 0 ||
+            //has any speed acceleration
             character.speedAcceleration != 0 ||
+            //has any speed
             character.speed != 0 ||
-            character.actions?.length != 0)) {
-
+            //has any actions
+            character.actions?.length != 0 ||
+            //dieing
+            (character.hp <= 0 && character.hp > 10))
+        ) {
             //console.log('activating', character.id)
             this.activeCharacters.add(character.id)
         }
