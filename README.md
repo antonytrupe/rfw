@@ -14,26 +14,29 @@ magical portals that let you fast travel but age you based on normal travel spee
 
 ## TODO LIST
 1. turn dead characters into tombstones
-2. fight/flight/assist/social/factions
-3. pathing/patrol
-4. healing/long/short rest
-5. running away
-6. character age
-7. attack of opportunities
-8. say/yell/whisper
-9. teleport
-10. touch controls
-11. random stats when spawning 
-12. strafing 
-13. package as exe/etc with electron
-14. add steam support
-15. admin tool to interact with world
-16. stay centered on selected characters
-17. rightclick move the screen
-18. change selected character stats
-19. randomly spawn new characters
-20. randomly move characters
-21. character health ui
+2. walls/caves
+3. fog-of-war
+4. fight/flight/assist/social/factions
+5. pathing/patrol
+6. healing/long/short rest
+7. running away
+8. character age
+9. attack of opportunities
+10. say/yell/whisper
+11. teleport
+12. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
+13. touch controls
+14. random stats when spawning 
+15. strafing 
+16. package as exe/etc with electron
+17. add steam support
+18. admin tool to interact with world
+19. stay centered on selected characters
+20. rightclick move the screen
+21. change selected character stats
+22. randomly spawn new characters
+23. randomly move characters
+24. character health ui
 
 ## DONE
 basic chat

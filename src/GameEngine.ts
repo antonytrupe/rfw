@@ -57,8 +57,20 @@ export default class GameEngine {
         //todo if its unconcious
         if (character.hp <= 0) {
             //clear accelerations and all actions
-            this.updateCharacter({ id: character.id, actions: [], directionAcceleration: 0, speedAcceleration: 0 })
+            character = this.updateCharacter({ id: character.id, actions: [], directionAcceleration: 0, speedAcceleration: 0 }).getCharacter(character.id)!
         }
+        //if its deaddead
+        if (character.hp <= -10) {
+            //turn it into a tombstone
+            this.deleteCharacter(character.id)
+            this.updateTombstone(character)
+        }
+    }
+    updateTombstone(character: Character) {
+        throw new Error("Method not implemented.")
+    }
+    deleteCharacter(id: string) {
+        throw new Error("Method not implemented.")
     }
 
     //this is the wrapper and callback function that calls step
@@ -73,7 +85,7 @@ export default class GameEngine {
     }
 
     //leave it public for testing
-    step(dt: number, now: number) {
+    step(dt: number, now: number): Set<string> {
         //console.log('GameEngine.step')
 
         //figure out if this is the first step of a new turn
@@ -102,7 +114,7 @@ export default class GameEngine {
             }
 
             if (character.hp <= 0) {
-                //we're dead, stop trying to do things
+                //we're dieing, stop trying to do things
                 character = this.updateCharacter({
                     id: character.id,
                     speedAcceleration: 0,
@@ -110,6 +122,14 @@ export default class GameEngine {
                     actions: [],
                     target: ''
                 }).getCharacter(character.id)!
+                updatedCharacters.add(character.id)
+            }
+
+            //if below 0 hps and not dead 
+            //TODO stable check
+            if (character.hp < 0 && character.hp > -10 && newTurn) {
+                //loose another hp
+                this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - 1, -10, character.hp) })
                 updatedCharacters.add(character.id)
             }
 
@@ -150,7 +170,7 @@ export default class GameEngine {
                                     //update the target's hp, clamped to -10 and maxHp
                                     this.takeDamage(target, damage)
                                     updatedCharacters.add(target.id)
-                                    //if the target was alive but now its not alive
+                                    //if the target was alive but now its dieing
                                     if (target.hp > 0 && target.hp <= damage) {
                                         //give xp
                                         character = this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
@@ -278,18 +298,9 @@ export default class GameEngine {
             if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
                 updatedCharacters.add(character.id)
             }
-
-            //if below 0 hps and not dead 
-            //TODO stable check
-            if (character.hp < 0 && character.hp > -10 && newTurn) {
-                //loose another hp
-                this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - 1, -10, character.hp) })
-                updatedCharacters.add(character.id)
-            }
         })
 
         if (updatedCharacters.size > 0) {
-
             //tell the server engine about the updated characters
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
         }
@@ -459,41 +470,44 @@ export default class GameEngine {
     }
 
     /////////movement stuff///////
-    accelerateDoubleStop(characterId: string, playerId: string | undefined) {
+    accelerateDoubleStop(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return
+            return false
         }
-        return this.updateCharacter({ id: character.id, mode: 1 })
-            .getCharacter(character.id)
+        this.updateCharacter({ id: character.id, mode: 1 })
+        return true
     }
 
-    accelerateStop(characterId: string, playerId: string | undefined) {
+    accelerateStop(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return
+            return false
         }
-        return this.updateCharacter({ id: character.id, speedAcceleration: 0 })
-            .getCharacter(character.id)
+        this.updateCharacter({ id: character.id, speedAcceleration: 0 })
+        return true
     }
 
-    accelerateDouble(characterId: string, playerId: string | undefined) {
-        const character = this.getCharacter(characterId)
-        if (!character?.id || character?.playerId != playerId) {
-            return
-        }
-        //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
-        return this.updateCharacter({ id: character.id, mode: 2, actions: actions })
-            .getCharacter(character.id)
-    }
-
-    turnStop(characterId: string, playerId: string | undefined): boolean {
+    accelerateDouble(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
             return false
         }
         if (character?.hp! <= 0) {
+            return false
+        }
+        if (character.mode == 2) {
+            return false
+        }
+        //clear any move actions
+        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        this.updateCharacter({ id: character.id, mode: 2, actions: actions })
+        return true
+    }
+
+    turnStop(characterId: string, playerId: string | undefined): boolean {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
             return false
         }
         if (character.directionAcceleration == 0) {
@@ -539,46 +553,41 @@ export default class GameEngine {
         return true
     }
 
-    /**
-     * 
-     * @param characters list of characters to turn left
-     * @returns updated characters. empty array if no characters updated
-     */
-    turnLeft(characterId: string, playerId: string | undefined): Character | undefined {
+    turnLeft(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return undefined
+            return false
         }
         if (character?.hp! <= 0) {
-            return
+            return false
+        }
+        if (character.directionAcceleration == LEFT) {
+            return false
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
-        return this.updateCharacter({ id: character.id, directionAcceleration: LEFT, actions: actions })
-            .getCharacter(character.id)
+        this.updateCharacter({ id: character.id, directionAcceleration: LEFT, actions: actions })
+        return true
     }
 
-    /**
-     * 
-     * @param characters 
-     * @returns a list of characters
-     */
-    turnRight(characterId: string, playerId: string | undefined): Character | undefined {
+    turnRight(characterId: string, playerId: string | undefined): boolean {
         const character = this.getCharacter(characterId)
         if (!character?.id || character?.playerId != playerId) {
-            return undefined
+            return false
         }
         if (character?.hp! <= 0) {
-            return
+            return false
+        }
+        if (character.directionAcceleration == RIGHT) {
+            return false
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
-        return this.updateCharacter({ id: character.id, directionAcceleration: RIGHT, actions: actions })
-            .getCharacter(character.id)
+        this.updateCharacter({ id: character.id, directionAcceleration: RIGHT, actions: actions })
+        return true
     }
 
     updateCharacters(characters: Character[]): GameEngine {
-        //console.log(characters)
         characters.forEach((character) => {
             this.updateCharacter(character)
         })

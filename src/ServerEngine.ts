@@ -453,15 +453,27 @@ export default class ServerEngine {
         //TODO only send character updates to the room/zone they're in
         characterIds.forEach((id) => {
             const character = this.getCharacter(id)
-            this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, [character])
+            if (!!character) {
+                //character still exists
+                this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, [character])
+                try {
+                    this.worldDB.push(CONSTANTS.CHARACTER_PATH + id, character)
+                }
+                catch (e) {
+                    console.log('failed to save character', character)
+                }
+            }
+            else {
+                //character doesn't exist
+                //TODO
+                //this.io.emit(CONSTANTS.CLIENT_CHARACTER_DELETE, [id])
 
-            try {
-                //array version
-                this.worldDB.push(CONSTANTS.CHARACTER_PATH + id, character)
+                this.worldDB.delete(CONSTANTS.CHARACTER_PATH + id)
+                //this.worldDB.push(CONSTANTS.TOMBSTONE_PATH + id, character)
+
             }
-            catch (e) {
-                console.log('failed to save character', character)
-            }
+
+
         })
     }
 
@@ -676,6 +688,8 @@ export default class ServerEngine {
         const buffer = 10
 
         let remaining = totalSize - createdCount
+
+        characters = []
         //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
@@ -686,10 +700,12 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y })
             createdCount++
-            this.sendAndSaveCharacterUpdates([c])
+            characters.push(c)
         }
+        this.sendAndSaveCharacterUpdates(characters)
 
         //create .5% adepts
+        characters = []
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -698,9 +714,12 @@ export default class ServerEngine {
             }
             const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y })
             createdCount++
-            this.sendAndSaveCharacterUpdates([c])
+            characters.push(c)
         }
+        this.sendAndSaveCharacterUpdates(characters)
+
         //create 3% experts
+        characters = []
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -709,9 +728,12 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y })
             createdCount++
-            this.sendAndSaveCharacterUpdates([c])
+            characters.push(c)
         }
+        this.sendAndSaveCharacterUpdates(characters)
+
         //create 5% warriors
+        characters = []
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -720,11 +742,14 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y })
             createdCount++
-            this.sendAndSaveCharacterUpdates([c])
+            characters.push(c)
         }
+        this.sendAndSaveCharacterUpdates(characters)
+
         //console.log('createdCount before commoner fill', createdCount)
 
         //create the rest as commoners
+        characters = []
         for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -733,9 +758,10 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y })
             createdCount++
-            this.sendAndSaveCharacterUpdates([c])
+            characters.push(c)
         }
         //console.log('createdCount after commoner fill', createdCount)
+        this.sendAndSaveCharacterUpdates(characters)
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [string[], Zones] {
