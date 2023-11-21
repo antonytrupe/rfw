@@ -20,7 +20,7 @@ interface ViewPort {
     bottom: number;
 }
 
-export const CLIENT_INITIAL = 'client.initial'
+export const CLIENT_VIEWPORT = 'client.viewport'
 export interface CLIENT_INITIAL_INTERFACE extends ViewPort { }
 
 export const CURRENT_PLAYER = 'current_player'

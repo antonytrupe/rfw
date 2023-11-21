@@ -149,7 +149,7 @@ export default class ClientEngine {
             this.translateX += deltaX
             this.translateY += deltaY
             //tell the server our viewport changed
-            this.socket?.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.getViewPort())
+            this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
         }
         //console.log(this.scale)
     }
@@ -885,7 +885,7 @@ export default class ClientEngine {
         //tell the ui we connected
         this.emit(CONSTANTS.CONNECT)
         //ask the server for characters
-        this.socket?.emit(CONSTANTS.CLIENT_INITIAL, this.getViewPort() as CONSTANTS.CLIENT_INITIAL_INTERFACE)
+        this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort() as CONSTANTS.CLIENT_INITIAL_INTERFACE)
     }
 
     private getViewPort() {

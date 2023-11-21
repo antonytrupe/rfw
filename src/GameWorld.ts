@@ -1,6 +1,6 @@
 import isEqual from "lodash.isequal"
 import Character from "./types/Character"
-import { Zones, Zone } from "./types/Zones"
+import { Zones, Zone, Zones2, Zone2 } from "./types/Zones"
 import { Point } from "./types/Point"
 
 //keeps track of the world state and has helper functions to interact with world state
@@ -38,12 +38,37 @@ export default class GameWorld {
         })
     }
 
-
     getCharactersWithin({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
             return top <= character.y && bottom >= character.y && left <= character.x && right >= character.x
         })
+    }
+
+    getCharactersInZones(brandNewZones: Set<string>): Character[] {
+        const characters: Character[] = Array.from(this.zones.entries()).filter(([zoneName, characters]) => {
+            return brandNewZones.has(zoneName)
+        }).map(([zoneName, characters]) => {
+            return this.getCharacters(Array.from(characters.values()))
+        }).flat()
+        return characters
+    }
+
+    getCharactersIntoZones(characterIds: string[]): Zones2 {
+        const zones = new Map<string, Zone2>()
+        characterIds.forEach((characerId) => {
+            const character = this.getCharacter(characerId)!
+
+            const zoneName = this.getTacticalZoneName({ x: character.x, y: character.y })
+
+            let zone: Zone2 | undefined = zones.get(zoneName)
+            if (!zone) {
+                zone = new Map<string, Character | undefined>()
+            }
+            zone.set(characerId, character)
+            zones.set(zoneName, zone)
+        })
+        return zones
     }
 
     getCharacter(characterId: string | undefined): Character | undefined {
@@ -53,7 +78,7 @@ export default class GameWorld {
         return this.characters.get(characterId)
     }
 
-    getTacticalZoneName({ x, y }:Point) {
+    getTacticalZoneName({ x, y }: Point) {
         //T tactical/one turn
         //M local/10 turns/1 minute
         //H overland/one hour

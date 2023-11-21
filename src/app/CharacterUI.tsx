@@ -12,14 +12,14 @@ export default function CharacterUI({ character, position, children = undefined 
         <div className={`card character`}
             style={{ display: "flex", position: "absolute", flexDirection: 'row', top: `${position?.y}px`, left: `${position?.x}px` }}>
             <div className="stats" >
-                <div> level {character?.level} {character?.characterClass}</div>
-                <div> {character?.hp} / {character?.maxHp} HP</div>
-                <div> Direction:{Math.round(character?.direction)}</div>
-                <div> Speed:{character?.maxSpeed}ft</div>
-                <div> Action:{character?.actions[0]?.action}</div>
-
-                <div> XP:{character?.xp}</div>
-                <div> Level:{character?.level}</div>
+                <div>level {character?.level} {character?.characterClass}</div>
+                <div>{character?.race}</div>
+                <div>{character?.hp} / {character?.maxHp} HP</div>
+                <div>Direction:{Math.round(character?.direction)}</div>
+                <div>Speed:{character?.maxSpeed}ft</div>
+                <div>Action:{character?.actions[0]?.action}</div>
+                <div>XP:{character?.xp}</div>
+                <div>ID:{character?.id}</div>
 
                 {
                     /*

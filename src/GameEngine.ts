@@ -103,6 +103,7 @@ export default class GameEngine {
 
         //TODO get them in initiative order
         //TODO put different initiatives at different ticks in the turn
+        //console.log('active characters:', this.activeCharacters.size)
         this.activeCharacters.forEach((id) => {
             let character: Character = this.getCharacter(id)!
 
@@ -327,7 +328,9 @@ export default class GameEngine {
             .filter((it) => {
                 return it.id != character.id && !character.targeters.includes(it.id) &&
                     //get rid of any dead/dying characters
-                    it.hp > 0
+                    it.hp > 0 &&
+                    //get rid of any claimed characters
+                    it.playerId != ''
             })
             //sort them by distance
             .sort((a, b) => {
@@ -338,7 +341,7 @@ export default class GameEngine {
             })
         //console.log('nearby', nearby)
         const aggressor = this.getCharacter(character.targeters[0])
-        if (!!aggressor) {
+        if (!!aggressor && nearby.length > 0) {
             //console.log('aggressor', aggressor)
             console.log('found someone to help')
             //move first, then attack. order matters    

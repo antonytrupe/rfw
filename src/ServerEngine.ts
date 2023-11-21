@@ -5,7 +5,7 @@ import * as CONSTANTS from "@/types/CONSTANTS"
 import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Server } from "socket.io"
-import { Zones } from "./types/Zones"
+import { Zones2 } from "./types/Zones"
 import { getSession } from "next-auth/react"
 import Player from "./types/Player"
 import { v4 as uuidv4 } from 'uuid'
@@ -75,12 +75,34 @@ export default class ServerEngine {
                 socket.broadcast.emit(CONSTANTS.CHAT, event)
             })
 
-            //CONSTANTS.CLIENT_INITIAL
-            socket.on(CONSTANTS.CLIENT_INITIAL, async (viewPort: CONSTANTS.CLIENT_INITIAL_INTERFACE) => {
-                //TODO join the right zone channels given the viewPort
-                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE,
-                    this.gameEngine.gameWorld.getCharactersWithin(viewPort)
-                )
+
+            //tell the client where all the character are
+            //client is 
+            socket.on(CONSTANTS.CLIENT_VIEWPORT, (viewPort: CONSTANTS.CLIENT_INITIAL_INTERFACE) => {
+                console.log('CLIENT_VIEWPORT')
+                //join the right zones/rooms
+                let oldZones = socket.rooms
+                let newZones = this.gameEngine.getZonesIn(viewPort)
+                //console.log(newZones)
+                //get the list of oldZones that aren't in newZones
+                //leave zones we shouldn't be in
+                oldZones.forEach((zone) => {
+                    if (!newZones.includes(zone)) {
+                        console.log('leaving a room')
+                        socket.leave(zone)
+                    }
+                })
+                //get the list of newZones that aren't in oldZones
+                const brandNewZones = new Set<string>()
+                newZones.forEach((zone) => {
+                    if (!Array.from(oldZones).includes(zone)) {
+                        socket.join(zone)
+                        brandNewZones.add(zone)
+                    }
+                })
+                console.log('socket.rooms', socket.rooms.size)
+                //TODO only send characters the client didn't already have in its old viewport
+                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersInZones(brandNewZones))
             })
 
             socket.on(CONSTANTS.CONTROL_CHARACTER, async (characterId: string | undefined) => {
@@ -97,7 +119,7 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
                 const characters = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
-                this.sendAndSaveCharacterUpdates([characters], new Map())
+                this.sendAndSaveCharacterUpdates([characters])
             })
 
             socket.on(CONSTANTS.ATTACK, async (attacker: string, attackee: string) => {
@@ -190,27 +212,7 @@ export default class ServerEngine {
                 //socket.broadcast.emit(PC_DISCONNECT, socket.id)
             })
 
-            //tell the client where all the character are
-            socket.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (viewPort: { top: number, bottom: number, left: number, right: number }) => {
-                //join the right zones/rooms
-                let oldZones = socket.rooms
-                let newZones = this.gameEngine.getZonesIn(viewPort)
-                //console.log(newZones)
-                //get the list of oldZones that aren't in newZones
-                //leave zones we shouldn't be in
-                oldZones.forEach((zone) => {
-                    if (!newZones.includes(zone)) {
-                        socket.leave(zone)
-                    }
-                })
-                //get the list of newZones that aren't in oldZones
-                newZones.forEach((zone) => {
-                    if (!Array.from(oldZones).includes(zone)) {
-                        socket.join(zone)
-                    }
-                })
-                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersWithin(viewPort))
-            })
+
         })
     }
 
@@ -274,49 +276,49 @@ export default class ServerEngine {
     accelerateDouble(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.accelerateDouble(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
     decelerate(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.decelerate(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
     accelerate(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.accelerate(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
     accelerateStop(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.accelerateStop(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
     turnStop(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.turnStop(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
     turnRight(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.turnRight(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
     turnLeft(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.turnLeft(characterId, player?.id)
         if (!!character) {
-            this.sendAndSaveCharacterUpdates([characterId], undefined)
+            this.sendAndSaveCharacterUpdates([characterId])
         }
     }
 
@@ -347,7 +349,7 @@ export default class ServerEngine {
         //tell the client it worked
         this.io.to(player.id).emit(CONSTANTS.CURRENT_PLAYER, player)
         if (c) {
-            this.sendAndSaveCharacterUpdates([c.id], undefined)
+            this.sendAndSaveCharacterUpdates([c.id])
         }
         return player
     }
@@ -392,7 +394,7 @@ export default class ServerEngine {
         player.claimedCharacters.push(characterId)
         player = await this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
 
-        this.sendAndSaveCharacterUpdates([characterId], undefined)
+        this.sendAndSaveCharacterUpdates([characterId])
         return player
     }
 
@@ -428,6 +430,7 @@ export default class ServerEngine {
     }
 
     private loadWorld() {
+        console.log('loading world')
         try {
             this.worldDB.load()
                 .then(() => {
@@ -447,40 +450,45 @@ export default class ServerEngine {
         catch (e) {
             //console.log('failed to load')
         }
+        console.log('finished loading world')
     }
 
-    private sendAndSaveCharacterUpdates(characterIds: string[], zones: Zones | undefined = undefined) {
+    private sendAndSaveCharacterUpdates(characterIds: string[]) {
         //TODO only send character updates to the room/zone they're in
-        characterIds.forEach((id) => {
-            const character = this.getCharacter(id)
-            if (!!character) {
-                //character still exists
-                this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, [character])
-                try {
-                    this.worldDB.push(CONSTANTS.CHARACTER_PATH + id, character)
+        const a: Zones2 = this.gameEngine.gameWorld.getCharactersIntoZones(characterIds)
+        //console.log(a)
+
+        a.forEach((characters, zoneName) => {
+            characters.forEach((character, characerId) => {
+                //persist the character
+                if (!!character) {
+                    //character still exists
+                    try {
+                        this.worldDB.push(CONSTANTS.CHARACTER_PATH + characerId, character)
+                    }
+                    catch (e) {
+                        console.log('failed to save character', character)
+                    }
                 }
-                catch (e) {
-                    console.log('failed to save character', character)
+                else {
+                    //character doesn't exist
+                    //TODO
+                    //this.io.emit(CONSTANTS.CLIENT_CHARACTER_DELETE, [id])
+
+                    //this.worldDB.delete(CONSTANTS.CHARACTER_PATH + characerId)
+                    //this.worldDB.push(CONSTANTS.TOMBSTONE_PATH + id, character)
                 }
-            }
-            else {
-                //character doesn't exist
-                //TODO
-                //this.io.emit(CONSTANTS.CLIENT_CHARACTER_DELETE, [id])
-
-                this.worldDB.delete(CONSTANTS.CHARACTER_PATH + id)
-                //this.worldDB.push(CONSTANTS.TOMBSTONE_PATH + id, character)
-
-            }
-
-
+            })
+            //send the zone
+            console.log('zoneName', zoneName)
+            console.log('characters', characters.size)
+            this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()))
         })
     }
 
     createCommunity({ size, race, location }: { size: string, race: string, location: Point }) {
-        //console.log('createCommunity')
-        //console.log(size)
-        //let updatedZones: Zones = new Map<string, Set<string>>()
+        console.log('createCommunity')
+        console.log(size)
         let modifier = -16
         let totalSize = 0
         let createdCount = 0
@@ -528,168 +536,142 @@ export default class ServerEngine {
                 break
         }
 
-        //console.log(modifier)
+        console.log('modifier', modifier)
 
         //pc classes
         //barbarians
-        let [characters,] = this.populateClass({
+        let characters = this.populateClass({
             className: 'BARBARIAN',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        console.log(characters.length, 'BARBARIAN')
 
         //bards
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'BARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'BARD')
 
         //clerics 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'BARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'BARD')
 
         //druid
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'DRUID',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'DRUID')
 
         //fighter 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'FIGHTER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'FIGHTER')
 
         //monk 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'MONK',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'MONK')
 
         //paladin 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'PALADIN',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'PALADIN')
 
         //ranger 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'RANGER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'RANGER')
 
         //rogue 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'ROGUE',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'ROGUE')
 
         //sorcerer 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'SORCERER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
-
-        //warrior 
-        [characters,] = this.populateClass({
-            className: 'WARRIOR',
-            diceCount: 2, diceSize: 4, modifier: modifier,
-            origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'SORCERER')
 
         //wizard 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'WIZARD',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'WIZARD')
 
         //npc classes
         //adepts  
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'ADEPT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'ADEPT')
 
-        //aristocrats 
-        [characters,] = this.populateClass({
+        //aristocrats
+        characters = characters.concat(this.populateClass({
             className: 'ARISTOCRAT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'ARISTOCRAT')
 
         //commoner 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'COMMONER',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'COMMONER')
 
         //expert 
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'EXPERT',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters);
+        }))
+        console.log(characters.length, 'EXPERT')
 
         //warrior
-        [characters,] = this.populateClass({
+        characters = characters.concat(this.populateClass({
             className: 'WARRIOR',
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
-        })
-        createdCount += characters.length
-        this.sendAndSaveCharacterUpdates(characters)
+        }))
+        console.log(characters.length, 'WARRIOR')
 
         const buffer = 10
 
-        let remaining = totalSize - createdCount
+        let remaining = totalSize - characters.length
 
-        characters = []
         //make more level 1 characters
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
@@ -702,10 +684,9 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        this.sendAndSaveCharacterUpdates(characters)
+        console.log(characters.length, 'ARISTOCRAT')
 
         //create .5% adepts
-        characters = []
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -716,10 +697,9 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        this.sendAndSaveCharacterUpdates(characters)
+        console.log(characters.length, 'ADEPT')
 
         //create 3% experts
-        characters = []
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -730,10 +710,9 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        this.sendAndSaveCharacterUpdates(characters)
+        console.log(characters.length, 'EXPERT')
 
         //create 5% warriors
-        characters = []
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -744,12 +723,11 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        this.sendAndSaveCharacterUpdates(characters)
+        console.log(characters.length, 'WARRIOR')
 
         //console.log('createdCount before commoner fill', createdCount)
 
         //create the rest as commoners
-        characters = []
         for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
@@ -761,10 +739,11 @@ export default class ServerEngine {
             characters.push(c)
         }
         //console.log('createdCount after commoner fill', createdCount)
+        console.log(characters.length, 'COMMONER')
         this.sendAndSaveCharacterUpdates(characters)
     }
 
-    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): [string[], Zones] {
+    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): string[] {
         let x, y
         const buffer = 10
         let createdCharacterIds: string[] = []
@@ -792,7 +771,7 @@ export default class ServerEngine {
             }
         }
         //console.log(updatedCharacters)
-        return [createdCharacterIds, new Map()]
+        return createdCharacterIds
     }
 
     //we have class and level
