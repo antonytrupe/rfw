@@ -454,7 +454,7 @@ export default class ServerEngine {
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[]) {
-        //TODO only send character updates to the room/zone they're in
+        //  only send character updates to the room/zone they're in
         const a: Zones2 = this.gameEngine.gameWorld.getCharactersIntoZones(characterIds)
         //console.log(a)
 
@@ -464,6 +464,7 @@ export default class ServerEngine {
                 if (!!character) {
                     //character still exists
                     try {
+                        //TODO maybe don't persist so frequently?
                         this.worldDB.push(CONSTANTS.CHARACTER_PATH + characerId, character)
                     }
                     catch (e) {
@@ -480,8 +481,8 @@ export default class ServerEngine {
                 }
             })
             //send the zone
-            console.log('zoneName', zoneName)
-            console.log('characters', characters.size)
+            //console.log('zoneName', zoneName)
+            //console.log('characters', characters.size)
             this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()))
         })
     }

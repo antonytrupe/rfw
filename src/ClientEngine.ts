@@ -177,7 +177,12 @@ export default class ClientEngine {
         //only get the characters from the right zones, just in case we have more data then we need to draw
         this.gameEngine.gameWorld.getCharactersWithin(this.getViewPort())
             .forEach((character: Character) => {
-                this.drawCharacter(ctx, character)
+                if (character.hp > -10) {
+                    this.drawCharacter(ctx, character)
+                }
+                else {
+                    this.drawTombstone(ctx, character)
+                }
             })
 
         //draw events
@@ -194,6 +199,7 @@ export default class ClientEngine {
             this.drawHourScale(ctx)
         }
     }
+
 
     private drawCrossHair(ctx: CanvasRenderingContext2D) {
         let center = 0
@@ -444,6 +450,19 @@ export default class ClientEngine {
             ctx.fillText(event.amount!.toString(), 0, 0)
             ctx.restore()
         }
+    }
+
+    drawTombstone(ctx: CanvasRenderingContext2D, character: Character) {
+
+        ctx.save()
+        ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
+        ctx.fillStyle = "#000000"
+        ctx.beginPath()
+        ctx.arc(0, 0, 1 * this.PIXELS_PER_FOOT / 1, 0, 2 * Math.PI)
+        ctx.fillRect(-this.PIXELS_PER_FOOT ,  0, this.PIXELS_PER_FOOT*2, this.PIXELS_PER_FOOT*2)
+        ctx.fill()
+        ctx.restore()
+        //throw new Error("Method not implemented.")
     }
 
     private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {

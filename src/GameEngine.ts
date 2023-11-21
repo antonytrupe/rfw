@@ -612,7 +612,7 @@ export default class GameEngine {
             //has any actions
             character.actions?.length != 0 ||
             //dieing
-            (character.hp <= 0 && character.hp > 10))
+            (character.hp <= 0 && character.hp > -10))
         ) {
             //console.log('activating', character.id)
             this.activeCharacters.add(character.id)
