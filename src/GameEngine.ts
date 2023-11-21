@@ -279,13 +279,10 @@ export default class GameEngine {
                 //filter out current character and dead characters
                 .filter((it) => { return it.id != character.id && it.hp > -10 })
             if (collisions.length > 0) {
-                //make sure we're not colliding with ourself
-                collisions = collisions.filter((it) => { return it.id != character.id })!
-
                 //"sum" up all the new positions from colliding objects
                 const c = collisions.reduce((t, p) => {
 
-                    //get the direction to the colliding object, normalized(shouldn't matter though)
+                    //get the direction to the colliding object
                     const d = this.getDirection({ x: p.x, y: p.y }, newPosition)
 
                     //get the distance along that path of both objects size/2
