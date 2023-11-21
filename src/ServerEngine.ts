@@ -678,7 +678,7 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5
+                radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
             const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y })
@@ -691,7 +691,7 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5
+                radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
             const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y })
@@ -704,7 +704,7 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5
+                radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
             const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y })
@@ -717,7 +717,7 @@ export default class ServerEngine {
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5
+                radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
             const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y })
@@ -732,7 +732,7 @@ export default class ServerEngine {
         for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
             while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
-                radius += 5
+                radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
             const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y })
@@ -759,7 +759,7 @@ export default class ServerEngine {
 
                 ({ x, y } = getRandomPoint({ origin, radius }))
                 while (this.gameEngine.gameWorld.getCharactersNearby({ x: x, y: y, r: buffer }).length > 0) {
-                    radius += 5;
+                    radius += 1;
                     ({ x, y } = getRandomPoint({ origin, radius }))
                 }
 

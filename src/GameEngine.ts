@@ -237,7 +237,10 @@ export default class GameEngine {
                     //if the target is inside another character and we've collided, then stop trying to move any more
                     //check for collisions
                     let charactersAtTarget = this.gameWorld.getCharactersNearby({ x: action.location.x, y: action.location.y, r: 5 })
-                    if (charactersAtTarget.filter((it) => { return it.id != character.id }).length > 0) {
+                        //throw out the current character
+                        //throw out dead characters
+                        .filter((it) => { return it.id != character.id && it.hp > -10 })
+                    if (charactersAtTarget.length > 0) {
                         //console.log('characters at target')
                         const dist = this.getDistance({ x: character.x, y: character.y }, { x: charactersAtTarget[0].x, y: charactersAtTarget[0].y })
                         if (dist < (character.size + charactersAtTarget[0].size) / 2) {
@@ -273,7 +276,9 @@ export default class GameEngine {
             let newPosition: Point = this.calculatePosition(character, dt)
             //check for collisions
             let collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .9 })
-            if (collisions.length > 1) {
+                //filter out current character and dead characters
+                .filter((it) => { return it.id != character.id && it.hp > -10 })
+            if (collisions.length > 0) {
                 //make sure we're not colliding with ourself
                 collisions = collisions.filter((it) => { return it.id != character.id })!
 
@@ -327,17 +332,16 @@ export default class GameEngine {
             //get rid of the two already fighting
             .filter((it) => {
                 return it.id != character.id && !character.targeters.includes(it.id) &&
-                    //get rid of any dead/dying characters
+                    //only characters still alive
                     it.hp > 0 &&
-                    //get rid of any claimed characters
-                    it.playerId != ''
+                    //only unclaimed characters
+                    it.playerId == ''
             })
             //sort them by distance
             .sort((a, b) => {
                 const distancetoA = this.getDistance({ x: character.x, y: character.y }, { x: a.x, y: a.y })
                 const distancetoB = this.getDistance({ x: character.x, y: character.y }, { x: b.x, y: b.y })
                 return distancetoA == distancetoB ? 0 : distancetoA > distancetoB ? 1 : -1
-
             })
         //console.log('nearby', nearby)
         const aggressor = this.getCharacter(character.targeters[0])
