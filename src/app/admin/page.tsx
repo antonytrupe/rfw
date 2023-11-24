@@ -6,23 +6,24 @@ import CharacterUI from "../CharacterUI"
 
 export default async function Page() {
 
-  const characters: Character[] = []
-  const worldDB = new JsonDB(new Config("data/world", true, true, '/'))
-
-  await worldDB.load()
-
-
-
   async function getCharacters() {
+    //console.log('getCharacters')
+    const worldDB = new JsonDB(new Config("data/world", true, true, '/'))
 
-    const j = await worldDB.getObject<{}>(CHARACTER_PATH)
+    await worldDB.load()
 
-    Object.entries(j).map(([id, character]: [id: string, character: any]) => {
-      characters.push(character)
+    return await worldDB.getObject<{}>(CHARACTER_PATH).then((charactersJSON) => {
+      //console.log('then')
+      const characters: Character[] = []
+
+      Object.entries(charactersJSON).map(([id, character]: [id: string, character: any]) => {
+        characters.push(character)
+      })
+      return characters
+    }).catch((error) => {
+      console.log(error)
     })
-    return characters
   }
-
 
   return (
     <div className="table">
