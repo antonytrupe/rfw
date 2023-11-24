@@ -100,8 +100,8 @@ export default class ServerEngine {
                         brandNewZones.add(zone)
                     }
                 })
-                console.log('socket.rooms', socket.rooms.size)
-                //TODO only send characters the client didn't already have in its old viewport
+                //console.log('socket.rooms', socket.rooms.size)
+                //only send characters the client didn't already have in its old viewport
                 socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersInZones(brandNewZones))
             })
 
@@ -109,8 +109,10 @@ export default class ServerEngine {
                 //console.log('serverengine controlcharacter', characterId)
                 //console.log('player', player)
                 if (!!player && characterId != undefined) {
-                    player = await this.controlCharacter(characterId, player?.email)
+                    let character
+                    [player, character] = await this.controlCharacter(characterId, player?.email)
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
+                    //TODO send character update
                 }
                 else {
                     console.log('bailing on control character, no session')
@@ -185,8 +187,10 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
                 if (!!player) {
-                    player = await this.claimCharacter(characterId, player.email)
+                    let character
+                    [player, character] = await this.claimCharacter(characterId, player.email)
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
+                    //TODO send character update
                 }
                 else {
                     console.log('bailing on claim character, no session')
@@ -195,9 +199,10 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.UNCLAIM_CHARACTER, async (characterId: string) => {
                 if (!!player) {
-                    player = await this.unClaimCharacter(characterId, player.email)
+                    let character
+                    [player, character] = await this.unClaimCharacter(characterId, player.email)
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
-
+                    //TODO send character update
                 }
                 else {
                     console.log('bailing on unclaim character, no session')
@@ -211,8 +216,6 @@ export default class ServerEngine {
                 //broadcast the removal
                 //socket.broadcast.emit(PC_DISCONNECT, socket.id)
             })
-
-
         })
     }
 
@@ -322,20 +325,20 @@ export default class ServerEngine {
         }
     }
 
-    async unClaimCharacter(characterId: string, playerEmail: string): Promise<Player | undefined> {
+    async unClaimCharacter(characterId: string, playerEmail: string): Promise<[Player | undefined, Character | undefined]> {
         if (!playerEmail) {
             console.log('bailing on unclaim character: no email')
-            return
+            return [undefined, undefined]
         }
 
         //find or create the player
         let player = await this.getPlayerByEmail(playerEmail)
         //bail if no player found
         if (!player) {
-            return player
+            return [player, undefined]
         }
         //we've got a player now
-        const c = this.gameEngine.unClaimCharacter(characterId)
+        const character = this.gameEngine.unClaimCharacter(characterId)
         //console.log('claimed character', c)
 
         player.claimedCharacters.splice(player.claimedCharacters.indexOf(characterId), 1)
@@ -348,16 +351,16 @@ export default class ServerEngine {
 
         //tell the client it worked
         this.io.to(player.id).emit(CONSTANTS.CURRENT_PLAYER, player)
-        if (c) {
-            this.sendAndSaveCharacterUpdates([c.id])
+        if (character) {
+            this.sendAndSaveCharacterUpdates([character.id])
         }
-        return player
+        return [player, character]
     }
 
-    async claimCharacter(characterId: string, playerEmail: string): Promise<Player | undefined> {
+    async claimCharacter(characterId: string, playerEmail: string): Promise<[Player | undefined, Character | undefined]> {
         if (!playerEmail) {
             console.log('bailing on claim character: no email')
-            return
+            return [undefined, undefined]
         }
         //find or create the player
         let player = await this.getPlayerByEmail(playerEmail)
@@ -369,24 +372,24 @@ export default class ServerEngine {
             //console.log(player)
         }
         //we've got a player now
-
+        const character = this.getCharacter(characterId)
         //if we already claimed this character, then bail
         if (player.claimedCharacters.some((c) => c == characterId)) {
             console.log('bailing on claim character, already claimed this character')
-            return player
+            return [player, character]
         }
 
-        const character = this.getCharacter(characterId)
+
         if (!character) {
             console.log('bailing on claim character: no character')
-            return player
+            return [player, character]
         }
 
         //check if the character is claimed by another player
         if (!!character.playerId) {
             console.log('character.playerId', character.playerId)
             console.log('bailing on claim character: claimed by another player')
-            return player
+            return [player, character]
         }
 
         this.gameEngine.updateCharacter({ id: characterId, playerId: player.id })
@@ -395,14 +398,14 @@ export default class ServerEngine {
         player = await this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
 
         this.sendAndSaveCharacterUpdates([characterId])
-        return player
+        return [player, character]
     }
 
-    async controlCharacter(characterId: string, playerEmail: string): Promise<Player | undefined> {
+    async controlCharacter(characterId: string, playerEmail: string): Promise<[Player | undefined, Character | undefined]> {
         //console.log('controlCharacter')
 
         if (!playerEmail) {
-            return
+            return [undefined, undefined]
         }
 
         //find or create the player
@@ -415,17 +418,19 @@ export default class ServerEngine {
             //console.log(player)
         }
 
-        const character = this.getCharacter(characterId)
+        let character = this.getCharacter(characterId)
         if ((!!characterId && !character)) {
-            return player
+            return [player, character]
         }
 
         //claim it if possible
         if (characterId) {
-            player = await this.claimCharacter(characterId, playerEmail)
+            [player, character] = await this.claimCharacter(characterId, playerEmail)
         }
 
-        return await this.savePlayer({ ...player, controlledCharacter: characterId })
+        player = await this.savePlayer({ ...player, controlledCharacter: characterId })
+
+        return [player, character]
 
     }
 
@@ -454,7 +459,7 @@ export default class ServerEngine {
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[]) {
-        //  only send character updates to the room/zone they're in
+        //only send character updates to the room/zone they're in
         const a: Zones2 = this.gameEngine.gameWorld.getCharactersIntoZones(characterIds)
         //console.log(a)
 
@@ -473,16 +478,12 @@ export default class ServerEngine {
                 }
                 else {
                     //character doesn't exist
-                    //TODO
                     //this.io.emit(CONSTANTS.CLIENT_CHARACTER_DELETE, [id])
-
                     //this.worldDB.delete(CONSTANTS.CHARACTER_PATH + characerId)
                     //this.worldDB.push(CONSTANTS.TOMBSTONE_PATH + id, character)
                 }
             })
             //send the zone
-            //console.log('zoneName', zoneName)
-            //console.log('characters', characters.size)
             this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()))
         })
     }

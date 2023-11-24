@@ -13,32 +13,34 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## TODO LIST
-1. turn dead characters into tombstones
-2. walls/caves
-3. fog-of-war
-4. fight/flight/assist/social/factions
-5. pathing/patrol
-6. healing/long/short rest
-7. running away
-8. character age
-9. attack of opportunities
-10. say/yell/whisper
-11. teleport
-12. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
-13. touch controls
-14. random stats when spawning 
-15. strafing 
-16. package as exe/etc with electron
-17. add steam support
-18. admin tool to interact with world
-19. stay centered on selected characters
-20. rightclick move the screen
-21. change selected character stats
-22. randomly spawn new characters
-23. randomly move characters
-24. character health ui
+2. low level monsters
+3. buildings
+4. walls/caves
+5. fog-of-war
+6. fight/flight/assist/social/factions
+7. pathing/patrol
+8. healing/long/short rest
+9.  running away
+10. character age
+11. attack of opportunities
+12. say/yell/whisper
+13. teleport
+14. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
+15. touch controls
+16. random stats when spawning 
+17. strafing 
+18. package as exe/etc with electron
+19. add steam support
+20. admin tool to interact with world
+21. stay centered on selected characters
+22. rightclick move the screen
+23. change selected character stats
+24. randomly spawn new characters
+25. randomly move characters
+26. character health ui
 
 ## DONE
+turn dead characters into tombstones
 basic chat
 no moving while incapacitated/dying/dead 
 sliding around more then one object

@@ -17,6 +17,11 @@ export default class GameWorld {
     //the entries are just a list of character ids
     private zones: Zones = new Map<string, Zone>()
 
+    restart() {
+        this.characters = new Map<string, Character>()
+        this.zones = new Map<string, Zone>()
+    }
+
     updateCharacters(characters: Character[]): GameWorld {
         characters.forEach((character) => {
             this.updateCharacter(character)

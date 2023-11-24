@@ -62,8 +62,8 @@ export default class GameEngine {
         //if its deaddead
         if (character.hp <= -10) {
             //turn it into a tombstone
-            this.deleteCharacter(character.id)
-            this.updateTombstone(character)
+            //this.deleteCharacter(character.id)
+            //this.updateTombstone(character)
         }
     }
     updateTombstone(character: Character) {
@@ -110,7 +110,8 @@ export default class GameEngine {
             if (newTurn) {
                 character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)!
                 if (character.actionsRemaining != 1) {
-                    updatedCharacters.add(character.id)
+                    //client can do this reliably
+                    //updatedCharacters.add(character.id)
                 }
             }
 
@@ -123,7 +124,7 @@ export default class GameEngine {
                     actions: [],
                     target: ''
                 }).getCharacter(character.id)!
-                updatedCharacters.add(character.id)
+                //updatedCharacters.add(character.id)
             }
 
             //if below 0 hps and not dead 
@@ -131,7 +132,7 @@ export default class GameEngine {
             if (character.hp < 0 && character.hp > -10 && newTurn) {
                 //loose another hp
                 this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - 1, -10, character.hp) })
-                updatedCharacters.add(character.id)
+                //updatedCharacters.add(character.id)
             }
 
             if (character.actions.length > 0 && character.actionsRemaining > 0) {
@@ -157,7 +158,7 @@ export default class GameEngine {
                             //always spend an action
                             character = this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
                                 .getCharacter(character.id)!
-                            updatedCharacters.add(character.id)
+                            //updatedCharacters.add(character.id)
 
                             //handle multiple attacks
                             character.bab.forEach((bab) => {
@@ -203,7 +204,8 @@ export default class GameEngine {
                             //done doing attacks
                             console.log('call for help')
                             //call for help 
-                            this.recruitHelp(target)
+                            const helper = this.recruitHelp(target)
+                            updatedCharacters.add(helper.id)
                             if (!target.target) {
                                 //fight back
                                 this.attack(target.id, character.id)
@@ -262,7 +264,7 @@ export default class GameEngine {
                         actions: actions
                     }).getCharacter(character.id)!
 
-                    updatedCharacters.add(character.id)
+                    //updatedCharacters.add(character.id)
                 }
             }
 
@@ -299,7 +301,7 @@ export default class GameEngine {
 
             this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
             if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
-                updatedCharacters.add(character.id)
+                //updatedCharacters.add(character.id)
             }
         })
 
@@ -342,6 +344,7 @@ export default class GameEngine {
             })
         //console.log('nearby', nearby)
         const aggressor = this.getCharacter(character.targeters[0])
+        const helper = nearby[0]
         if (!!aggressor && nearby.length > 0) {
             //console.log('aggressor', aggressor)
             console.log('found someone to help')
@@ -349,7 +352,7 @@ export default class GameEngine {
             this.moveCharacter(nearby[0].id, { x: aggressor.x, y: aggressor.y })
             this.attack(nearby[0].id, aggressor.id)
         }
-        //throw new Error("Method not implemented.")
+        return helper
     }
 
     calculateAcceleration(character: Character, target: Point): number {
@@ -812,12 +815,14 @@ export default class GameEngine {
     }
 
     start() {
-        //console.log('GameEngine.start')
         this.timeoutID = setTimeout(this.tick.bind(this))
-        if (typeof window === 'object' && typeof window.requestAnimationFrame === 'function') {
-            //window.requestAnimationFrame(this.nextTickChecker.bind(this)) 
-        }
         return this
+    }
+
+    restart() {
+        this.stop()
+        this.gameWorld.restart()
+        this.start()
     }
 
     stop() {

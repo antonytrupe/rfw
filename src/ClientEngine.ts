@@ -452,6 +452,35 @@ export default class ClientEngine {
         }
     }
 
+    drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number) {
+        var rot = Math.PI / 2 * 3;
+        var x = cx;
+        var y = cy;
+        var step = Math.PI / spikes;
+        ctx.save()
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius)
+        for (let i = 0; i < spikes; i++) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            ctx.lineTo(x, y)
+            rot += step
+
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            ctx.lineTo(x, y)
+            rot += step
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = 'gold';
+        ctx.stroke();
+        ctx.fillStyle = 'yellow';
+        ctx.fill();
+        ctx.restore()
+    }
+
     drawTombstone(ctx: CanvasRenderingContext2D, character: Character) {
 
         ctx.save()
@@ -459,10 +488,19 @@ export default class ClientEngine {
         ctx.fillStyle = "#000000"
         ctx.beginPath()
         ctx.arc(0, 0, 1 * this.PIXELS_PER_FOOT / 1, 0, 2 * Math.PI)
-        ctx.fillRect(-this.PIXELS_PER_FOOT ,  0, this.PIXELS_PER_FOOT*2, this.PIXELS_PER_FOOT*2)
+        ctx.fillRect(-this.PIXELS_PER_FOOT, 0, this.PIXELS_PER_FOOT * 2, this.PIXELS_PER_FOOT * 2)
         ctx.fill()
+
+        const claimed = this.player?.claimedCharacters.some((id) => {
+            return id == character.id
+        })
+
+        if (claimed) {
+            //draw a star
+            this.drawStar(ctx, 0, 0, 6, 0.8 * this.PIXELS_PER_FOOT, 0.4 * this.PIXELS_PER_FOOT)
+        }
+
         ctx.restore()
-        //throw new Error("Method not implemented.")
     }
 
     private drawCharacter(ctx: CanvasRenderingContext2D, character: Character) {
@@ -593,19 +631,6 @@ export default class ClientEngine {
                 ctx.fillStyle = "#f0f0f0"
         }
 
-        if (isTargeted) {
-            //draw a special circle around it
-            drawTargeted()
-        }
-        if (isControlled) {
-            //draw a special circle around it
-            drawControlled()
-        }
-
-        if (claimed) {
-            //TODO draw a star or something
-        }
-
         ctx.beginPath()
         ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2, 0, 2 * Math.PI)
         ctx.fill()
@@ -619,6 +644,20 @@ export default class ClientEngine {
 
         ctx.stroke()
         drawHealth()
+
+        if (isTargeted) {
+            //draw a special circle around it
+            drawTargeted()
+        }
+        if (isControlled) {
+            //draw a special circle around it
+            drawControlled()
+        }
+
+        if (claimed) {
+            //TODO draw a star or something
+            this.drawStar(ctx, 0, 0, 6, 0.8 * this.PIXELS_PER_FOOT, 0.4 * this.PIXELS_PER_FOOT)
+        }
 
         ctx.restore()
     }
@@ -659,8 +698,7 @@ export default class ClientEngine {
                 (!this.player?.controlledCharacter && (this.player?.claimedCharacters.length < this.player.maxClaimedCharacters) ||
                     (this.player?.claimedCharacters.some((id) => id == characters[0].id))
                 )) {
-                //then claim and control
-                this.claim(characters[0].id)
+                //then control(server should handle claiming first if needed)
                 this.control(characters[0].id)
             }
             //controlled character, so target is a target
@@ -746,7 +784,6 @@ export default class ClientEngine {
                 this.decelarate(this.player.controlledCharacter)
             }
             else if (code == 'KeyW') {
-                //console.log('W')
                 this.accelerate(this.player.controlledCharacter)
             }
             else if (code == "ShiftLeft") {
@@ -768,7 +805,7 @@ export default class ClientEngine {
     private accelerate(characterId: string) {
         const change: boolean = this.gameEngine.accelerate(characterId, this.player?.id)
         if (change) {
-            //TODO only send this if not already accelerating
+            //only send this if not already accelerating
             this.socket?.emit(CONSTANTS.ACCELERATE, characterId)
         }
     }
@@ -903,6 +940,10 @@ export default class ClientEngine {
         this.connected = true
         //tell the ui we connected
         this.emit(CONSTANTS.CONNECT)
+
+        //restart/reset the gameengine and gameworld
+        this.gameEngine.restart()
+
         //ask the server for characters
         this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort() as CONSTANTS.CLIENT_INITIAL_INTERFACE)
     }
