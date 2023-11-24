@@ -41,7 +41,7 @@ export default async function Page() {
       <Suspense fallback={<span>loading</span>}>
         {(await getCharacters())?.map((character) => {
           return (
-            <div className="table-row">
+            <div className="table-row" key={character.id}>
               <span className="table-cell">{ }</span>
               <span className="table-cell">{character.level}</span>
               <span className="table-cell">{character.characterClass}</span>
