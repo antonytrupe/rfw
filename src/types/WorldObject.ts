@@ -11,8 +11,24 @@ export default class WorldObject implements WorldObjectInterface {
     points: Point[] = []
     subObjects: Object[] = []
 
-    constructor({ radius=1 }: WorldObjectInterface) {
+    constructor({ id = '__test__',
+        location = { x: 0, y: 0 },
+        rotation = 0,
+        shape = SHAPE.CIRCLE,
+        radius = 1,
+        length = 1,
+        width = 1,
+        points = [],
+        subObjects = [] }: WorldObjectInterface) {
+        this.id = id
+        this.location = location
+        this.rotation = rotation
+        this.shape = shape
         this.radius = radius
+        this.length = length
+        this.width = width
+        this.points = points
+        this.subObjects = subObjects
     }
 }
 

@@ -236,7 +236,8 @@ export default class ServerEngine {
         })
     }
     createObject() {
-        const o = new WorldObject({})
+        const id = uuidv4()
+        const o = new WorldObject({ id })
         this.saveObject(o)
     }
 
