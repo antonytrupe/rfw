@@ -7,6 +7,7 @@ import * as CONSTANTS from "@/types/CONSTANTS"
 import Player from "./types/Player"
 import { GameEvent } from "./types/GameEvent"
 import { Point } from "./types/Point"
+import { ViewPort } from "@/types/CONSTANTS"
 
 export default class ClientEngine {
 
@@ -151,7 +152,7 @@ export default class ClientEngine {
             //tell the server our viewport changed
             this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
         }
-        //console.log(this.scale)
+        console.log(this.scale)
     }
 
     private draw() {
@@ -173,17 +174,21 @@ export default class ClientEngine {
 
         this.drawCrossHair(ctx)
 
-        //draw all the characters
-        //only get the characters from the right zones, just in case we have more data then we need to draw
-        this.gameEngine.gameWorld.getCharactersWithin(this.getViewPort())
-            .forEach((character: Character) => {
-                if (character.hp > -10) {
-                    this.drawCharacter(ctx, character)
-                }
-                else {
-                    this.drawTombstone(ctx, character)
-                }
-            })
+
+        if (this.scale < 30) {
+
+            //draw all the characters
+            //only get the characters from the right zones, just in case we have more data then we need to draw
+            this.gameEngine.gameWorld.getCharactersWithin(this.getViewPort())
+                .forEach((character: Character) => {
+                    if (character.hp > -10) {
+                        this.drawCharacter(ctx, character)
+                    }
+                    else {
+                        this.drawTombstone(ctx, character)
+                    }
+                })
+        }
 
         //draw events
         this.drawEvents(ctx)
@@ -597,7 +602,7 @@ export default class ClientEngine {
                 ctx.fillStyle = "#ad8820"
                 break
             case "PALADIN":
-                ctx.fillStyle = "#076802"
+                ctx.fillStyle = "#934db2"
                 break
             case "RANGER":
                 ctx.fillStyle = "#1ee134"
@@ -622,13 +627,13 @@ export default class ClientEngine {
                 ctx.fillStyle = "#f0f0f0"
                 break
             case "EXPERT":
-                ctx.fillStyle = "#076802"
+                ctx.fillStyle = "#0cae03"
                 break
             case "WARRIOR":
                 ctx.fillStyle = "#ff6661"
                 break
             default:
-                ctx.fillStyle = "#f0f0f0"
+                ctx.fillStyle = "#808080"
         }
 
         ctx.beginPath()
@@ -945,7 +950,7 @@ export default class ClientEngine {
         this.gameEngine.restart()
 
         //ask the server for characters
-        this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort() as CONSTANTS.CLIENT_INITIAL_INTERFACE)
+        this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort() as ViewPort)
     }
 
     private getViewPort() {

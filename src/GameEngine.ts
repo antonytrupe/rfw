@@ -87,6 +87,7 @@ export default class GameEngine {
     //leave it public for testing
     step(dt: number, now: number): Set<string> {
         //console.log('GameEngine.step')
+        const started = (new Date()).getTime()
 
         //figure out if this is the first step of a new turn
         const lastTurn = Math.floor((now - dt) / 1000 / 6)
@@ -95,8 +96,6 @@ export default class GameEngine {
         if (lastTurn != currentTurn) {
             newTurn = true
         }
-        const started = (new Date()).getTime()
-
         //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Set<string> = new Set()
         const gameEvents: GameEvent[] = []
@@ -454,11 +453,18 @@ export default class GameEngine {
     }
 
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
+        const area = (right - left) * (bottom - top)
         let zones = []
-        for (let i = left; i < right; i += 30) {
-            for (let j = top; j < bottom; j += 30) {
-                zones.push(this.gameWorld.getTacticalZoneName({ x: i, y: j }))
+        if (area < 1000000) {
+            //tactical zones
+            for (let x = left; x < right; x += 30) {
+                for (let y = top; y < bottom; y += 30) {
+                    zones.push(this.gameWorld.getTacticalZoneName({ x: x, y: y }))
+                }
             }
+        }
+        else {
+            //TODO do local zone names
         }
         return zones
     }

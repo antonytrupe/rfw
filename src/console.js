@@ -1,13 +1,12 @@
-
 ['log', 'warn', 'error'].forEach((methodName) => {
     //@ts-ignore
     const originalMethod = console[methodName]
     //@ts-ignore
-    console[methodName] = (...args: any) => {
+    console[methodName] = (...args) => {
         let initiator = 'unknown place'
         try {
             throw new Error()
-        } catch (e: any) {
+        } catch (e) {
             if (typeof e.stack === 'string') {
                 let isFirst = true
                 for (const line of e.stack.split('\n')) {

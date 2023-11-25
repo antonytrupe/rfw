@@ -1,8 +1,7 @@
 import { CHARACTER_PATH } from "@/types/CONSTANTS"
 import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
-import { Suspense, useState } from "react"
-import CharacterUI from "../CharacterUI"
+import { Suspense } from "react"
 
 export default async function Page() {
 

@@ -14,7 +14,7 @@ import { GameEvent } from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
-import "./console"
+import { ViewPort } from "@/types/CONSTANTS"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -78,17 +78,20 @@ export default class ServerEngine {
 
             //tell the client where all the character are
             //client is 
-            socket.on(CONSTANTS.CLIENT_VIEWPORT, (viewPort: CONSTANTS.CLIENT_INITIAL_INTERFACE) => {
+            socket.on(CONSTANTS.CLIENT_VIEWPORT, (viewPort: ViewPort) => {
                 console.log('CLIENT_VIEWPORT')
+                console.log('viewport', (viewPort.right - viewPort.left) * (viewPort.bottom - viewPort.top))
+                const started = (new Date()).getTime()
                 //join the right zones/rooms
                 let oldZones = socket.rooms
                 let newZones = this.gameEngine.getZonesIn(viewPort)
+                //TODO switch to bigger zones if we're zoomed out a bunch
                 //console.log(newZones)
                 //get the list of oldZones that aren't in newZones
                 //leave zones we shouldn't be in
                 oldZones.forEach((zone) => {
-                    if (!newZones.includes(zone)) {
-                        console.log('leaving a room')
+                    if (!newZones.includes(zone) && zone != player?.id) {
+                        //console.log('leaving a room')
                         socket.leave(zone)
                     }
                 })
@@ -100,9 +103,16 @@ export default class ServerEngine {
                         brandNewZones.add(zone)
                     }
                 })
-                //console.log('socket.rooms', socket.rooms.size)
+                const characters = this.gameEngine.gameWorld.getCharactersInZones(brandNewZones)
+                console.log('socket.rooms', socket.rooms.size)
                 //only send characters the client didn't already have in its old viewport
-                socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, this.gameEngine.gameWorld.getCharactersInZones(brandNewZones))
+                if (characters.length > 0) {
+                    socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
+                }
+                const finished = (new Date()).getTime()
+                if (finished - started > 5) {
+                    console.log('CLIENT_VIEWPORT duration', finished - started)
+                }
             })
 
             socket.on(CONSTANTS.CONTROL_CHARACTER, async (characterId: string | undefined) => {
@@ -489,6 +499,8 @@ export default class ServerEngine {
     }
 
     createCommunity({ size, race, location }: { size: string, race: string, location: Point }) {
+        const started = (new Date()).getTime()
+        const logging = false
         console.log('createCommunity')
         console.log(size)
         let modifier = -16
@@ -538,7 +550,7 @@ export default class ServerEngine {
                 break
         }
 
-        console.log('modifier', modifier)
+        if (logging) console.log('modifier', modifier)
 
         //pc classes
         //barbarians
@@ -547,7 +559,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
-        console.log(characters.length, 'BARBARIAN')
+        if (logging) console.log(characters.length, 'BARBARIAN')
 
         //bards
         characters = characters.concat(this.populateClass({
@@ -555,7 +567,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'BARD')
+        if (logging) console.log(characters.length, 'BARD')
 
         //clerics 
         characters = characters.concat(this.populateClass({
@@ -563,7 +575,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'BARD')
+        if (logging) console.log(characters.length, 'BARD')
 
         //druid
         characters = characters.concat(this.populateClass({
@@ -571,7 +583,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'DRUID')
+        if (logging) console.log(characters.length, 'DRUID')
 
         //fighter 
         characters = characters.concat(this.populateClass({
@@ -579,7 +591,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'FIGHTER')
+        if (logging) console.log(characters.length, 'FIGHTER')
 
         //monk 
         characters = characters.concat(this.populateClass({
@@ -587,7 +599,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'MONK')
+        if (logging) console.log(characters.length, 'MONK')
 
         //paladin 
         characters = characters.concat(this.populateClass({
@@ -595,7 +607,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'PALADIN')
+        if (logging) console.log(characters.length, 'PALADIN')
 
         //ranger 
         characters = characters.concat(this.populateClass({
@@ -603,7 +615,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'RANGER')
+        if (logging) console.log(characters.length, 'RANGER')
 
         //rogue 
         characters = characters.concat(this.populateClass({
@@ -611,7 +623,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'ROGUE')
+        if (logging) console.log(characters.length, 'ROGUE')
 
         //sorcerer 
         characters = characters.concat(this.populateClass({
@@ -619,7 +631,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'SORCERER')
+        if (logging) console.log(characters.length, 'SORCERER')
 
         //wizard 
         characters = characters.concat(this.populateClass({
@@ -627,7 +639,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'WIZARD')
+        if (logging) console.log(characters.length, 'WIZARD')
 
         //npc classes
         //adepts  
@@ -636,7 +648,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'ADEPT')
+        if (logging) console.log(characters.length, 'ADEPT')
 
         //aristocrats
         characters = characters.concat(this.populateClass({
@@ -644,7 +656,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'ARISTOCRAT')
+        if (logging) console.log(characters.length, 'ARISTOCRAT')
 
         //commoner 
         characters = characters.concat(this.populateClass({
@@ -652,7 +664,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'COMMONER')
+        if (logging) console.log(characters.length, 'COMMONER')
 
         //expert 
         characters = characters.concat(this.populateClass({
@@ -660,7 +672,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'EXPERT')
+        if (logging) console.log(characters.length, 'EXPERT')
 
         //warrior
         characters = characters.concat(this.populateClass({
@@ -668,7 +680,7 @@ export default class ServerEngine {
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
-        console.log(characters.length, 'WARRIOR')
+        if (logging) console.log(characters.length, 'WARRIOR')
 
         const buffer = 10
 
@@ -686,7 +698,7 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        console.log(characters.length, 'ARISTOCRAT')
+        if (logging) console.log(characters.length, 'ARISTOCRAT')
 
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
@@ -699,7 +711,7 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        console.log(characters.length, 'ADEPT')
+        if (logging) console.log(characters.length, 'ADEPT')
 
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
@@ -712,7 +724,7 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        console.log(characters.length, 'EXPERT')
+        if (logging) console.log(characters.length, 'EXPERT')
 
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
@@ -725,7 +737,7 @@ export default class ServerEngine {
             createdCount++
             characters.push(c)
         }
-        console.log(characters.length, 'WARRIOR')
+        if (logging) console.log(characters.length, 'WARRIOR')
 
         //console.log('createdCount before commoner fill', createdCount)
 
@@ -741,8 +753,13 @@ export default class ServerEngine {
             characters.push(c)
         }
         //console.log('createdCount after commoner fill', createdCount)
-        console.log(characters.length, 'COMMONER')
+        if (logging) console.log(characters.length, 'COMMONER')
         this.sendAndSaveCharacterUpdates(characters)
+
+        const finished = (new Date()).getTime()
+        if (finished - started > 5) {
+            console.log('step duration', finished - started)
+        }
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): string[] {

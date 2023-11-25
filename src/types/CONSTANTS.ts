@@ -13,7 +13,7 @@ export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 //db constants
 export const CHARACTER_PATH = '/CHARACTER/'
 
-interface ViewPort {
+export interface ViewPort {
     left: number;
     right: number;
     top: number;
@@ -21,8 +21,7 @@ interface ViewPort {
 }
 
 export const CLIENT_VIEWPORT = 'client.viewport'
-export interface CLIENT_INITIAL_INTERFACE extends ViewPort { }
-
+ 
 export const CURRENT_PLAYER = 'current_player'
 
 export const HOVERED_CHARACTER = 'client.character.hovered'
