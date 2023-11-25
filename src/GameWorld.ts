@@ -189,7 +189,7 @@ export default class GameWorld {
                         Math.pow(character.location.x - position.x, 2) +
                         Math.pow(character.location.y - position.y, 2))
                     //console.log('distance', distance)
-                    if (distance < character.size / 2) {
+                    if (distance < character.radius) {
                         result.push(character)
                     }
                 }

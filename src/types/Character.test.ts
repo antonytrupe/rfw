@@ -5,5 +5,9 @@ describe('Character', () => {
         const c = new Character({})
         expect(c.direction).toBe(0)
     })
-
+    
+    test('default radius should be 2.5', () => {
+        const c = new Character({})
+        expect(c.radius).toBe(2.5)
+    })
 })

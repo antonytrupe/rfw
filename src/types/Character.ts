@@ -1,12 +1,10 @@
 import { Action } from "./Action"
 import { Point } from "./Point"
+import WorldObject, { SHAPE } from "./WorldObject"
 
-export default class Character {
-    id: string
+export default class Character extends WorldObject implements CharacterInterface {
     playerId: string
-    size: number
     maxSpeed: number
-    location: Point
     speed: number
     speedAcceleration: number
     mode: number //1 for walk, 2 for  run, .5 for stealth, .25 for crawl
@@ -30,7 +28,6 @@ export default class Character {
     constructor({
         id = "__test__",
         playerId = "",
-        size = 5,
         direction = 0,
         location = { x: 0, y: 0 },
         maxSpeed = 30,
@@ -52,9 +49,9 @@ export default class Character {
         age = 30,
         race = "HUMAN"
     }: CharacterInterface) {
+        super({id:id,location:location,rotation:direction,shape:SHAPE.CIRCLE, radius: 2.5 })
         this.id = id
         this.playerId = playerId
-        this.size = size
         this.maxSpeed = maxSpeed
         this.location = location
         this.mode = mode
@@ -77,13 +74,11 @@ export default class Character {
         this.age = age
         this.race = race
     }
-
 }
 
 interface CharacterInterface {
     id?: string
     playerId?: string
-    size?: number
     direction?: number
     location?: Point
     maxSpeed?: number
@@ -100,7 +95,7 @@ interface CharacterInterface {
     bab?: number[]
     target?: string
     targeters?: string[]
-    actions?: []
+    actions?: Action[]
     actionsRemaining?: number
     age?: number
     race?: string

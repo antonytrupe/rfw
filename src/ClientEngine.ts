@@ -414,7 +414,7 @@ export default class ClientEngine {
             const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
 
             ctx.save()
-            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.size / 2) * this.PIXELS_PER_FOOT)
+            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.radius) * this.PIXELS_PER_FOOT)
 
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(0,0,0,${a})`
@@ -440,7 +440,7 @@ export default class ClientEngine {
             const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
 
             ctx.save()
-            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.size / 2) * this.PIXELS_PER_FOOT)
+            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.radius) * this.PIXELS_PER_FOOT)
 
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(255,0,0,${a})`
@@ -525,7 +525,7 @@ export default class ClientEngine {
 
             ctx.strokeStyle = "rgba(255, 215, 0, " + a + ")"
             ctx.lineWidth = 6
-            ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 + 3, 0, 2 * Math.PI)
+            ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT + 3, 0, 2 * Math.PI)
             ctx.stroke()
             ctx.restore()
         }
@@ -543,7 +543,7 @@ export default class ClientEngine {
             ctx.strokeStyle = "#bb2930"
             ctx.strokeStyle = "rgba(187, 41, 48, " + a + ")"
             ctx.lineWidth = 6
-            ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 + 3, 0, 2 * Math.PI)
+            ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT + 3, 0, 2 * Math.PI)
             ctx.stroke()
             ctx.restore()
         }
@@ -557,13 +557,13 @@ export default class ClientEngine {
             ctx.lineWidth = 3
             if (character.hp > 0) {
                 //ctx.strokeStyle = "#008000"
-                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 - 1,
+                ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT - 1,
                     (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
                     (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
             }
             else {
                 ctx.strokeStyle = "#D22B2B"
-                ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2 - 3,
+                ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT - 3,
                     ((character.hp + 10) / -10) * Math.PI - Math.PI / 2,
                     ((-character.hp + 10) / -10) * Math.PI - Math.PI / 2)
             }
@@ -637,7 +637,7 @@ export default class ClientEngine {
         }
 
         ctx.beginPath()
-        ctx.arc(0, 0, character.size * this.PIXELS_PER_FOOT / 2, 0, 2 * Math.PI)
+        ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
         ctx.fill()
 
         //draw an arrow
@@ -645,7 +645,7 @@ export default class ClientEngine {
         ctx.strokeStyle = '#FFFFFF'
 
         ctx.moveTo(0, 0)
-        ctx.lineTo((character.size) * .4 * this.PIXELS_PER_FOOT, 0)
+        ctx.lineTo((character.radius) * .8 * this.PIXELS_PER_FOOT, 0)
 
         ctx.stroke()
         drawHealth()

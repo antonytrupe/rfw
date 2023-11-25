@@ -81,8 +81,8 @@ export default class ServerEngine {
             //tell the client where all the character are
             //client is 
             socket.on(CONSTANTS.CLIENT_VIEWPORT, (viewPort: ViewPort) => {
-                console.log('CLIENT_VIEWPORT')
-                console.log('viewport', (viewPort.right - viewPort.left) * (viewPort.bottom - viewPort.top))
+                //console.log('CLIENT_VIEWPORT')
+                //console.log('viewport', (viewPort.right - viewPort.left) * (viewPort.bottom - viewPort.top))
                 const started = (new Date()).getTime()
                 //join the right zones/rooms
                 let oldZones = socket.rooms
@@ -106,14 +106,14 @@ export default class ServerEngine {
                     }
                 })
                 const characters = this.gameEngine.gameWorld.getCharactersInZones(brandNewZones)
-                console.log('socket.rooms', socket.rooms.size)
+                //console.log('socket.rooms', socket.rooms.size)
                 //only send characters the client didn't already have in its old viewport
                 if (characters.length > 0) {
                     socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
                 }
                 const finished = (new Date()).getTime()
                 if (finished - started > 5) {
-                    console.log('CLIENT_VIEWPORT duration', finished - started)
+                    //console.log('CLIENT_VIEWPORT duration', finished - started)
                 }
             })
 
@@ -236,7 +236,7 @@ export default class ServerEngine {
         })
     }
     createObject() {
-        const o = new WorldObject()
+        const o = new WorldObject({})
         this.saveObject(o)
     }
 
@@ -249,7 +249,7 @@ export default class ServerEngine {
         catch (error) {
             console.log('error looking up old object', newObject)
         }
-        const merged = { ...new WorldObject(), ...old, ...newObject }
+        const merged = { ...new WorldObject({}), ...old, ...newObject }
         //console.log('merged', merged)
         await this.objectDB.push(CONSTANTS.OBJECT_PATH + merged.id, merged)
         return merged

@@ -156,7 +156,7 @@ export default class GameEngine {
 
                         //check range
                         const distance = this.getDistance(target.location, character.location)
-                        if (distance <= (target.size / 2 + character.size / 2) * 1.1) {
+                        if (distance <= (target.radius  + character.radius  ) * 1.1) {
                             //console.log('distance', distance)
                             //always spend an action
                             character = this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
@@ -228,7 +228,7 @@ export default class GameEngine {
                     let turnDirection = 0
                     let speedAcceleration = 0
                     let actions = character.actions
-                    if (dist > character.size / 2) {
+                    if (dist > character.radius ) {
                         //console.log('turn/accelerate/stop')
                         targetDirection = this.getDirection(character.location, action.location)
 
@@ -248,7 +248,7 @@ export default class GameEngine {
                     if (charactersAtTarget.length > 0) {
                         //console.log('characters at target')
                         const dist = this.getDistance(character.location, charactersAtTarget[0].location)
-                        if (dist < (character.size + charactersAtTarget[0].size) / 2) {
+                        if (dist < (character.radius + charactersAtTarget[0].radius)  ) {
                             //console.log('colliding with characters at target')
                             turnDirection = 0
                             speedAcceleration = 0
@@ -280,7 +280,7 @@ export default class GameEngine {
 
             let newPosition: Point = this.calculatePosition(character, dt)
             //check for collisions
-            let collisions = this.gameWorld.getCharactersNearby({ location: newPosition, r: character.size * .9 })
+            let collisions = this.gameWorld.getCharactersNearby({ location: newPosition, r: character.radius * 1.8 })
                 //filter out current character and dead characters
                 .filter((it) => { return it.id != character.id && it.hp > -10 })
             if (collisions.length > 0) {
@@ -291,8 +291,8 @@ export default class GameEngine {
                     const d = this.getDirection(p.location, newPosition)
 
                     //get the distance along that path of both objects size/2
-                    const x = p.location.x + Math.cos(d) * (character.size + p.size) / 2 * .9
-                    const y = p.location.y - Math.sin(d) * (character.size + p.size) / 2 * .9
+                    const x = p.location.x + Math.cos(d) * (character.radius + p.radius)   * .9
+                    const y = p.location.y - Math.sin(d) * (character.radius + p.radius)  * .9
 
                     t.x += x
                     t.y += y
@@ -374,7 +374,7 @@ export default class GameEngine {
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
         const dist = this.getDistance(target, loc)
-        if (dist <= character.size / 2) {
+        if (dist <= character.radius  ) {
             acceleration = 0
         }
         return acceleration
