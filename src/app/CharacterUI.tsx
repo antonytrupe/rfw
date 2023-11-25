@@ -20,6 +20,8 @@ export default function CharacterUI({ character, position, children = undefined 
                 <div>Action:{character?.actions[0]?.action}</div>
                 <div>XP:{character?.xp}</div>
                 <div>ID:{character?.id}</div>
+                <div> x:{character.location.x.toFixed(2)}</div>
+                <div> y:{character.location.y.toFixed(2)}</div>
 
                 {
                     /*

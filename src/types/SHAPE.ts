@@ -3,5 +3,6 @@ export enum SHAPE {
     RECT = 'RECT',
     TRIANGLE = 'TRIANGLE',
     POLY = 'POLY',
-    COMPOSITE = 'COMPOSITE'
+    COMPOSITE = 'COMPOSITE',
+    TEMPLATE = 'TEMPLATE'
 }

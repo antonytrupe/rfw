@@ -1,0 +1,75 @@
+{
+    "TEMPLATE": {
+        "HOUSE": {
+            "id": "HOUSE",
+            "location": {
+                "x": 0,
+                "y": 0
+            },
+            "rotation": 0,
+            "shape": "COMPOSITE",
+            "radius": 1,
+            "width": 12,
+            "height": 12,
+            "points": [],
+            "subObjects": [
+                {
+                    "id": "LEFT_WALL",
+                    "location": {
+                        "x": -5.5,
+                        "y": 0
+                    },
+                    "rotation": 0,
+                    "shape": "RECT",
+                    "radius": 1,
+                    "height": 12,
+                    "width": 1,
+                    "points": [],
+                    "subObjects": []
+                },
+                {
+                    "id": "RIGHT_WALL",
+                    "location": {
+                        "x": 5.5,
+                        "y": 0
+                    },
+                    "rotation": 0,
+                    "shape": "RECT",
+                    "radius": 1,
+                    "height": 12,
+                    "width": 1,
+                    "points": [],
+                    "subObjects": []
+                },
+                {
+                    "id": "TOP_WALL",
+                    "location": {
+                        "x": 0,
+                        "y": -5.5
+                    },
+                    "rotation": 0,
+                    "shape": "RECT",
+                    "radius": 1,
+                    "height": 1,
+                    "width": 12,
+                    "points": [],
+                    "subObjects": []
+                },
+                {
+                    "id": "BOTTOM_WALL",
+                    "location": {
+                        "x": -3,
+                        "y": 5.5
+                    },
+                    "rotation": 0,
+                    "shape": "RECT",
+                    "radius": 1,
+                    "height": 1,
+                    "width": 6,
+                    "points": [],
+                    "subObjects": []
+                }
+            ]
+        }
+    }
+}

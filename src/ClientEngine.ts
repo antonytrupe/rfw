@@ -34,6 +34,7 @@ export default class ClientEngine {
     private translateY = -20 * this.scale
     private mousePosition: Point = { x: 0, y: 0 }
     game_events: GameEvent[] = []
+    templates: Map<string, WorldObject> = new Map()
 
     constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
@@ -680,14 +681,20 @@ export default class ClientEngine {
         ctx.save()
         ctx.translate(wo.location.x * this.PIXELS_PER_FOOT, wo.location.y * this.PIXELS_PER_FOOT)
         ctx.rotate(-wo.rotation)
-        ctx.beginPath()
+
 
         if (wo.shape == SHAPE.CIRCLE) {
+            ctx.beginPath()
             ctx.arc(0, 0, wo.radius * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
+            ctx.fill()
         }
         else if (wo.shape == SHAPE.RECT) {
-            ctx.translate(-wo.width / 2 * this.PIXELS_PER_FOOT, wo.height / 2 * this.PIXELS_PER_FOOT)
+            ctx.save()
+            ctx.translate(-wo.width / 2 * this.PIXELS_PER_FOOT, -wo.height / 2 * this.PIXELS_PER_FOOT)
+            ctx.beginPath()
             ctx.rect(0, 0, wo.width * this.PIXELS_PER_FOOT, wo.height * this.PIXELS_PER_FOOT)
+            ctx.fill()
+            ctx.restore()
         }
         else if (wo.shape == SHAPE.TRIANGLE) {
             ctx.strokeText('TRIANGLE', 0, 0)
@@ -700,7 +707,18 @@ export default class ClientEngine {
         else if (wo.shape == SHAPE.POLY) {
             ctx.strokeText('POLY', 0, 0)
         }
-        ctx.fill()
+        else {
+            //maybe it's using a template
+            const template = this.templates.get(wo.shape)
+            if (!!template) {
+                const merged = { ...template, id: wo.id, location: wo.location, rotation: wo.rotation }
+                this.drawWorldObject(ctx, merged)
+            }
+            else {
+                ctx.strokeText(wo.shape, 0, 0)
+            }
+        }
+
         ctx.restore()
     }
 
@@ -967,6 +985,10 @@ export default class ClientEngine {
                 this.gameEngine.updateObjects(worldObjects)
             })
 
+            //template data
+            this.socket?.on(CONSTANTS.TEMPLATE_OBJECTS, (templates: [string, WorldObject][]) => {
+                this.templates = new Map<string, WorldObject>(templates)
+            })
         }
         catch (e) {
             //something went wrong

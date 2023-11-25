@@ -14,8 +14,9 @@ import { GameEvent } from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
-import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, ViewPort } from "@/types/CONSTANTS"
+import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, TEMPLATE_DB_PATH, ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
+import { SHAPE } from "./types/SHAPE"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -25,6 +26,8 @@ export default class ServerEngine {
     private characterDB: JsonDB
     private objectDB: JsonDB
     private playerDB: JsonDB
+    private templateDB: JsonDB
+    private templates: Map<string, WorldObject> = new Map()
 
     constructor(io: Server) {
         this.io = io
@@ -36,6 +39,7 @@ export default class ServerEngine {
         this.characterDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
         this.objectDB = new JsonDB(new Config(OBJECT_DB_PATH, true, true, '/'))
         this.playerDB = new JsonDB(new Config(PLAYER_DB_PATH, true, true, '/'))
+        this.templateDB = new JsonDB(new Config(TEMPLATE_DB_PATH, true, true, '/'))
         this.loadWorld()
 
         //start the gameengines clock thingy
@@ -112,6 +116,9 @@ export default class ServerEngine {
                 }
                 if (worldObjects.length > 0) {
                     socket.emit(CONSTANTS.WORLD_OBJECTS, worldObjects)
+                }
+                if (this.templates.size > 0) {
+                    socket.emit(CONSTANTS.TEMPLATE_OBJECTS, Array.from(this.templates.entries()))
                 }
                 const finished = (new Date()).getTime()
                 if (finished - started > 5) {
@@ -475,54 +482,61 @@ export default class ServerEngine {
 
     private loadWorld() {
         console.log('loading world')
-        try {
-            this.characterDB.load()
-                .then(() => {
-                    this.characterDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                        const characters: Character[] = []
-                        Object.entries(c).map(([id, character]: [id: string, character: any]) => {
-                            characters.push(character)
-                        })
-                        this.gameEngine.updateCharacters(characters)
-                    }).catch(err => {
-                        console.log('empty player database', err)
+        this.characterDB.load()
+            .then(() => {
+                this.characterDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
+                    const characters: Character[] = []
+                    Object.entries(c).map(([id, character]: [id: string, character: any]) => {
+                        characters.push(character)
                     })
+                    this.gameEngine.updateCharacters(characters)
+                }).catch(err => {
+                    console.log('empty player database', err)
                 })
-                .then(() => {
-                    console.log('finished loading characters')
-                })
-                .catch((error) => {
-                    console.log('failed to load character db ', error)
-                })
-        }
-        catch (e) {
-            //console.log('failed to load')
-        }
-        try {
-            this.objectDB.load()
-                .then(() => {
-                    this.objectDB.getObject<{}>(CONSTANTS.OBJECT_PATH).then((c: {}) => {
-                        const objects: WorldObject[] = []
-                        Object.entries(c).map(([id, object]: [id: string, object: any]) => {
-                            //console.log(object)
-                            objects.push(object)
-                        })
-                        this.gameEngine.updateObjects(objects)
-                    }).catch(err => {
-                        console.log('empty player database', err)
+            })
+            .then(() => {
+                console.log('finished loading characters')
+            })
+            .catch((error) => {
+                console.log('failed to load character db ', error)
+            })
+
+        this.templateDB.load()
+            .then(() => {
+                this.templateDB.getObject<{}>(CONSTANTS.TEMPLATE_PATH).then((c: {}) => {
+                    Object.entries(c).map(([id, template]: [id: string, object: any]) => {
+                        //console.log(object)
+                        this.templates.set(template.id, template)
                     })
+                }).catch(err => {
+                    console.log('empty template database', err)
                 })
-                .then(() => {
-                    console.log('finished loading world objects')
+            })
+            .then(() => {
+                console.log('finished loading template objects')
+            })
+            .catch((error) => {
+                console.log('failed to load template objects db ', error)
+            })
+
+        this.objectDB.load()
+            .then(() => {
+                this.objectDB.getObject<{}>(CONSTANTS.OBJECT_PATH).then((c: {}) => {
+                    const objects: WorldObject[] = []
+                    Object.entries(c).map(([id, object]: [id: string, object: any]) => {
+                        objects.push(object)
+                    })
+                    this.gameEngine.updateObjects(objects)
+                }).catch(err => {
+                    console.log('empty player database', err)
                 })
-                .catch((error) => {
-                    console.log('failed to load world objects db ', error)
-                })
-        }
-        catch (e) {
-            //console.log('failed to load')
-        }
-        console.log('finished loading world')
+            })
+            .then(() => {
+                console.log('finished loading world objects')
+            })
+            .catch((error) => {
+                console.log('failed to load world objects db ', error)
+            })
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[]) {
