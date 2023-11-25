@@ -6,6 +6,7 @@ import { roll } from "./utility"
 import { GameEvent } from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
+import { WorldObject } from "./types/WorldObject"
 
 const LEFT = 1
 const RIGHT = -1
@@ -13,6 +14,9 @@ const RIGHT = -1
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+    updateObject(objects: WorldObject[]) {
+        throw new Error("Method not implemented.")
+    }
 
     //EventEmitter function
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter

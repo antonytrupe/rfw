@@ -14,14 +14,16 @@ import { GameEvent } from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
-import { ViewPort } from "@/types/CONSTANTS"
+import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, ViewPort } from "@/types/CONSTANTS"
+import { WorldObject } from "./types/WorldObject"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     private emit: (eventName: string | symbol, ...args: any[]) => boolean
     private gameEngine: GameEngine
     private io: Server
-    private worldDB: JsonDB
+    private characterDB: JsonDB
+    private objectDB: JsonDB
     private playerDB: JsonDB
 
     constructor(io: Server) {
@@ -31,10 +33,10 @@ export default class ServerEngine {
         this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        this.worldDB = new JsonDB(new Config("data/world", true, true, '/'))
-        this.playerDB = new JsonDB(new Config("data/player", true, true, '/'))
+        this.characterDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
+        this.objectDB = new JsonDB(new Config(OBJECT_DB_PATH, true, true, '/'))
+        this.playerDB = new JsonDB(new Config(PLAYER_DB_PATH, true, true, '/'))
         this.loadWorld()
-        //this.loadPlayers()
 
         //start the gameengines clock thingy
         this.gameEngine.start()
@@ -447,14 +449,33 @@ export default class ServerEngine {
     private loadWorld() {
         console.log('loading world')
         try {
-            this.worldDB.load()
+            this.characterDB.load()
                 .then(() => {
-                    this.worldDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
+                    this.characterDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
                         const characters: Character[] = []
                         Object.entries(c).map(([id, character]: [id: string, character: any]) => {
                             characters.push(character)
                         })
                         this.gameEngine.updateCharacters(characters)
+                    }).catch(err => {
+                        console.log('empty player database', err)
+                    })
+                }).catch((error) => {
+                    console.log('failed to load db ', error)
+                })
+        }
+        catch (e) {
+            //console.log('failed to load')
+        }
+        try {
+            this.objectDB.load()
+                .then(() => {
+                    this.characterDB.getObject<{}>(CONSTANTS.OBJECT_PATH).then((c: {}) => {
+                        const objects: WorldObject[] = []
+                        Object.entries(c).map(([id, object]: [id: string, object: any]) => {
+                            objects.push(object)
+                        })
+                        this.gameEngine.updateObject(objects)
                     }).catch(err => {
                         console.log('empty player database', err)
                     })
@@ -480,7 +501,7 @@ export default class ServerEngine {
                     //character still exists
                     try {
                         //TODO maybe don't persist so frequently?
-                        this.worldDB.push(CONSTANTS.CHARACTER_PATH + characerId, character)
+                        this.characterDB.push(CONSTANTS.CHARACTER_PATH + characerId, character)
                     }
                     catch (e) {
                         console.log('failed to save character', character)

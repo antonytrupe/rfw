@@ -1,3 +1,9 @@
+//datastore stuff
+export const CHARACTER_DB_PATH = "data/characters"
+export const PLAYER_DB_PATH = "data/players"
+export const OBJECT_DB_PATH = "data/objects"
+export const CHARACTER_PATH = '/CHARACTER/'
+export const OBJECT_PATH = '/OBJECT/'
 
 export const CHAT = 'chat'
 //client connect
@@ -10,9 +16,6 @@ export const DISCONNECT = 'disconnect'
 export const MESSAGE_CLIENT_SEND = "message.client.send"
 export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 
-//db constants
-export const CHARACTER_PATH = '/CHARACTER/'
-
 export interface ViewPort {
     left: number;
     right: number;
@@ -21,7 +24,7 @@ export interface ViewPort {
 }
 
 export const CLIENT_VIEWPORT = 'client.viewport'
- 
+
 export const CURRENT_PLAYER = 'current_player'
 
 export const HOVERED_CHARACTER = 'client.character.hovered'

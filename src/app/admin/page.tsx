@@ -1,4 +1,4 @@
-import { CHARACTER_PATH } from "@/types/CONSTANTS"
+import { CHARACTER_DB_PATH, CHARACTER_PATH } from "@/types/CONSTANTS"
 import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Suspense } from "react"
@@ -7,7 +7,7 @@ export default async function Page() {
 
   async function getCharacters() {
     //console.log('getCharacters')
-    const worldDB = new JsonDB(new Config("data/world", true, true, '/'))
+    const worldDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
 
     await worldDB.load()
 

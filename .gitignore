@@ -40,3 +40,6 @@ world.json
 .vscode/settings.json
 .env.production
 player.json
+data/characters.json
+data/objects.json
+data/players.json
