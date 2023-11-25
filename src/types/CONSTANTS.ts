@@ -4,6 +4,7 @@ export const PLAYER_DB_PATH = "data/players"
 export const OBJECT_DB_PATH = "data/objects"
 export const CHARACTER_PATH = '/CHARACTER/'
 export const OBJECT_PATH = '/OBJECT/'
+export const PLAYER_PATH= '/PLAYER/'
 
 export const CHAT = 'chat'
 //client connect
@@ -39,12 +40,12 @@ export const CLIENT_CHARACTER_UPDATE = 'world.character.location.client'
 export const SERVER_CHARACTER_UPDATE = 'world.character.location.server'
 //tell the server to create a character
 export const CREATE_CHARACTER = 'world.character.create'
+export const CREATE_OBJECT = 'world.object.create'
 
 export const CREATE_COMMUNITY = 'world.create_community'
 //clientengine notify UI
 //list of claimed characters, last selected character, last viewport
 export const CLIENT_INFO = 'client.selected_characters.update'
-
 
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'

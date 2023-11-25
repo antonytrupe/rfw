@@ -15,7 +15,7 @@ import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
 import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, ViewPort } from "@/types/CONSTANTS"
-import { WorldObject } from "./types/WorldObject"
+import WorldObject from "./types/WorldObject"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -136,6 +136,11 @@ export default class ServerEngine {
                 this.sendAndSaveCharacterUpdates([characters])
             })
 
+            socket.on(CONSTANTS.CREATE_OBJECT, () => {
+                const object = this.createObject()
+                //this.sendObjects()
+            })
+
             socket.on(CONSTANTS.ATTACK, async (attacker: string, attackee: string) => {
                 if (attackee) {
                     this.attack(attacker, attackee)
@@ -230,6 +235,25 @@ export default class ServerEngine {
             })
         })
     }
+    createObject() {
+        const o = new WorldObject()
+        this.saveObject(o)
+    }
+
+    async saveObject(newObject: WorldObject) {
+        //look up the player first and then merge
+        let old
+        try {
+            old = await this.objectDB.getObject<WorldObject>(CONSTANTS.OBJECT_PATH + newObject.id)
+        }
+        catch (error) {
+            console.log('error looking up old object', newObject)
+        }
+        const merged = { ...new WorldObject(), ...old, ...newObject }
+        //console.log('merged', merged)
+        await this.objectDB.push(CONSTANTS.OBJECT_PATH + merged.id, merged)
+        return merged
+    }
 
     move(characterId: string, location: Point) {
         this.gameEngine.moveCharacter(characterId, location)
@@ -249,7 +273,7 @@ export default class ServerEngine {
         //look up the player first and then merge
         let old
         try {
-            old = await this.playerDB.getObject<Player>('/PLAYER/' + player.email)
+            old = await this.playerDB.getObject<Player>(CONSTANTS.PLAYER_PATH + player.email)
         }
         catch (error) {
             console.log('error saving player', player)
@@ -264,7 +288,7 @@ export default class ServerEngine {
         //console.log('getPlayerByEmail')
         let player: Player
         try {
-            player = await this.playerDB.getObject<Player>('/PLAYER/' + email)
+            player = await this.playerDB.getObject<Player>(CONSTANTS.PLAYER_PATH + email)
             return player
         } catch (error) {
         }

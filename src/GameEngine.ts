@@ -6,7 +6,7 @@ import { roll } from "./utility"
 import { GameEvent } from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
-import { WorldObject } from "./types/WorldObject"
+import   WorldObject  from "./types/WorldObject"
 
 const LEFT = 1
 const RIGHT = -1

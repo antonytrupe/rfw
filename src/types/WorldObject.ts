@@ -1,15 +1,15 @@
 import { Point } from "./Point"
 
-enum SHAPE {
-    CIRCLE,
-    RECT,
-    TRIANGLE
-}
-
-export class WorldObject {
+export default class WorldObject {
     id: string = '__test__'
     location: Point = { x: 0, y: 0 }
     rotation: number = 0
     shape: SHAPE = SHAPE.CIRCLE
     subObjects: Object[] = []
+}
+
+enum SHAPE {
+    CIRCLE = 'CIRCLE',
+    RECT = 'RECT',
+    TRIANGLE = 'TRIANGLE'
 }

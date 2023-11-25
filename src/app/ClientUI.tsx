@@ -142,6 +142,10 @@ export default function ClientUI() {
     clientEngine?.createCharacter()
   }
 
+  const createObject= () => {
+    clientEngine?.createObject()
+  }
+
   const createCommunity = (options: { size: string, race: string }) => {
     clientEngine?.createCommunity(options)
   }
@@ -177,13 +181,12 @@ export default function ClientUI() {
             <Clock />
             {session?.user?.email == 'antony.trupe@gmail.com' && (<>
               <div>
-                {connected && (<button onClick={createCharacter}>Create Character</button>)}
+              <button onClick={createCharacter}>Create Character</button>
+              <button onClick={createObject}>Create Object</button>
               </div>
               <div>
-                {connected && (
-                  <CommunityCreation action={createCommunity}>
-                  </CommunityCreation>
-                )}
+                <CommunityCreation action={createCommunity}>
+                </CommunityCreation>
               </div>
             </>
             )}

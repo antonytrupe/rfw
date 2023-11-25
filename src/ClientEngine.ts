@@ -671,6 +671,10 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.CREATE_CHARACTER)
     }
 
+    createObject() {
+        this.socket?.emit(CONSTANTS.CREATE_OBJECT)
+    }
+
     createCommunity(options: { size: string, race: string }) {
         //get client center
         const origin = this.getViewPortOrigin()
