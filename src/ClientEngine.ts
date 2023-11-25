@@ -123,8 +123,8 @@ export default class ClientEngine {
         //console.log('center', center)
         const rect = this.getViewPort()
         //console.log('rect', rect)
-        this.translateX = c.x - (rect.right - rect.left) / 2
-        this.translateY = c.y - (rect.bottom - rect.top) / 2
+        this.translateX = c.location.x - (rect.right - rect.left) / 2
+        this.translateY = c.location.y - (rect.bottom - rect.top) / 2
     }
 
     wheelHandler(e: WheelEvent) {
@@ -414,7 +414,7 @@ export default class ClientEngine {
             const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
 
             ctx.save()
-            ctx.translate(character.x * this.PIXELS_PER_FOOT, (character.y - character.size / 2) * this.PIXELS_PER_FOOT)
+            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.size / 2) * this.PIXELS_PER_FOOT)
 
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(0,0,0,${a})`
@@ -440,7 +440,7 @@ export default class ClientEngine {
             const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
 
             ctx.save()
-            ctx.translate(character.x * this.PIXELS_PER_FOOT, (character.y - character.size / 2) * this.PIXELS_PER_FOOT)
+            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.size / 2) * this.PIXELS_PER_FOOT)
 
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(255,0,0,${a})`
@@ -489,7 +489,7 @@ export default class ClientEngine {
     drawTombstone(ctx: CanvasRenderingContext2D, character: Character) {
 
         ctx.save()
-        ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
+        ctx.translate(character.location.x * this.PIXELS_PER_FOOT, character.location.y * this.PIXELS_PER_FOOT)
         ctx.fillStyle = "#000000"
         ctx.beginPath()
         ctx.arc(0, 0, 1 * this.PIXELS_PER_FOOT / 1, 0, 2 * Math.PI)
@@ -572,7 +572,7 @@ export default class ClientEngine {
         }
 
         ctx.save()
-        ctx.translate(character.x * this.PIXELS_PER_FOOT, character.y * this.PIXELS_PER_FOOT)
+        ctx.translate(character.location.x * this.PIXELS_PER_FOOT, character.location.y * this.PIXELS_PER_FOOT)
         ctx.rotate(-character.direction)
 
         const claimed = this.player?.claimedCharacters.some((id) => {

@@ -6,7 +6,7 @@ import { roll } from "./utility"
 import { GameEvent } from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
-import   WorldObject  from "./types/WorldObject"
+import WorldObject from "./types/WorldObject"
 
 const LEFT = 1
 const RIGHT = -1
@@ -155,7 +155,7 @@ export default class GameEngine {
                         }
 
                         //check range
-                        const distance = this.getDistance({ x: target.x, y: target.y }, { x: character.x, y: character.y })
+                        const distance = this.getDistance(target.location, character.location)
                         if (distance <= (target.size / 2 + character.size / 2) * 1.1) {
                             //console.log('distance', distance)
                             //always spend an action
@@ -223,14 +223,14 @@ export default class GameEngine {
                     }
                 }
                 else if (action.action == 'move' && !!action.location) {
-                    const dist = this.getDistance(action.location, { x: character.x, y: character.y })
+                    const dist = this.getDistance(action.location, character.location)
                     let targetDirection
                     let turnDirection = 0
                     let speedAcceleration = 0
                     let actions = character.actions
                     if (dist > character.size / 2) {
                         //console.log('turn/accelerate/stop')
-                        targetDirection = this.getDirection({ x: character.x, y: character.y }, action.location)
+                        targetDirection = this.getDirection(character.location, action.location)
 
                         //turn right or left
                         turnDirection = this.calculateDirectionAcceleration(character.direction, targetDirection)
@@ -241,13 +241,13 @@ export default class GameEngine {
 
                     //if the target is inside another character and we've collided, then stop trying to move any more
                     //check for collisions
-                    let charactersAtTarget = this.gameWorld.getCharactersNearby({ x: action.location.x, y: action.location.y, r: 5 })
+                    let charactersAtTarget = this.gameWorld.getCharactersNearby({ location: action.location, r: 5 })
                         //throw out the current character
                         //throw out dead characters
                         .filter((it) => { return it.id != character.id && it.hp > -10 })
                     if (charactersAtTarget.length > 0) {
                         //console.log('characters at target')
-                        const dist = this.getDistance({ x: character.x, y: character.y }, { x: charactersAtTarget[0].x, y: charactersAtTarget[0].y })
+                        const dist = this.getDistance(character.location, charactersAtTarget[0].location)
                         if (dist < (character.size + charactersAtTarget[0].size) / 2) {
                             //console.log('colliding with characters at target')
                             turnDirection = 0
@@ -274,13 +274,13 @@ export default class GameEngine {
             //calculate the new angle
             let newDirection = this.calculateDirection(character, dt)
 
-            //TODO if they went over their walk speed or they went over their walk distance, then no action
+            //TODO if they went over their walk speed or they went over their walk distance, then consume an action
+            //TODO if they don't have an action to use for running, don't let them run
             let newSpeed = this.calculateSpeed(character, dt)
 
-            //pass the new speed to the location calculatin or not?
             let newPosition: Point = this.calculatePosition(character, dt)
             //check for collisions
-            let collisions = this.gameWorld.getCharactersNearby({ x: newPosition.x, y: newPosition.y, r: character.size * .9 })
+            let collisions = this.gameWorld.getCharactersNearby({ location: newPosition, r: character.size * .9 })
                 //filter out current character and dead characters
                 .filter((it) => { return it.id != character.id && it.hp > -10 })
             if (collisions.length > 0) {
@@ -288,11 +288,11 @@ export default class GameEngine {
                 const c = collisions.reduce((t, p) => {
 
                     //get the direction to the colliding object
-                    const d = this.getDirection({ x: p.x, y: p.y }, newPosition)
+                    const d = this.getDirection(p.location, newPosition)
 
                     //get the distance along that path of both objects size/2
-                    const x = p.x + Math.cos(d) * (character.size + p.size) / 2 * .9
-                    const y = p.y - Math.sin(d) * (character.size + p.size) / 2 * .9
+                    const x = p.location.x + Math.cos(d) * (character.size + p.size) / 2 * .9
+                    const y = p.location.y - Math.sin(d) * (character.size + p.size) / 2 * .9
 
                     t.x += x
                     t.y += y
@@ -302,8 +302,8 @@ export default class GameEngine {
                 newPosition = { x: c.x / collisions.length, y: c.y / collisions.length }
             }
 
-            this.updateCharacter({ id: character.id, ...newPosition, speed: newSpeed, direction: newDirection })
-            if (newPosition.x != character.x || newPosition.y != character.y || newSpeed != character.speed || newDirection != character.direction) {
+            this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, direction: newDirection })
+            if (newPosition.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newDirection != character.direction) {
                 //updatedCharacters.add(character.id)
             }
         })
@@ -330,7 +330,7 @@ export default class GameEngine {
         console.log('recruitHelp')
         //TODO call for help 
         //just get the nearest level character that's nearby to attack
-        const nearby = this.gameWorld.getCharactersNearby({ x: character.x, y: character.y, r: 60 })
+        const nearby = this.gameWorld.getCharactersNearby({ location: character.location, r: 60 })
             //get rid of the two already fighting
             .filter((it) => {
                 return it.id != character.id && !character.targeters.includes(it.id) &&
@@ -341,8 +341,8 @@ export default class GameEngine {
             })
             //sort them by distance
             .sort((a, b) => {
-                const distancetoA = this.getDistance({ x: character.x, y: character.y }, { x: a.x, y: a.y })
-                const distancetoB = this.getDistance({ x: character.x, y: character.y }, { x: b.x, y: b.y })
+                const distancetoA = this.getDistance(character.location, a.location)
+                const distancetoB = this.getDistance(character.location, b.location)
                 return distancetoA == distancetoB ? 0 : distancetoA > distancetoB ? 1 : -1
             })
         //console.log('nearby', nearby)
@@ -352,7 +352,7 @@ export default class GameEngine {
             //console.log('aggressor', aggressor)
             console.log('found someone to help')
             //move first, then attack. order matters    
-            this.moveCharacter(nearby[0].id, { x: aggressor.x, y: aggressor.y })
+            this.moveCharacter(nearby[0].id, aggressor.location)
             this.attack(nearby[0].id, aggressor.id)
         }
         return helper
@@ -360,7 +360,7 @@ export default class GameEngine {
 
     calculateAcceleration(character: Character, target: Point): number {
         const currentDirection = character.direction
-        const targetDirection = this.getDirection({ x: character.x, y: character.y }, target)
+        const targetDirection = this.getDirection(character.location, target)
         const delta = this.getDirectionDelta(currentDirection, targetDirection)
 
         let acceleration = 0
@@ -616,6 +616,7 @@ export default class GameEngine {
             .getCharacter(updates.id)
         //console.log(character)
 
+        //check for things that make this an active character
         if (!!character && (
             //has any direction acceleration
             character.directionAcceleration != 0 ||
@@ -814,12 +815,12 @@ export default class GameEngine {
 
     private calculatePosition(character: Character, dt: number) {
         const w = character.directionAcceleration / this.turnMultiplier
-        let x: number = character.x
-        let y: number = character.y
+        let x: number = character.location.x
+        let y: number = character.location.y
         if (character.speed != 0) {
             //calculate new position
-            x = character.x + character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
-            y = character.y - character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
+            x = character.location.x + character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
+            y = character.location.y - character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
         }
         return { x, y }
     }

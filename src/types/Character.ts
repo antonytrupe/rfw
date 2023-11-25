@@ -1,12 +1,12 @@
 import { Action } from "./Action"
+import { Point } from "./Point"
 
 export default class Character {
     id: string
     playerId: string
     size: number
     maxSpeed: number
-    x: number
-    y: number
+    location: Point
     speed: number
     speedAcceleration: number
     mode: number //1 for walk, 2 for  run, .5 for stealth, .25 for crawl
@@ -32,8 +32,7 @@ export default class Character {
         playerId = "",
         size = 5,
         direction = 0,
-        x = 0,
-        y = 0,
+        location = { x: 0, y: 0 },
         maxSpeed = 30,
         mode = 1,
         speed = 0,
@@ -57,8 +56,7 @@ export default class Character {
         this.playerId = playerId
         this.size = size
         this.maxSpeed = maxSpeed
-        this.x = x
-        this.y = y
+        this.location = location
         this.mode = mode
         this.speed = speed
         this.directionAcceleration = directionAcceleration
@@ -87,8 +85,7 @@ interface CharacterInterface {
     playerId?: string
     size?: number
     direction?: number
-    x?: number
-    y?: number
+    location?: Point
     maxSpeed?: number
     mode?: number
     speed?: number

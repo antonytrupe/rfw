@@ -24,9 +24,9 @@ describe('GameEngine', () => {
     })
 
     test('should add 3 new chararacters', () => {
-        gameEngine.createCharacter({ id: '1', x: 0, y: 0 })
-        gameEngine.createCharacter({ id: '2', x: 0, y: 0 })
-        gameEngine.createCharacter({ id: '3', x: 0, y: 0 })
+        gameEngine.createCharacter({ id: '1', location: { x: 0, y: 0 } })
+        gameEngine.createCharacter({ id: '2', location: { x: 0, y: 0 } })
+        gameEngine.createCharacter({ id: '3', location: { x: 0, y: 0 } })
         expect(Array.from(gameEngine.gameWorld.getAllCharacters().values()).length).toBe(3)
     })
 
@@ -85,7 +85,7 @@ describe('GameEngine', () => {
     describe("calculateAcceleration", () => {
         let c: Character
         beforeEach(() => {
-            c = gameEngine.createCharacter({ id: '1', x: 0, y: 0,hp:1 }).getCharacter("1")!
+            c = gameEngine.createCharacter({ id: '1', location: { x: 0, y: 0 }, hp: 1 }).getCharacter("1")!
         })
         describe("facing east", () => {
             test('E', () => {
@@ -240,13 +240,13 @@ describe('GameEngine', () => {
 
     describe("actions", () => {
         beforeEach(() => {
-            gameEngine.createCharacter({ id: '1', x: 0, y: 0 })
+            gameEngine.createCharacter({ id: '1', location: { x: 0, y: 0 } })
         })
         describe("move", () => {
 
             describe("when starting facing north/up", () => {
                 beforeEach(() => {
-                    gameEngine.createCharacter({ id: '1', x: 0, y: 0 })
+                    gameEngine.createCharacter({ id: '1', location: { x: 0, y: 0 } })
                     gameEngine.updateCharacter({ id: '1', direction: Math.PI / 2 })
                 })
 
@@ -393,8 +393,8 @@ describe('GameEngine', () => {
             gameEngine.step(1000, 0)
             const nc = gameEngine.getCharacter(c.id)!
             //check the characters position
-            expect(nc.x).toBe(0)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(0)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
             expect(nc.speedAcceleration).toBe(0)
         })
@@ -406,8 +406,8 @@ describe('GameEngine', () => {
             gameEngine.step(1000, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(5)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(5)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
             expect(nc.speedAcceleration).toBe(0)
         })
@@ -419,8 +419,8 @@ describe('GameEngine', () => {
             gameEngine.step(1000, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(5)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(5)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(30)
             expect(nc.speedAcceleration).toBe(1)
         })
@@ -432,8 +432,8 @@ describe('GameEngine', () => {
             gameEngine.step(1000, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(10)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(10)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(60)
             expect(nc.speedAcceleration).toBe(1)
         })
@@ -445,8 +445,8 @@ describe('GameEngine', () => {
             gameEngine.step(600, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(0)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(0)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(30)
         })
 
@@ -457,22 +457,22 @@ describe('GameEngine', () => {
             gameEngine.step(400, 0)
             //check the characters position
             let nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(0)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(0)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(40)
 
             gameEngine.step(200, 400)
             nc = gameEngine.getCharacter(c.id)!
 
-            expect(nc.x).toBeCloseTo(1.333)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBeCloseTo(1.333)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(60)
 
             gameEngine.step(100, 600)
             nc = gameEngine.getCharacter(c.id)!
 
-            expect(nc.x).toBeCloseTo(2.333)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBeCloseTo(2.333)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(60)
 
         })
@@ -484,8 +484,8 @@ describe('GameEngine', () => {
             gameEngine.step(1, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(.01)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(.01)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).not.toBe(30)
         })
 
@@ -496,8 +496,8 @@ describe('GameEngine', () => {
             gameEngine.step(600, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(3)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(3)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
         })
 
@@ -508,8 +508,8 @@ describe('GameEngine', () => {
             gameEngine.step(600, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(6)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(6)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
         })
 
@@ -520,8 +520,8 @@ describe('GameEngine', () => {
             gameEngine.step(600, 0)
             //check the characters position
             const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.x).toBe(6)
-            expect(nc.y).toBe(0)
+            expect(nc.location.x).toBe(6)
+            expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
         })
 

@@ -33,11 +33,11 @@ export default class GameWorld {
         return this.characters
     }
 
-    getCharactersNearby({ x, y, r }: { x: number, y: number, r: number }): Character[] {
+    getCharactersNearby({ location, r }: { location: Point, r: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
-            const a = x - character.x
-            const b = y - character.y
+            const a = location.x - character.location.x
+            const b = location.y - character.location.y
             const d = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
             return d <= r
         })
@@ -46,7 +46,7 @@ export default class GameWorld {
     getCharactersWithin({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
-            return top <= character.y && bottom >= character.y && left <= character.x && right >= character.x
+            return top <= character.location.y && bottom >= character.location.y && left <= character.location.x && right >= character.location.x
         })
     }
 
@@ -64,7 +64,7 @@ export default class GameWorld {
         characterIds.forEach((characerId) => {
             const character = this.getCharacter(characerId)!
 
-            const zoneName = this.getTacticalZoneName({ x: character.x, y: character.y })
+            const zoneName = this.getTacticalZoneName(character.location)
 
             let zone: Zone2 | undefined = zones.get(zoneName)
             if (!zone) {
@@ -110,7 +110,7 @@ export default class GameWorld {
         //console.log('old',old)
         const merged: Character = { ...new Character({}), ...old, ...character }
 
-        if ((!merged.x && merged.x != 0) || (!merged.y && merged.y != 0)) {
+        if ((!merged.location.x && merged.location.x != 0) || (!merged.location.y && merged.location.y != 0)) {
             //bail if it doesn't have a location
             return this
         }
@@ -122,7 +122,7 @@ export default class GameWorld {
         }
 
         //console.log('got past sanity checks')
-        const newZoneName = this.getTacticalZoneName({ x: merged.x, y: merged.y })
+        const newZoneName = this.getTacticalZoneName(merged.location)
         let newZone = this.zones.get(newZoneName)
         let updatedZones = new Map<string, Set<string>>()
 
@@ -142,7 +142,7 @@ export default class GameWorld {
         if (!!old) {
             //updating existing character
             //clean up old zone
-            const oldZoneName = this.getTacticalZoneName({ x: old.x, y: old.y })
+            const oldZoneName = this.getTacticalZoneName(old.location)
             //if the oldzonename is different then the newzone name
             if (oldZoneName != newZoneName) {
                 //remove them from the old zone
@@ -186,8 +186,8 @@ export default class GameWorld {
 
                 if (character) {
                     const distance = Math.sqrt(
-                        Math.pow(character.x - position.x, 2) +
-                        Math.pow(character.y - position.y, 2))
+                        Math.pow(character.location.x - position.x, 2) +
+                        Math.pow(character.location.y - position.y, 2))
                     //console.log('distance', distance)
                     if (distance < character.size / 2) {
                         result.push(character)

@@ -142,7 +142,7 @@ export default function ClientUI() {
     clientEngine?.createCharacter()
   }
 
-  const createObject= () => {
+  const createObject = () => {
     clientEngine?.createObject()
   }
 
@@ -168,7 +168,7 @@ export default function ClientUI() {
 
   return (
     <>
-      <CharacterUI character={hoveredCharacter} position={clientEngine?.getScreenPosition({ x: hoveredCharacter?.x || 0, y: hoveredCharacter?.y || 0 })} />
+      <CharacterUI character={hoveredCharacter} position={clientEngine?.getScreenPosition({ x: hoveredCharacter?.location.x || 0, y: hoveredCharacter?.location.y || 0 })} />
       <div
         autoFocus
         ref={containerRef}
@@ -181,8 +181,8 @@ export default function ClientUI() {
             <Clock />
             {session?.user?.email == 'antony.trupe@gmail.com' && (<>
               <div>
-              <button onClick={createCharacter}>Create Character</button>
-              <button onClick={createObject}>Create Object</button>
+                <button onClick={createCharacter}>Create Character</button>
+                <button onClick={createObject}>Create Object</button>
               </div>
               <div>
                 <CommunityCreation action={createCommunity}>

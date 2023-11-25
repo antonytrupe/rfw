@@ -132,8 +132,8 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
-                const characters = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
-                this.sendAndSaveCharacterUpdates([characters])
+                const character = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
+                this.sendAndSaveCharacterUpdates([character])
             })
 
             socket.on(CONSTANTS.CREATE_OBJECT, () => {
@@ -735,11 +735,11 @@ export default class ServerEngine {
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "ARISTOCRAT", x: p.x, y: p.y })
+            const c = this.createCharacter({ characterClass: "ARISTOCRAT", location: p })
             createdCount++
             characters.push(c)
         }
@@ -748,11 +748,11 @@ export default class ServerEngine {
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c: string = this.createCharacter({ characterClass: "ADEPT", x: p.x, y: p.y })
+            const c: string = this.createCharacter({ characterClass: "ADEPT", location: p })
             createdCount++
             characters.push(c)
         }
@@ -761,11 +761,11 @@ export default class ServerEngine {
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "EXPERT", x: p.x, y: p.y })
+            const c = this.createCharacter({ characterClass: "EXPERT", location: p })
             createdCount++
             characters.push(c)
         }
@@ -774,11 +774,11 @@ export default class ServerEngine {
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "WARRIOR", x: p.x, y: p.y })
+            const c = this.createCharacter({ characterClass: "WARRIOR", location: p })
             createdCount++
             characters.push(c)
         }
@@ -789,11 +789,11 @@ export default class ServerEngine {
         //create the rest as commoners
         for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ x: p.x, y: p.y, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "COMMONER", x: p.x, y: p.y })
+            const c = this.createCharacter({ characterClass: "COMMONER", location: p })
             createdCount++
             characters.push(c)
         }
@@ -808,7 +808,7 @@ export default class ServerEngine {
     }
 
     private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): string[] {
-        let x, y
+        let location: Point
         const buffer = 10
         let createdCharacterIds: string[] = []
         //let updatedZones = new Map<string, Set<string>>()
@@ -820,15 +820,15 @@ export default class ServerEngine {
             //make the right amount of each level
             for (let i = 0; i < highestLevel / l; i++) {
 
-                ({ x, y } = getRandomPoint({ origin, radius }))
-                while (this.gameEngine.gameWorld.getCharactersNearby({ x: x, y: y, r: buffer }).length > 0) {
+                location = getRandomPoint({ origin, radius })
+                while (this.gameEngine.gameWorld.getCharactersNearby({ location, r: buffer }).length > 0) {
                     radius += 1;
-                    ({ x, y } = getRandomPoint({ origin, radius }))
+                    location = getRandomPoint({ origin, radius })
                 }
 
                 const level = Math.round(l)
                 const xp = LEVELS[level.toString() as keyof typeof LEVELS]
-                const id = this.createCharacter({ characterClass: className, level: level, xp: xp, x: x, y: y })
+                const id = this.createCharacter({ characterClass: className, level: level, xp: xp, location: location })
                 //console.log('c', c)
                 createdCharacterIds = [...createdCharacterIds, id]
                 ///updatedZones = new Map([...updatedZones, ...zones])
@@ -848,7 +848,7 @@ export default class ServerEngine {
         let y = roll({ size: 60, modifier: -30 })
         const id = uuidv4()
         const age = 30
-        this.gameEngine.createCharacter({ id: id, x: x, y: y, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
+        this.gameEngine.createCharacter({ id: id, location: { x: x, y: y }, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
         return id
     }
 }
