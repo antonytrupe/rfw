@@ -2,6 +2,7 @@ import isEqual from "lodash.isequal"
 import Character from "./types/Character"
 import { Zones, Zone, Zones2, Zone2 } from "./types/Zones"
 import { Point } from "./types/Point"
+import WorldObject from "./types/WorldObject"
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
@@ -10,6 +11,8 @@ export default class GameWorld {
 
     //needs to be private to force going through a setter to keep the zones up to date
     private characters: Map<string, Character> = new Map<string, Character>()
+    private worldObjects: Map<string, WorldObject> = new Map<string, WorldObject>()
+
     //a character is always in 1 tactical zone
     //a map of zones
     //the keys are zone names
@@ -22,6 +25,74 @@ export default class GameWorld {
         this.zones = new Map<string, Zone>()
     }
 
+    updateWorldObjects(objects: WorldObject[]) {
+        objects.forEach((object) => {
+            this.updateWorldObject(object)
+        })
+        return this
+    }
+
+    updateWorldObject(worldObject: Partial<WorldObject>): GameWorld {
+        //if we don't have a character id, give up
+        //console.log('character.id',character.id)
+        if (!worldObject?.id) {
+            return this
+        }
+
+        const old: WorldObject | undefined = this.worldObjects.get(worldObject.id)
+        //console.log('old',old)
+        const merged: WorldObject = { ...new Character({}), ...old, ...worldObject }
+
+        if ((!merged.location.x && merged.location.x != 0) || (!merged.location.y && merged.location.y != 0)) {
+            //bail if it doesn't have a location
+            return this
+        }
+
+        //bail if nothing is changing
+        if (isEqual(old, merged)) {
+            //console.log('nothing changed')
+            return this
+        }
+
+        //console.log('got past sanity checks')
+        const newZoneName = this.getTacticalZoneName(merged.location)
+        let newZone = this.zones.get(newZoneName)
+        let updatedZones = new Map<string, Set<string>>()
+
+        //if the new zone doesn't exist
+        if (!newZone) {
+            //create it and add them to it
+            newZone = new Set([worldObject.id])
+            this.zones.set(newZoneName, newZone)
+        }
+
+        //the new zone exists but they're not in it
+        if (!Array.from(newZone.values()).includes(worldObject.id)) {
+            newZone.add(worldObject.id)
+            updatedZones.set(newZoneName, newZone)
+        }
+
+        if (!!old) {
+            //updating existing character
+            //clean up old zone
+            const oldZoneName = this.getTacticalZoneName(old.location)
+            //if the oldzonename is different then the newzone name
+            if (oldZoneName != newZoneName) {
+                //remove them from the old zone
+                let oldZone = this.zones.get(newZoneName)
+                if (oldZone) {
+                    //let i = oldZone.indexOf(character.id)
+                    oldZone.delete(worldObject.id)
+                    updatedZones.set(oldZoneName, oldZone)
+                }
+            }
+        }
+
+        this.worldObjects.set(merged.id, merged)
+        return this
+    }
+
+
     updateCharacters(characters: Character[]): GameWorld {
         characters.forEach((character) => {
             this.updateCharacter(character)
@@ -31,6 +102,10 @@ export default class GameWorld {
 
     getAllCharacters() {
         return this.characters
+    }
+
+    getAllWorldObjects() {
+        return this.worldObjects
     }
 
     getCharactersNearby({ location, r }: { location: Point, r: number }): Character[] {
@@ -50,13 +125,22 @@ export default class GameWorld {
         })
     }
 
-    getCharactersInZones(brandNewZones: Set<string>): Character[] {
-        const characters: Character[] = Array.from(this.zones.entries()).filter(([zoneName, characters]) => {
-            return brandNewZones.has(zoneName)
-        }).map(([zoneName, characters]) => {
+    getCharactersInZones(zones: Set<string>): Character[] {
+        const characters: Character[] = Array.from(this.zones.entries()).filter(([zoneName,]) => {
+            return zones.has(zoneName)
+        }).map(([, characters]) => {
             return this.getCharacters(Array.from(characters.values()))
         }).flat()
         return characters
+    }
+
+    getObjectsInZones(zones: Set<string>): WorldObject[] {
+        const worldObjects: WorldObject[] = Array.from(this.zones.entries()).filter(([zoneName,]) => {
+            return zones.has(zoneName)
+        }).map(([, objects]) => {
+            return this.getWorldObjects(Array.from(objects.values()))
+        }).flat()
+        return worldObjects
     }
 
     getCharactersIntoZones(characterIds: string[]): Zones2 {
@@ -204,6 +288,17 @@ export default class GameWorld {
         let l: Character[] = []
         ids.forEach((id) => {
             const c = this.characters.get(id)
+            if (c)
+                l.push(c)
+        })
+        return l
+    }
+
+    private getWorldObjects(ids: string[]): WorldObject[] {
+
+        let l: WorldObject[] = []
+        ids.forEach((id) => {
+            const c = this.worldObjects.get(id)
             if (c)
                 l.push(c)
         })

@@ -1,6 +1,8 @@
 import { Action } from "./Action"
 import { Point } from "./Point"
-import WorldObject, { SHAPE } from "./WorldObject"
+import { ZONETYPE } from "./ZONETYPE"
+import { SHAPE } from "./SHAPE"
+import WorldObject from "./WorldObject"
 
 export default class Character extends WorldObject implements CharacterInterface {
     playerId: string
@@ -8,8 +10,8 @@ export default class Character extends WorldObject implements CharacterInterface
     speed: number
     speedAcceleration: number
     mode: number //1 for walk, 2 for  run, .5 for stealth, .25 for crawl
-    directionAcceleration: number
-    direction: number
+    rotationAcceleration: number
+    rotation: number
     hp: number
     tmpHp: number
     maxHp: number
@@ -28,12 +30,12 @@ export default class Character extends WorldObject implements CharacterInterface
     constructor({
         id = "__test__",
         playerId = "",
-        direction = 0,
+        rotation = 0,
         location = { x: 0, y: 0 },
         maxSpeed = 30,
         mode = 1,
         speed = 0,
-        directionAcceleration = 0,
+        rotationAcceleration = 0,
         speedAcceleration = 0,
         hp = 1,
         tmpHp = 0,
@@ -49,15 +51,15 @@ export default class Character extends WorldObject implements CharacterInterface
         age = 30,
         race = "HUMAN"
     }: CharacterInterface) {
-        super({id:id,location:location,rotation:direction,shape:SHAPE.CIRCLE, radius: 2.5 })
+        super({ id: id, location: location, rotation: rotation, shape: SHAPE.CIRCLE, radius: 2.5, zoneType: [ZONETYPE.TACTICAL] })
         this.id = id
         this.playerId = playerId
         this.maxSpeed = maxSpeed
         this.location = location
         this.mode = mode
         this.speed = speed
-        this.directionAcceleration = directionAcceleration
-        this.direction = direction
+        this.rotationAcceleration = rotationAcceleration
+        this.rotation = rotation
         this.speedAcceleration = speedAcceleration
         this.hp = hp
         this.tmpHp = tmpHp
@@ -79,12 +81,12 @@ export default class Character extends WorldObject implements CharacterInterface
 interface CharacterInterface {
     id?: string
     playerId?: string
-    direction?: number
+    rotation?: number
     location?: Point
     maxSpeed?: number
     mode?: number
     speed?: number
-    directionAcceleration?: number
+    rotationAcceleration?: number
     speedAcceleration?: number
     hp?: number
     tmpHp?: number

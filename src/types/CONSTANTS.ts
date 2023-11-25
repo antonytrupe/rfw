@@ -4,7 +4,7 @@ export const PLAYER_DB_PATH = "data/players"
 export const OBJECT_DB_PATH = "data/objects"
 export const CHARACTER_PATH = '/CHARACTER/'
 export const OBJECT_PATH = '/OBJECT/'
-export const PLAYER_PATH= '/PLAYER/'
+export const PLAYER_PATH = '/PLAYER/'
 
 export const CHAT = 'chat'
 //client connect
@@ -30,6 +30,7 @@ export const CURRENT_PLAYER = 'current_player'
 
 export const HOVERED_CHARACTER = 'client.character.hovered'
 
+export const WORLD_OBJECTS = 'world.objects'
 
 export const ATTACK = 'attack'
 

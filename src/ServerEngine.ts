@@ -86,10 +86,8 @@ export default class ServerEngine {
                 const started = (new Date()).getTime()
                 //join the right zones/rooms
                 let oldZones = socket.rooms
-                let newZones = this.gameEngine.getZonesIn(viewPort)
                 //TODO switch to bigger zones if we're zoomed out a bunch
-                //console.log(newZones)
-                //get the list of oldZones that aren't in newZones
+                let newZones = this.gameEngine.getZonesIn(viewPort)
                 //leave zones we shouldn't be in
                 oldZones.forEach((zone) => {
                     if (!newZones.includes(zone) && zone != player?.id) {
@@ -106,10 +104,14 @@ export default class ServerEngine {
                     }
                 })
                 const characters = this.gameEngine.gameWorld.getCharactersInZones(brandNewZones)
+                const worldObjects = this.gameEngine.gameWorld.getObjectsInZones(brandNewZones)
                 //console.log('socket.rooms', socket.rooms.size)
                 //only send characters the client didn't already have in its old viewport
                 if (characters.length > 0) {
                     socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
+                }
+                if (worldObjects.length > 0) {
+                    socket.emit(CONSTANTS.WORLD_OBJECTS, worldObjects)
                 }
                 const finished = (new Date()).getTime()
                 if (finished - started > 5) {
@@ -485,8 +487,12 @@ export default class ServerEngine {
                     }).catch(err => {
                         console.log('empty player database', err)
                     })
-                }).catch((error) => {
-                    console.log('failed to load db ', error)
+                })
+                .then(() => {
+                    console.log('finished loading characters')
+                })
+                .catch((error) => {
+                    console.log('failed to load character db ', error)
                 })
         }
         catch (e) {
@@ -495,17 +501,22 @@ export default class ServerEngine {
         try {
             this.objectDB.load()
                 .then(() => {
-                    this.characterDB.getObject<{}>(CONSTANTS.OBJECT_PATH).then((c: {}) => {
+                    this.objectDB.getObject<{}>(CONSTANTS.OBJECT_PATH).then((c: {}) => {
                         const objects: WorldObject[] = []
                         Object.entries(c).map(([id, object]: [id: string, object: any]) => {
+                            //console.log(object)
                             objects.push(object)
                         })
-                        this.gameEngine.updateObject(objects)
+                        this.gameEngine.updateObjects(objects)
                     }).catch(err => {
                         console.log('empty player database', err)
                     })
-                }).catch((error) => {
-                    console.log('failed to load db ', error)
+                })
+                .then(() => {
+                    console.log('finished loading world objects')
+                })
+                .catch((error) => {
+                    console.log('failed to load world objects db ', error)
                 })
         }
         catch (e) {

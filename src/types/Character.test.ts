@@ -1,9 +1,9 @@
 import Character from "./Character";
 
 describe('Character', () => {
-    test('should have a default direction of 0', () => {
+    test('should have a default rotation of 0', () => {
         const c = new Character({})
-        expect(c.direction).toBe(0)
+        expect(c.rotation).toBe(0)
     })
     
     test('default radius should be 2.5', () => {

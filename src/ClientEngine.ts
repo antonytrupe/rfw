@@ -8,6 +8,8 @@ import Player from "./types/Player"
 import { GameEvent } from "./types/GameEvent"
 import { Point } from "./types/Point"
 import { ViewPort } from "@/types/CONSTANTS"
+import WorldObject from "./types/WorldObject"
+import { SHAPE } from "./types/SHAPE"
 
 export default class ClientEngine {
 
@@ -152,7 +154,6 @@ export default class ClientEngine {
             //tell the server our viewport changed
             this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
         }
-        console.log(this.scale)
     }
 
     private draw() {
@@ -166,14 +167,22 @@ export default class ClientEngine {
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
+        //background color
+        ctx.save()
         ctx.fillStyle = "#d7f0dd"
         ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.restore()
 
         ctx.translate(-this.translateX * this.PIXELS_PER_FOOT / this.scale, -this.translateY * this.PIXELS_PER_FOOT / this.scale)
         ctx.scale(1 / this.scale, 1 / this.scale)
 
         this.drawCrossHair(ctx)
 
+        //TODO not all, just the ones in view
+        this.gameEngine.gameWorld.getAllWorldObjects()
+            .forEach((wo: WorldObject) => {
+                this.drawWorldObject(ctx, wo)
+            })
 
         if (this.scale < 30) {
 
@@ -204,7 +213,6 @@ export default class ClientEngine {
             this.drawHourScale(ctx)
         }
     }
-
 
     private drawCrossHair(ctx: CanvasRenderingContext2D) {
         let center = 0
@@ -518,7 +526,7 @@ export default class ClientEngine {
             const a = (3 + Math.sin(now / 200)) / 4
 
             ctx.save()
-            ctx.rotate(-character.direction)
+            ctx.rotate(-character.rotation)
 
             ctx.beginPath()
             ctx.setLineDash([20, 8])
@@ -535,7 +543,7 @@ export default class ClientEngine {
             const a = (3 + Math.sin((now + 3) / 200)) / 4
 
             ctx.save()
-            ctx.rotate(-character.direction + .2)
+            ctx.rotate(-character.rotation + .2)
 
             ctx.beginPath()
             ctx.setLineDash([20, 8])
@@ -573,7 +581,7 @@ export default class ClientEngine {
 
         ctx.save()
         ctx.translate(character.location.x * this.PIXELS_PER_FOOT, character.location.y * this.PIXELS_PER_FOOT)
-        ctx.rotate(-character.direction)
+        ctx.rotate(-character.rotation)
 
         const claimed = this.player?.claimedCharacters.some((id) => {
             return id == character.id
@@ -635,8 +643,8 @@ export default class ClientEngine {
             default:
                 ctx.fillStyle = "#808080"
         }
-
         ctx.beginPath()
+        //ctx.filter = "blur(1px)"
         ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
         ctx.fill()
 
@@ -664,6 +672,35 @@ export default class ClientEngine {
             this.drawStar(ctx, 0, 0, 6, 0.8 * this.PIXELS_PER_FOOT, 0.4 * this.PIXELS_PER_FOOT)
         }
 
+        ctx.restore()
+    }
+
+    drawWorldObject(ctx: CanvasRenderingContext2D, wo: WorldObject) {
+        //console.log('drawWorldObject')
+        ctx.save()
+        ctx.translate(wo.location.x * this.PIXELS_PER_FOOT, wo.location.y * this.PIXELS_PER_FOOT)
+        ctx.rotate(-wo.rotation)
+        ctx.beginPath()
+
+        if (wo.shape == SHAPE.CIRCLE) {
+            ctx.arc(0, 0, wo.radius * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
+        }
+        else if (wo.shape == SHAPE.RECT) {
+            ctx.translate(-wo.width / 2 * this.PIXELS_PER_FOOT, wo.height / 2 * this.PIXELS_PER_FOOT)
+            ctx.rect(0, 0, wo.width * this.PIXELS_PER_FOOT, wo.height * this.PIXELS_PER_FOOT)
+        }
+        else if (wo.shape == SHAPE.TRIANGLE) {
+            ctx.strokeText('TRIANGLE', 0, 0)
+        }
+        else if (wo.shape == SHAPE.COMPOSITE) {
+            wo.subObjects.forEach((swo) => {
+                this.drawWorldObject(ctx, swo)
+            })
+        }
+        else if (wo.shape == SHAPE.POLY) {
+            ctx.strokeText('POLY', 0, 0)
+        }
+        ctx.fill()
         ctx.restore()
     }
 
@@ -921,8 +958,15 @@ export default class ClientEngine {
                 //tell the gameengine we got an update 
                 //console.log(characters)
                 this.gameEngine.updateCharacters(characters)
-
             })
+
+            //world object location data
+            this.socket?.on(CONSTANTS.WORLD_OBJECTS, (worldObjects: WorldObject[]) => {
+                //tell the gameengine we got an update 
+                //console.log(characters)
+                this.gameEngine.updateObjects(worldObjects)
+            })
+
         }
         catch (e) {
             //something went wrong

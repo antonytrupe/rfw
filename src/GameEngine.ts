@@ -14,9 +14,7 @@ const RIGHT = -1
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
-    updateObject(objects: WorldObject[]) {
-        throw new Error("Method not implemented.")
-    }
+   
 
     //EventEmitter function
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -61,7 +59,7 @@ export default class GameEngine {
         //todo if its unconcious
         if (character.hp <= 0) {
             //clear accelerations and all actions
-            character = this.updateCharacter({ id: character.id, actions: [], directionAcceleration: 0, speedAcceleration: 0 }).getCharacter(character.id)!
+            character = this.updateCharacter({ id: character.id, actions: [], rotationAcceleration: 0, speedAcceleration: 0 }).getCharacter(character.id)!
         }
         //if its deaddead
         if (character.hp <= -10) {
@@ -123,7 +121,7 @@ export default class GameEngine {
                 character = this.updateCharacter({
                     id: character.id,
                     speedAcceleration: 0,
-                    directionAcceleration: 0,
+                    rotationAcceleration: 0,
                     actions: [],
                     target: ''
                 }).getCharacter(character.id)!
@@ -224,16 +222,16 @@ export default class GameEngine {
                 }
                 else if (action.action == 'move' && !!action.location) {
                     const dist = this.getDistance(action.location, character.location)
-                    let targetDirection
-                    let turnDirection = 0
+                    let targetRotation
+                    let turnRotation = 0
                     let speedAcceleration = 0
                     let actions = character.actions
                     if (dist > character.radius ) {
                         //console.log('turn/accelerate/stop')
-                        targetDirection = this.getDirection(character.location, action.location)
+                        targetRotation = this.getRotation(character.location, action.location)
 
                         //turn right or left
-                        turnDirection = this.calculateDirectionAcceleration(character.direction, targetDirection)
+                        turnRotation = this.calculateRotationAcceleration(character.rotation, targetRotation)
 
                         //accelerate or stop accelerating
                         speedAcceleration = this.calculateAcceleration(character, action.location)
@@ -250,19 +248,19 @@ export default class GameEngine {
                         const dist = this.getDistance(character.location, charactersAtTarget[0].location)
                         if (dist < (character.radius + charactersAtTarget[0].radius)  ) {
                             //console.log('colliding with characters at target')
-                            turnDirection = 0
+                            turnRotation = 0
                             speedAcceleration = 0
                         }
                     }
 
-                    if (turnDirection == 0 && speedAcceleration == 0) {
+                    if (turnRotation == 0 && speedAcceleration == 0) {
                         //we got there, so clear all move actions
                         actions = actions.filter((action) => { return action.action != 'move' })
                     }
 
                     character = this.updateCharacter({
                         id: character.id,
-                        directionAcceleration: turnDirection,
+                        rotationAcceleration: turnRotation,
                         speedAcceleration: speedAcceleration,
                         actions: actions
                     }).getCharacter(character.id)!
@@ -272,7 +270,7 @@ export default class GameEngine {
             }
 
             //calculate the new angle
-            let newDirection = this.calculateDirection(character, dt)
+            let newRotation = this.calculateRotation(character, dt)
 
             //TODO if they went over their walk speed or they went over their walk distance, then consume an action
             //TODO if they don't have an action to use for running, don't let them run
@@ -287,8 +285,8 @@ export default class GameEngine {
                 //"sum" up all the new positions from colliding objects
                 const c = collisions.reduce((t, p) => {
 
-                    //get the direction to the colliding object
-                    const d = this.getDirection(p.location, newPosition)
+                    //get the rotation to the colliding object
+                    const d = this.getRotation(p.location, newPosition)
 
                     //get the distance along that path of both objects size/2
                     const x = p.location.x + Math.cos(d) * (character.radius + p.radius)   * .9
@@ -302,8 +300,8 @@ export default class GameEngine {
                 newPosition = { x: c.x / collisions.length, y: c.y / collisions.length }
             }
 
-            this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, direction: newDirection })
-            if (newPosition.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newDirection != character.direction) {
+            this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, rotation: newRotation })
+            if (newPosition.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
                 //updatedCharacters.add(character.id)
             }
         })
@@ -359,9 +357,9 @@ export default class GameEngine {
     }
 
     calculateAcceleration(character: Character, target: Point): number {
-        const currentDirection = character.direction
-        const targetDirection = this.getDirection(character.location, target)
-        const delta = this.getDirectionDelta(currentDirection, targetDirection)
+        const currentRotation = character.rotation
+        const targetRotation = this.getRotation(character.location, target)
+        const delta = this.getRotationDelta(currentRotation, targetRotation)
 
         let acceleration = 0
 
@@ -380,8 +378,8 @@ export default class GameEngine {
         return acceleration
     }
 
-    calculateDirectionAcceleration(current: number, target: number) {
-        let delta = this.getDirectionDelta(current, target)
+    calculateRotationAcceleration(current: number, target: number) {
+        let delta = this.getRotationDelta(current, target)
         //do something about creeping up on 0
         let a = this.clamp(delta / (Math.PI / 4), -1, 1)
         if (Math.abs(a) > .01 || a == 0)
@@ -390,7 +388,7 @@ export default class GameEngine {
             return Math.abs(a) / a * .01
     }
 
-    getDirectionDelta(current: number, target: number) {
+    getRotationDelta(current: number, target: number) {
         let delta = (target - current + (Math.PI * 8 / 4)) % (Math.PI * 2)
         if (delta > Math.PI) {
             delta = -(Math.PI * 2 - delta)
@@ -398,7 +396,7 @@ export default class GameEngine {
         return delta
     }
 
-    getDirection(src: Point, dest: Point) {
+    getRotation(src: Point, dest: Point) {
         return (Math.atan2(-dest.y - -src.y, dest.x - src.x) + (4 / 2 * Math.PI)) % (Math.PI * 2)
     }
 
@@ -527,12 +525,12 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return false
         }
-        if (character.directionAcceleration == 0) {
+        if (character.rotationAcceleration == 0) {
             return false
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
-        this.updateCharacter({ id: character.id, directionAcceleration: 0, actions: actions })
+        this.updateCharacter({ id: character.id, rotationAcceleration: 0, actions: actions })
         return true
     }
 
@@ -578,12 +576,12 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.directionAcceleration == LEFT) {
+        if (character.rotationAcceleration == LEFT) {
             return false
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
-        this.updateCharacter({ id: character.id, directionAcceleration: LEFT, actions: actions })
+        this.updateCharacter({ id: character.id, rotationAcceleration: LEFT, actions: actions })
         return true
     }
 
@@ -595,12 +593,12 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.directionAcceleration == RIGHT) {
+        if (character.rotationAcceleration == RIGHT) {
             return false
         }
         //clear any move actions
         const actions = character.actions.filter((action) => { return action.action != 'move' })
-        this.updateCharacter({ id: character.id, directionAcceleration: RIGHT, actions: actions })
+        this.updateCharacter({ id: character.id, rotationAcceleration: RIGHT, actions: actions })
         return true
     }
 
@@ -611,6 +609,10 @@ export default class GameEngine {
         return this
     }
 
+    updateObjects(objects: WorldObject[]) {
+        this.gameWorld.updateWorldObjects(objects)
+    }
+
     updateCharacter(updates: Partial<Character>): GameEngine {
         const character = this.gameWorld.updateCharacter(updates)
             .getCharacter(updates.id)
@@ -618,8 +620,8 @@ export default class GameEngine {
 
         //check for things that make this an active character
         if (!!character && (
-            //has any direction acceleration
-            character.directionAcceleration != 0 ||
+            //has any rotation acceleration
+            character.rotationAcceleration != 0 ||
             //has any speed acceleration
             character.speedAcceleration != 0 ||
             //has any speed
@@ -799,10 +801,10 @@ export default class GameEngine {
         return newSpeed
     }
 
-    private calculateDirection(character: Character, dt: number) {
-        let newAngle = character.direction
-        if (character.directionAcceleration != 0) {
-            newAngle = character.direction + character.directionAcceleration * dt / this.turnMultiplier
+    private calculateRotation(character: Character, dt: number) {
+        let newAngle = character.rotation
+        if (character.rotationAcceleration != 0) {
+            newAngle = character.rotation + character.rotationAcceleration * dt / this.turnMultiplier
         }
         //normalize it to between -2pi and 2pi
         newAngle %= (Math.PI * 2)
@@ -814,13 +816,13 @@ export default class GameEngine {
     }
 
     private calculatePosition(character: Character, dt: number) {
-        const w = character.directionAcceleration / this.turnMultiplier
+        const w = character.rotationAcceleration / this.turnMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
         if (character.speed != 0) {
             //calculate new position
-            x = character.location.x + character.speed * (Math.cos(character.direction + w * dt)) * dt / this.speedMultiplier
-            y = character.location.y - character.speed * (Math.sin(character.direction + w * dt)) * dt / this.speedMultiplier
+            x = character.location.x + character.speed * (Math.cos(character.rotation + w * dt)) * dt / this.speedMultiplier
+            y = character.location.y - character.speed * (Math.sin(character.rotation + w * dt)) * dt / this.speedMultiplier
         }
         return { x, y }
     }
