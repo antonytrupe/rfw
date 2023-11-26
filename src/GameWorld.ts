@@ -129,10 +129,9 @@ export default class GameWorld {
     getObjectsNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): WorldObject[] {
         return Array.from(this.worldObjects.values()).filter((wo): boolean => {
             const d = this.getDistancePointSegment({ start, stop, point: wo.location }) - wo.radiusX
-            return d <= width
+            return d < width
         })
     }
-
 
     getDistancePointSegment({ point: { x, y }, start: { x: x1, y: y1 }, stop: { x: x2, y: y2 } }: { point: Point, start: Point, stop: Point }) {
         var A = x - x1;

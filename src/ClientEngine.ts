@@ -715,7 +715,7 @@ export default class ClientEngine {
             ctx.strokeText('TRIANGLE', 0, 0)
         }
         else if (wo.shape == SHAPE.COMPOSITE) {
-            //draw a box around the hitbox
+            //draw a dashed line around the composite hitbox
             ctx.save()
             ctx.translate(-wo.width / 2 * this.PIXELS_PER_FOOT, -wo.height / 2 * this.PIXELS_PER_FOOT)
             ctx.beginPath()
@@ -738,7 +738,7 @@ export default class ClientEngine {
             //maybe it's using a template
             const template = this.templates.get(wo.shape)
             if (!!template) {
-                const merged = { ...template, id: wo.id, location: wo.location, rotation: wo.rotation }
+                const merged = { ...template, id: wo.id }
                 this.drawWorldObject(ctx, merged)
             }
             else {

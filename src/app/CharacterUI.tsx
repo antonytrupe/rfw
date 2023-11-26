@@ -15,7 +15,7 @@ export default function CharacterUI({ character, position, children = undefined 
                 <div>level {character?.level} {character?.characterClass}</div>
                 <div>{character?.race}</div>
                 <div>{character?.hp} / {character?.maxHp} HP</div>
-                <div>Direction:{Math.round(character?.rotation)}</div>
+                <div>Direction:{character?.rotation.toFixed(2)}</div>
                 <div>Speed:{character?.maxSpeed}ft</div>
                 <div>Action:{character?.actions[0]?.action}</div>
                 <div>XP:{character?.xp}</div>

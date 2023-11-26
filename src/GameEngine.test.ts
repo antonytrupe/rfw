@@ -2,7 +2,7 @@ import EventEmitter from "events"
 import GameEngine from "./GameEngine"
 import Character from "./types/Character"
 import WorldObject from "./types/WorldObject"
-
+import { SHAPE } from "./types/SHAPE"
 
 describe('GameEngine', () => {
     let gameEngine: GameEngine
@@ -23,6 +23,140 @@ describe('GameEngine', () => {
         eventEmitter = new EventEmitter()
         gameEngine = new GameEngine({ ticksPerSecond }, eventEmitter)
     })
+    describe("rectangle intersections", () => {
+        test('should intersect a rectable at two points when moving down', () => {
+            const circle = new Character({ location: { x: 0, y: -20 } })
+            //move straight down
+            const direction = { x: 0, y: 10 }
+            const rect = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(rect)
+
+            const topIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topLeft, end: topRight })
+            const leftIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomLeft, end: topLeft })
+            const bottomIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomRight, end: bottomLeft })
+            const rightIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topRight, end: bottomRight })
+
+            expect(topIntersection?.x).toBe(0)
+            expect(topIntersection?.y).toBe(-1)
+
+            expect(leftIntersection?.x).toBeUndefined()
+            expect(leftIntersection?.y).toBeUndefined()
+
+            expect(bottomIntersection?.x).toBe(0)
+            expect(bottomIntersection?.y).toBe(1)
+
+            expect(rightIntersection?.x).toBeUndefined()
+            expect(rightIntersection?.y).toBeUndefined() 
+        })
+
+        test('should intersect a rectable at two points when moving horizontal', () => {
+            const circle = new Character({ location: { x: -20, y: 0 } })
+            //move straight down
+            const direction = { x: 20, y: 0 }
+            const rect = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(rect)
+
+            const topIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topLeft, end: topRight })
+            const leftIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomLeft, end: topLeft })
+            const bottomIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomRight, end: bottomLeft })
+            const rightIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topRight, end: bottomRight })
+
+            expect(topIntersection?.x).toBeUndefined()
+            expect(topIntersection?.y).toBeUndefined()
+
+            expect(leftIntersection?.x).toBe(-2)
+            expect(leftIntersection?.y).toBe(0)
+
+            expect(bottomIntersection?.x).toBeUndefined()
+            expect(bottomIntersection?.y).toBeUndefined()
+
+            expect(rightIntersection?.x).toBe(2)
+            expect(rightIntersection?.y).toBe(0) 
+        })
+
+    })
+
+
+    describe("calculateRectanglePoints", () => {
+        test('should handle a square at the origin', () => {
+            const square = new WorldObject({ shape: SHAPE.RECT, width: 2, height: 2 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(square)
+            expect(topRight.x).toBe(1)
+            expect(topRight.y).toBe(-1)
+            expect(topLeft.x).toBe(-1)
+            expect(topLeft.y).toBe(-1)
+            expect(bottomLeft.x).toBe(-1)
+            expect(bottomLeft.y).toBe(1)
+            expect(bottomRight.x).toBe(1)
+            expect(bottomRight.y).toBe(1)
+        })
+
+        test('should handle a rectangle at the origin', () => {
+            const square = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(square)
+            expect(topRight.x).toBe(2)
+            expect(topRight.y).toBe(-1)
+            expect(topLeft.x).toBe(-2)
+            expect(topLeft.y).toBe(-1)
+            expect(bottomLeft.x).toBe(-2)
+            expect(bottomLeft.y).toBe(1)
+            expect(bottomRight.x).toBe(2)
+            expect(bottomRight.y).toBe(1)
+        })
+
+        test('should handle a square at the origin rotated 45 degrees', () => {
+            const square = new WorldObject({ shape: SHAPE.RECT, width: 2, height: 2, rotation: Math.PI / 4, })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(square)
+            expect(topRight.x).toBeCloseTo(0)
+            expect(topRight.y).toBeCloseTo(-1.4142)
+            expect(topLeft.x).toBeCloseTo(-1.4142)
+            expect(topLeft.y).toBeCloseTo(0)
+            expect(bottomLeft.x).toBeCloseTo(0)
+            expect(bottomLeft.y).toBeCloseTo(1.4142)
+            expect(bottomRight.x).toBeCloseTo(1.4142)
+            expect(bottomRight.y).toBeCloseTo(0)
+        })
+
+        test('should handle a rect at the origin rotated 90 degress', () => {
+            const square = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2, rotation: Math.PI / 2 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(square)
+            expect(topRight.x).toBeCloseTo(-1)
+            expect(topRight.y).toBeCloseTo(-5)
+            expect(topLeft.x).toBeCloseTo(-1)
+            expect(topLeft.y).toBeCloseTo(5)
+            expect(bottomLeft.x).toBeCloseTo(1)
+            expect(bottomLeft.y).toBeCloseTo(5)
+            expect(bottomRight.x).toBeCloseTo(1)
+            expect(bottomRight.y).toBeCloseTo(-5)
+        })
+
+        test('should handle a rect at the origin rotated 45 degress', () => {
+            const square = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2, rotation: Math.PI / 4 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(square)
+            expect(topRight.x).toBeCloseTo(2.828)
+            expect(topRight.y).toBeCloseTo(-4.242)
+            expect(topLeft.x).toBeCloseTo(-4.242)
+            expect(topLeft.y).toBeCloseTo(2.828)
+            expect(bottomLeft.x).toBeCloseTo(-2.828)
+            expect(bottomLeft.y).toBeCloseTo(4.242)
+            expect(bottomRight.x).toBeCloseTo(4.242)
+            expect(bottomRight.y).toBeCloseTo(-2.828)
+        })
+
+        test('should handle a rect not at the origin rotated 45 degress', () => {
+            const square = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2, rotation: Math.PI / 4, location: { x: 10, y: 10 } })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(square)
+            expect(topRight.x).toBeCloseTo(12.828)
+            expect(topRight.y).toBeCloseTo(5.757)
+            expect(topLeft.x).toBeCloseTo(5.757)
+            expect(topLeft.y).toBeCloseTo(12.828)
+            expect(bottomLeft.x).toBeCloseTo(7.171)
+            expect(bottomLeft.y).toBeCloseTo(14.242)
+            expect(bottomRight.x).toBeCloseTo(14.242)
+            expect(bottomRight.y).toBeCloseTo(7.171)
+        })
+    })
+
 
     test('should add 3 new chararacters', () => {
         gameEngine.createCharacter({ id: '1', location: { x: 0, y: 0 } })
@@ -31,16 +165,7 @@ describe('GameEngine', () => {
         expect(Array.from(gameEngine.gameWorld.getAllCharacters().values()).length).toBe(3)
     })
 
-    describe("getCollisionPoint", () => {
-        describe("when there's no collision", () => {
-            test('should move right', () => {
-                const a = new Character({ speed: 30, speedAcceleration: 1 })
-                const b = new WorldObject({ location: { x: -100, y: 0 } })
-                //expect(gameEngine.getCollisionPoint(a,b,dt).x).toBeCloseTo(0)
-                //expect(gameEngine.getCollisionPoint().y).toBeCloseTo(0)
-            })
-        })
-    })
+
 
     describe("getRotationDelta", () => {
         test('E to E', () => {
@@ -194,6 +319,18 @@ describe('GameEngine', () => {
             test('SE', () => {
                 expect(gameEngine.getRotation({ x: 1, y: 1 }, { x: 2, y: 2 })).toBeCloseTo(SE)
             })
+        })
+    })
+
+    //calculateCollisionPoint
+    describe("calculateCollisionPoint", () => {
+        test('should hit the top of the rectangle', () => {
+            const character = new Character({ location: { x: 0, y: -10 } })
+            const direction = { x: 0, y: 10 }
+            const rect = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2 })
+            const collisionPoint = gameEngine.calculateCollisionPoint(character, direction, rect)
+            expect(collisionPoint?.x).toBe(0)
+            expect(collisionPoint?.y).toBe(-1)
         })
     })
 
