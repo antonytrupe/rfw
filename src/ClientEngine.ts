@@ -423,7 +423,7 @@ export default class ClientEngine {
             const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
 
             ctx.save()
-            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.radius) * this.PIXELS_PER_FOOT)
+            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.radiusX) * this.PIXELS_PER_FOOT)
 
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(0,0,0,${a})`
@@ -449,7 +449,7 @@ export default class ClientEngine {
             const a = ((duration - 1) - (((now - event.time) / 1000) % duration)) / (duration - 1)
 
             ctx.save()
-            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.radius) * this.PIXELS_PER_FOOT)
+            ctx.translate(character.location.x * this.PIXELS_PER_FOOT, (character.location.y - character.radiusX) * this.PIXELS_PER_FOOT)
 
             ctx.font = 30 + "px Arial"
             ctx.fillStyle = `rgba(255,0,0,${a})`
@@ -534,7 +534,7 @@ export default class ClientEngine {
 
             ctx.strokeStyle = "rgba(255, 215, 0, " + a + ")"
             ctx.lineWidth = 6
-            ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT + 3, 0, 2 * Math.PI)
+            ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT + 3, 0, 2 * Math.PI)
             ctx.stroke()
             ctx.restore()
         }
@@ -552,7 +552,7 @@ export default class ClientEngine {
             ctx.strokeStyle = "#bb2930"
             ctx.strokeStyle = "rgba(187, 41, 48, " + a + ")"
             ctx.lineWidth = 6
-            ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT + 3, 0, 2 * Math.PI)
+            ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT + 3, 0, 2 * Math.PI)
             ctx.stroke()
             ctx.restore()
         }
@@ -566,13 +566,13 @@ export default class ClientEngine {
             ctx.lineWidth = 3
             if (character.hp > 0) {
                 //ctx.strokeStyle = "#008000"
-                ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT - 1,
+                ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 1,
                     (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
                     (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
             }
             else {
                 ctx.strokeStyle = "#D22B2B"
-                ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT - 3,
+                ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 3,
                     ((character.hp + 10) / -10) * Math.PI - Math.PI / 2,
                     ((-character.hp + 10) / -10) * Math.PI - Math.PI / 2)
             }
@@ -646,7 +646,7 @@ export default class ClientEngine {
         }
         ctx.beginPath()
         //ctx.filter = "blur(1px)"
-        ctx.arc(0, 0, character.radius * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
+        ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
         ctx.fill()
 
         //draw an arrow
@@ -654,7 +654,7 @@ export default class ClientEngine {
         ctx.strokeStyle = '#FFFFFF'
 
         ctx.moveTo(0, 0)
-        ctx.lineTo((character.radius) * .8 * this.PIXELS_PER_FOOT, 0)
+        ctx.lineTo((character.radiusX) * .8 * this.PIXELS_PER_FOOT, 0)
 
         ctx.stroke()
         drawHealth()
@@ -685,7 +685,22 @@ export default class ClientEngine {
 
         if (wo.shape == SHAPE.CIRCLE) {
             ctx.beginPath()
-            ctx.arc(0, 0, wo.radius * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
+            ctx.arc(0, 0, wo.radiusX * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
+            ctx.fill()
+        }
+        else if (wo.shape == SHAPE.ELLIPSE) {
+            ctx.beginPath()
+            ctx.ellipse(0, 0, wo.radiusX * this.PIXELS_PER_FOOT, wo.radiusY * this.PIXELS_PER_FOOT, 0, 0, 2 * Math.PI)
+            ctx.fill()
+        }
+        else if (wo.shape == SHAPE.OVAL) {
+            ctx.beginPath()
+            const radius = Math.min(wo.radiusX, wo.radiusY)
+            const side = Math.max(wo.radiusX, wo.radiusY) - radius
+            //draw the bottom arc
+            ctx.arc(0, side * this.PIXELS_PER_FOOT, radius * this.PIXELS_PER_FOOT, 0, Math.PI)
+            //draw the top arc
+            ctx.arc(0, -side * this.PIXELS_PER_FOOT, radius * this.PIXELS_PER_FOOT, Math.PI, 2 * Math.PI)
             ctx.fill()
         }
         else if (wo.shape == SHAPE.RECT) {
@@ -705,8 +720,8 @@ export default class ClientEngine {
             ctx.translate(-wo.width / 2 * this.PIXELS_PER_FOOT, -wo.height / 2 * this.PIXELS_PER_FOOT)
             ctx.beginPath()
             ctx.rect(0, 0, wo.width * this.PIXELS_PER_FOOT, wo.height * this.PIXELS_PER_FOOT)
-            ctx.strokeStyle="lightgray"
-            ctx.lineWidth=2
+            ctx.strokeStyle = "lightgray"
+            ctx.lineWidth = 2
             ctx.setLineDash([5, 5]);
 
             ctx.stroke()

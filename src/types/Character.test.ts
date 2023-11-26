@@ -8,6 +8,6 @@ describe('Character', () => {
     
     test('default radius should be 2.5', () => {
         const c = new Character({})
-        expect(c.radius).toBe(2.5)
+        expect(c.radiusX).toBe(2.5)
     })
 })

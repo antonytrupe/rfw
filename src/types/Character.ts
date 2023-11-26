@@ -51,7 +51,7 @@ export default class Character extends WorldObject implements CharacterInterface
         age = 30,
         race = "HUMAN"
     }: CharacterInterface) {
-        super({ id: id, location: location, rotation: rotation, shape: SHAPE.CIRCLE, radius: 2.5, zoneType: [ZONETYPE.TACTICAL] })
+        super({ id: id, location: location, rotation: rotation, shape: SHAPE.CIRCLE, radiusX: 2.5, zoneType: [ZONETYPE.TACTICAL] })
         this.id = id
         this.playerId = playerId
         this.maxSpeed = maxSpeed

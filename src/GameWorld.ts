@@ -121,14 +121,14 @@ export default class GameWorld {
     getCharactersNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
-            const d = this.getDistancePointSegment({ start, stop, point: character.location }) - character.radius
+            const d = this.getDistancePointSegment({ start, stop, point: character.location }) - character.radiusX
             return d <= width
         })
     }
 
     getObjectsNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): WorldObject[] {
         return Array.from(this.worldObjects.values()).filter((wo): boolean => {
-            const d = this.getDistancePointSegment({ start, stop, point: wo.location }) - wo.radius
+            const d = this.getDistancePointSegment({ start, stop, point: wo.location }) - wo.radiusX
             return d <= width
         })
     }
@@ -331,7 +331,7 @@ export default class GameWorld {
                         Math.pow(character.location.x - position.x, 2) +
                         Math.pow(character.location.y - position.y, 2))
                     //console.log('distance', distance)
-                    if (distance < character.radius) {
+                    if (distance < character.radiusX) {
                         result.push(character)
                     }
                 }

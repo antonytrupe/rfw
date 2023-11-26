@@ -1,5 +1,7 @@
 export enum SHAPE {
     CIRCLE = 'CIRCLE',
+    OVAL = 'OVAL',
+    ELLIPSE = 'ELLIPSE',
     RECT = 'RECT',
     TRIANGLE = 'TRIANGLE',
     POLY = 'POLY',
