@@ -108,13 +108,71 @@ export default class GameWorld {
         return this.worldObjects
     }
 
-    getCharactersNearby({ location, r }: { location: Point, r: number }): Character[] {
+    getCharactersNearPoint({ location, distance }: { location: Point, distance: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
             const a = location.x - character.location.x
             const b = location.y - character.location.y
             const d = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
-            return d <= r
+            return d <= distance
+        })
+    }
+
+    getCharactersNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): Character[] {
+        //TODO make this smarter and use zones
+        return Array.from(this.characters.values()).filter((character): boolean => {
+            const d = this.getDistancePointSegment({ start, stop, point: character.location }) - character.radius
+            return d <= width
+        })
+    }
+
+    getObjectsNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): WorldObject[] {
+        return Array.from(this.worldObjects.values()).filter((wo): boolean => {
+            const d = this.getDistancePointSegment({ start, stop, point: wo.location }) - wo.radius
+            return d <= width
+        })
+    }
+
+
+    getDistancePointSegment({ point: { x, y }, start: { x: x1, y: y1 }, stop: { x: x2, y: y2 } }: { point: Point, start: Point, stop: Point }) {
+        var A = x - x1;
+        var B = y - y1;
+        var C = x2 - x1;
+        var D = y2 - y1;
+
+        var dot = A * C + B * D;
+        var len_sq = C * C + D * D;
+        var param = -1;
+        if (len_sq != 0) //in case of 0 length line
+            param = dot / len_sq;
+
+        var xx, yy;
+
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        }
+        else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        }
+        else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+
+        var dx = x - xx;
+        var dy = y - yy;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    getObjectsNearPoint({ location, distance }: { location: Point, distance: number }): WorldObject[] {
+        //TODO make this smarter and use zones
+        return Array.from(this.worldObjects.values()).filter((wo): boolean => {
+            const a = location.x - wo.location.x
+            const b = location.y - wo.location.y
+            const d = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
+            return d <= distance
         })
     }
 

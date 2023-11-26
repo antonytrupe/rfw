@@ -1,6 +1,7 @@
 import EventEmitter from "events"
 import GameEngine from "./GameEngine"
 import Character from "./types/Character"
+import WorldObject from "./types/WorldObject"
 
 
 describe('GameEngine', () => {
@@ -28,6 +29,17 @@ describe('GameEngine', () => {
         gameEngine.createCharacter({ id: '2', location: { x: 0, y: 0 } })
         gameEngine.createCharacter({ id: '3', location: { x: 0, y: 0 } })
         expect(Array.from(gameEngine.gameWorld.getAllCharacters().values()).length).toBe(3)
+    })
+
+    describe("getCollisionPoint", () => {
+        describe("when there's no collision", () => {
+            test('should move right', () => {
+                const a = new Character({ speed: 30, speedAcceleration: 1 })
+                const b = new WorldObject({ location: { x: -100, y: 0 } })
+                //expect(gameEngine.getCollisionPoint(a,b,dt).x).toBeCloseTo(0)
+                //expect(gameEngine.getCollisionPoint().y).toBeCloseTo(0)
+            })
+        })
     })
 
     describe("getRotationDelta", () => {
@@ -112,7 +124,6 @@ describe('GameEngine', () => {
             test('SE', () => {
                 expect(gameEngine.calculateAcceleration(c, { x: 6, y: 1 })).toBe(1)
             })
-
         })
     })
 

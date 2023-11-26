@@ -761,7 +761,7 @@ export default class ServerEngine {
         //create .5% aristocrats
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearPoint({ location: p, distance: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
@@ -774,7 +774,7 @@ export default class ServerEngine {
         //create .5% adepts
         for (let i = 0; i < remaining * .005; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearPoint({ location: p, distance: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
@@ -787,7 +787,7 @@ export default class ServerEngine {
         //create 3% experts
         for (let i = 0; i < remaining * .03; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearPoint({ location: p, distance: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
@@ -800,7 +800,7 @@ export default class ServerEngine {
         //create 5% warriors
         for (let i = 0; i < remaining * .05; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearPoint({ location: p, distance: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
@@ -815,7 +815,7 @@ export default class ServerEngine {
         //create the rest as commoners
         for (let i = 0; createdCount < totalSize; i++) {
             let p = getRandomPoint({ origin: location, radius })
-            while (this.gameEngine.gameWorld.getCharactersNearby({ location: p, r: buffer }).length > 0) {
+            while (this.gameEngine.gameWorld.getCharactersNearPoint({ location: p, distance: buffer }).length > 0) {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
@@ -847,7 +847,7 @@ export default class ServerEngine {
             for (let i = 0; i < highestLevel / l; i++) {
 
                 location = getRandomPoint({ origin, radius })
-                while (this.gameEngine.gameWorld.getCharactersNearby({ location, r: buffer }).length > 0) {
+                while (this.gameEngine.gameWorld.getCharactersNearPoint({ location, distance: buffer }).length > 0) {
                     radius += 1;
                     location = getRandomPoint({ origin, radius })
                 }

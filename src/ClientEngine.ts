@@ -224,19 +224,19 @@ export default class ClientEngine {
         ctx.lineWidth = 1 * this.scale
         //vertical line
         ctx.moveTo(
-            center * this.PIXELS_PER_FOOT / this.scale,
-            (-length / 2 + center) * this.PIXELS_PER_FOOT / this.scale)
+            center * this.PIXELS_PER_FOOT,
+            (-length / 2 + center) * this.PIXELS_PER_FOOT)
         ctx.lineTo(
-            center * this.PIXELS_PER_FOOT / this.scale,
-            (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale)
+            center * this.PIXELS_PER_FOOT,
+            (length / 2 + center) * this.PIXELS_PER_FOOT)
 
         //horizontal line
         ctx.moveTo(
-            (-length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
+            (-length / 2 + center) * this.PIXELS_PER_FOOT,
             center * this.PIXELS_PER_FOOT)
         ctx.lineTo(
-            (length / 2 + center) * this.PIXELS_PER_FOOT / this.scale,
-            center * this.PIXELS_PER_FOOT / this.scale)
+            (length / 2 + center) * this.PIXELS_PER_FOOT,
+            center * this.PIXELS_PER_FOOT)
         ctx.stroke()
         ctx.restore()
     }
@@ -700,6 +700,18 @@ export default class ClientEngine {
             ctx.strokeText('TRIANGLE', 0, 0)
         }
         else if (wo.shape == SHAPE.COMPOSITE) {
+            //draw a box around the hitbox
+            ctx.save()
+            ctx.translate(-wo.width / 2 * this.PIXELS_PER_FOOT, -wo.height / 2 * this.PIXELS_PER_FOOT)
+            ctx.beginPath()
+            ctx.rect(0, 0, wo.width * this.PIXELS_PER_FOOT, wo.height * this.PIXELS_PER_FOOT)
+            ctx.strokeStyle="lightgray"
+            ctx.lineWidth=2
+            ctx.setLineDash([5, 5]);
+
+            ctx.stroke()
+            ctx.restore()
+
             wo.subObjects.forEach((swo) => {
                 this.drawWorldObject(ctx, swo)
             })
