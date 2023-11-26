@@ -7,6 +7,7 @@ import { GameEvent } from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
 import { Point } from "./types/Point"
 import WorldObject from "./types/WorldObject"
+import { SHAPE } from "./types/SHAPE"
 
 const LEFT = 1
 const RIGHT = -1
@@ -316,21 +317,23 @@ export default class GameEngine {
         //)
         if (collisions.length > 0) {
             //"sum up" all the new positions from colliding objects
-            const c = collisions.reduce((t, p) => {
+            const collisionSum = collisions.reduce((previousValue, currentObject) => {
+                let x = 0, y = 0
+                if (currentObject.shape == SHAPE.CIRCLE) {
+                    //get the rotation to the colliding object
+                    const d = this.getRotation(currentObject.location, newPosition)
 
-                //get the rotation to the colliding object
-                const d = this.getRotation(p.location, newPosition)
+                    //get the distance along that path of both objects size/2
+                    x = currentObject.location.x + Math.cos(d) * (character.radiusX + currentObject.radiusX)
+                    y = currentObject.location.y - Math.sin(d) * (character.radiusX + currentObject.radiusX)
+                }
 
-                //get the distance along that path of both objects size/2
-                const x = p.location.x + Math.cos(d) * (character.radiusX + p.radiusX)
-                const y = p.location.y - Math.sin(d) * (character.radiusX + p.radiusX)
-
-                t.x += x
-                t.y += y
-                return t
+                previousValue.x += x
+                previousValue.y += y
+                return previousValue
             }, { x: 0, y: 0 })
             //then get the average position
-            newPosition = { x: c.x / collisions.length, y: c.y / collisions.length }
+            newPosition = { x: collisionSum.x / collisions.length, y: collisionSum.y / collisions.length }
         }
         return newPosition
     }

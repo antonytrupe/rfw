@@ -122,7 +122,7 @@ export default class GameWorld {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
             const d = this.getDistancePointSegment({ start, stop, point: character.location }) - character.radiusX
-            return d <= width
+            return d < width
         })
     }
 
