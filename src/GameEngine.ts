@@ -340,15 +340,8 @@ export default class GameEngine {
                     const cp = this.calculateCollisionPoint(character, newPosition, currentObject)
                     //check to see if the collision point is on the line segment we moved this tick
                     if (!!cp) {
-                        // get the point of the circle that's tangent to the side we collided with
-                        const pp = this.calculatePerpendicularPoint(currentObject, cp, character.radiusX)
-                        if (!!pp) {
-                            x = pp?.x
-                            y = pp.y
-                        }
-                        else {
-                            console.log('pp is null or undefined')
-                        }
+                        x = cp?.x
+                        y = cp.y
                     }
                     else {
                         console.log('cp is null or undefined')
@@ -518,11 +511,57 @@ export default class GameEngine {
         return intersectionPoint
     }
 
-    calculateRaySegmentIntersection(ray: Ray, segment: LineSegment): Point | null {
+    calculateSegmentsIntersection(segment1: LineSegment, segment2: LineSegment): { collision: Point, segment: LineSegment } | undefined {
+        const { start: p1, end: q1 } = segment1;
+        const { start: p2, end: q2 } = segment2;
+
+        const orientation = (p: Point, q: Point, r: Point): number => {
+            const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+            if (val === 0) return 0; // Collinear
+            return val > 0 ? 1 : 2; // Clockwise or counterclockwise
+        };
+
+        const onSegment = (p: Point, q: Point, r: Point): boolean => {
+            return (
+                q.x <= Math.max(p.x, r.x) &&
+                q.x >= Math.min(p.x, r.x) &&
+                q.y <= Math.max(p.y, r.y) &&
+                q.y >= Math.min(p.y, r.y)
+            );
+        };
+
+        const orientation1 = orientation(p1, q1, p2);
+        const orientation2 = orientation(p1, q1, q2);
+        const orientation3 = orientation(p2, q2, p1);
+        const orientation4 = orientation(p2, q2, q1);
+
+        // General case
+        if (orientation1 !== orientation2 && orientation3 !== orientation4) {
+            const intersectionX =
+                ((p1.x * q1.y - p1.y * q1.x) * (p2.x - q2.x) - (p1.x - q1.x) * (p2.x * q2.y - p2.y * q2.x)) /
+                ((p1.x - q1.x) * (p2.y - q2.y) - (p1.y - q1.y) * (p2.x - q2.x));
+
+            const intersectionY =
+                ((p1.x * q1.y - p1.y * q1.x) * (p2.y - q2.y) - (p1.y - q1.y) * (p2.x * q2.y - p2.y * q2.x)) /
+                ((p1.x - q1.x) * (p2.y - q2.y) - (p1.y - q1.y) * (p2.x - q2.x));
+
+            const intersectionPoint: Point = { x: intersectionX, y: intersectionY };
+
+            // Check if the intersection point lies on both line segments
+            if (onSegment(p1, intersectionPoint, q1) && onSegment(p2, intersectionPoint, q2)) {
+                return { collision: intersectionPoint, segment: segment1 }
+            }
+        }
+
+        // No intersection
+        return undefined;
+    }
+
+    private calculateRaySegmentIntersection(ray: Ray, segment: LineSegment): Point | null {
         const { origin, direction } = ray;
         const { start, end } = segment;
 
-        const rayDir = { x: direction.x, y: direction.y };
+        const rayDir = direction
         const segmentDir = { x: end.x - start.x, y: end.y - start.y };
         const rayStartToSegmentStart = { x: start.x - origin.x, y: start.y - origin.y };
 
@@ -538,62 +577,118 @@ export default class GameEngine {
         const t = (rayStartToSegmentStart.x * segmentDir.y - rayStartToSegmentStart.y * segmentDir.x) / determinant;
         const u = (rayStartToSegmentStart.x * rayDir.y - rayStartToSegmentStart.y * rayDir.x) / determinant;
 
+
         if (t >= 0 && u >= 0 && u <= 1) {
             // Intersection point is within the segment
+
+            // Calculate the intersection point
             const intersectionX = origin.x + t * rayDir.x;
             const intersectionY = origin.y + t * rayDir.y;
-            return { x: intersectionX, y: intersectionY };
+
+            // Ensure the intersection point is along the ray (not behind the origin)
+            if (t >= 0) {
+                return { x: intersectionX, y: intersectionY };
+            }
         }
 
         // No intersection
         return null;
     }
 
-    calculateCollisionPoint(circle: WorldObject, direction: Point, rectangle: WorldObject): Point | null {
-        const { location: circlePos, radiusX: radius } = circle;
-        const { location: rectPos, width, height, rotation } = rectangle;
+    calculatePerpendicularPointOnSameSide(
+        segment: LineSegment,
+        pointOnSegment: Point,
+        pointNotOnSegment: Point,
+        distance: number
+    ): Point | undefined {
+        const { start, end } = segment;
 
-        // Translate the circle's position and direction to the local coordinate system of the rotated rectangle
-        const translatedCirclePos = {
-            x: (circlePos.x - rectPos.x) * Math.cos(-rotation) - (circlePos.y - rectPos.y) * Math.sin(-rotation),
-            y: (circlePos.x - rectPos.x) * Math.sin(-rotation) + (circlePos.y - rectPos.y) * Math.cos(-rotation),
+        // Calculate the vector along the segment
+        const segmentVector = { x: end.x - start.x, y: end.y - start.y };
+
+        // Calculate the vector from the point on the segment to the point not on the segment
+        const pointVector = { x: pointNotOnSegment.x - pointOnSegment.x, y: pointNotOnSegment.y - pointOnSegment.y };
+
+        // Calculate the dot product of the two vectors
+        const dotProduct = segmentVector.x * pointVector.x + segmentVector.y * pointVector.y;
+
+        // Calculate the projection of pointVector onto segmentVector
+        const projection = {
+            x: (dotProduct / (segmentVector.x * segmentVector.x + segmentVector.y * segmentVector.y)) * segmentVector.x,
+            y: (dotProduct / (segmentVector.x * segmentVector.x + segmentVector.y * segmentVector.y)) * segmentVector.y,
         };
-        // Check if the translated circle's center is inside the rectangle
-        if (
-            translatedCirclePos.x >= -width / 2 &&
-            translatedCirclePos.x <= width / 2 &&
-            translatedCirclePos.y >= -height / 2 &&
-            translatedCirclePos.y <= height / 2
-        ) {
-            return { x: circlePos.x, y: circlePos.y }; // Circle's center is inside the rectangle
-        }
 
-        // Check for collision with rectangle sides
-        const closestX = Math.max(-width / 2, Math.min(translatedCirclePos.x, width / 2));
-        const closestY = Math.max(-height / 2, Math.min(translatedCirclePos.y, height / 2));
+        // Calculate the perpendicular vector
+        const perpendicularVector = { x: pointVector.x - projection.x, y: pointVector.y - projection.y };
 
-        const distanceX = translatedCirclePos.x - closestX;
-        const distanceY = translatedCirclePos.y - closestY;
-        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+        // Calculate the length of the perpendicular vector
+        const perpendicularVectorLength = Math.sqrt(
+            perpendicularVector.x * perpendicularVector.x + perpendicularVector.y * perpendicularVector.y
+        );
 
-        if (distanceSquared < radius * radius) {
-            // Collision occurred, calculate the collision point
-            const distance = Math.sqrt(distanceSquared);
-            const collisionX = closestX + (distanceX / distance) * radius;
-            const collisionY = closestY + (distanceY / distance) * radius;
+        // Calculate the unit vector in the direction of the perpendicular vector
+        const unitPerpendicularVector = {
+            x: perpendicularVector.x / perpendicularVectorLength,
+            y: perpendicularVector.y / perpendicularVectorLength,
+        };
 
-            // Transform the collision point back to the global coordinate system
-            const globalCollisionPoint = {
-                x: collisionX * Math.cos(rotation) - collisionY * Math.sin(rotation) + rectPos.x,
-                y: collisionX * Math.sin(rotation) + collisionY * Math.cos(rotation) + rectPos.y,
-            };
+        // Calculate the new point at the specified distance along the perpendicular vector
+        const newPoint = {
+            x: pointOnSegment.x + unitPerpendicularVector.x * distance,
+            y: pointOnSegment.y + unitPerpendicularVector.y * distance,
+        };
 
-            return globalCollisionPoint;
-        }
-
-        return null; // No collision
+        return newPoint;
     }
 
+    private calculateCollisionPoint(circle: WorldObject, end: Point, shape: WorldObject): Point | undefined {
+        //get all the vertices
+        let vertices: Point[] = []
+        if (shape.shape == SHAPE.RECT) {
+            vertices = this.calculateRectanglePoints(shape)
+        }
+
+        //get all the collisions of all the segments
+        let collisions: { collision: Point, segment: LineSegment }[] = []
+        vertices.forEach((a, i) => {
+            const b = vertices[i == 0 ? vertices.length - 1 : i - 1]
+            const c = this.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: a, end: b })
+            if (!!c) {
+                collisions.push(c)
+            }
+        })
+
+        //now get the collision point closest to the original location
+        const closest = this.findClosestPoint(circle.location, collisions)
+
+        //now back off from where we collided
+        if (!!closest) {
+            const p = this.calculatePerpendicularPointOnSameSide({ start: closest.segment.start, end: closest.segment.end }, circle.location, closest.collision, circle.radiusX)
+            return p
+        }
+        return undefined
+    }
+
+    findClosestPoint(referencePoint: Point, points: { collision: Point, segment: LineSegment }[]): { collision: Point, segment: LineSegment } | undefined {
+        if (points.length === 0) {
+            return undefined; // Return null if the list of points is empty
+        }
+
+        let closestPoint = points[0];
+        let closestDistance = this.getDistancePointPoint(referencePoint, closestPoint.collision);
+
+        for (let i = 1; i < points.length; i++) {
+            const currentPoint = points[i];
+            const currentDistance = this.getDistancePointPoint(referencePoint, currentPoint.collision);
+
+            if (currentDistance < closestDistance) {
+                closestPoint = currentPoint;
+                closestDistance = currentDistance;
+            }
+        }
+
+        return closestPoint;
+    }
 
     private recruitHelp(character: Character) {
         console.log('recruitHelp')

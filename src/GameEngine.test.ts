@@ -3,6 +3,7 @@ import GameEngine from "./GameEngine"
 import Character from "./types/Character"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
+import { LineSegment } from "./types/LineSegment"
 
 describe('GameEngine', () => {
     let gameEngine: GameEngine
@@ -23,7 +24,84 @@ describe('GameEngine', () => {
         eventEmitter = new EventEmitter()
         gameEngine = new GameEngine({ ticksPerSecond }, eventEmitter)
     })
-    describe("rectangle intersections", () => {
+
+    describe("calculatePerpendicularPointOnSameSide", () => {
+        test('below a horizontal line', () => {
+            const segment = { start: { x: -10, y: 0 }, end: { x: 10, y: 0 } }
+            const pointOnSegment = { x: 0, y: 0 }
+            const pointNotOnSegment = { x: 0, y: 1 }
+            const distance = 2.5
+            const newPosition = gameEngine.calculatePerpendicularPointOnSameSide(segment, pointOnSegment, pointNotOnSegment, distance)
+            expect(newPosition?.x).toBe(0)
+            expect(newPosition?.y).toBe(2.5)
+        })
+
+        test('above a horizontal line', () => {
+            const segment = { start: { x: -10, y: 0 }, end: { x: 10, y: 0 } }
+            const pointOnSegment = { x: 0, y: 0 }
+            const pointNotOnSegment = { x: 0, y: -1 }
+            const distance = 2.5
+            const newPosition = gameEngine.calculatePerpendicularPointOnSameSide(segment, pointOnSegment, pointNotOnSegment, distance)
+            expect(newPosition?.x).toBe(0)
+            expect(newPosition?.y).toBe(-2.5)
+        })
+        test('to the right of a vertical line', () => {
+            const segment = { start: { x: 0, y: -10 }, end: { x: 0, y: 10 } }
+            const pointOnSegment = { x: 0, y: 0 }
+            const pointNotOnSegment = { x: 10, y: 0 }
+            const distance = 2.5
+            const newPosition = gameEngine.calculatePerpendicularPointOnSameSide(segment, pointOnSegment, pointNotOnSegment, distance)
+            expect(newPosition?.x).toBe(2.5)
+            expect(newPosition?.y).toBe(0)
+        })
+        test('to the left of a vertical line', () => {
+            const segment = { start: { x: 0, y: -10 }, end: { x: 0, y: 10 } }
+            const pointOnSegment = { x: 0, y: 0 }
+            const pointNotOnSegment = { x: -10, y: 0 }
+            const distance = 2.5
+            const newPosition = gameEngine.calculatePerpendicularPointOnSameSide(segment, pointOnSegment, pointNotOnSegment, distance)
+            expect(newPosition?.x).toBe(-2.5)
+            expect(newPosition?.y).toBe(0)
+        })
+
+        test('above a line running nw to se', () => {
+            const segment = { start: { x: -10, y: -10 }, end: { x: 10, y: 10 } }
+            const pointOnSegment = { x: 0, y: 0 }
+            const pointNotOnSegment = { x: 5, y: -5 }
+            const distance = 2.5
+            const newPosition = gameEngine.calculatePerpendicularPointOnSameSide(segment, pointOnSegment, pointNotOnSegment, distance)
+            expect(newPosition?.x).toBeCloseTo(1.767)
+            expect(newPosition?.y).toBeCloseTo(-1.767)
+        })
+    })
+
+    describe("findClosestPoint", () => {
+        test('should find the closest point', () => {
+            const points = [
+                { collision: { x: 1, y: 5 }, segment: { start: { x: 1, y: 0 }, end: { x: 0, y: 0 } } },
+                { collision: { x: 1, y: 6 }, segment: { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } } },
+                { collision: { x: 7, y: 1 }, segment: { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } } },
+                { collision: { x: 4, y: 4 }, segment: { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } } },
+            ]
+            const point = { x: 0, y: 0 }
+
+            const closestPoint = gameEngine.findClosestPoint(point, points);
+            expect(closestPoint?.collision.x).toBe(1)
+            expect(closestPoint?.collision.y).toBe(5)
+            expect(closestPoint?.segment.start.x).toBe(1)
+        })
+    })
+
+    describe("calculateSegmentsIntersection", () => {
+        test('chatgpt example', () => {
+            const segment1: LineSegment = { start: { x: 1, y: 5 }, end: { x: 5, y: 1 } };
+            const segment2: LineSegment = { start: { x: -1, y: 5 }, end: { x: 7, y: 1 } };
+
+            const intersectionPoint = gameEngine.calculateSegmentsIntersection(segment1, segment2);
+            expect(intersectionPoint?.collision.x).toBe(3)
+            expect(intersectionPoint?.collision.y).toBe(3)
+        })
+
         test('should intersect a rectable at two points when moving down', () => {
             const circle = new Character({ location: { x: 0, y: -20 } })
             //move straight down
@@ -31,48 +109,83 @@ describe('GameEngine', () => {
             const rect = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
             const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(rect)
 
-            const topIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topLeft, end: topRight })
-            const leftIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomLeft, end: topLeft })
-            const bottomIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomRight, end: bottomLeft })
-            const rightIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topRight, end: bottomRight })
+            const topIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: direction }, { start: topLeft, end: topRight })
+            const leftIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: direction }, { start: bottomLeft, end: topLeft })
+            const bottomIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: direction }, { start: bottomRight, end: bottomLeft })
+            const rightIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: direction }, { start: topRight, end: bottomRight })
 
-            expect(topIntersection?.x).toBe(0)
-            expect(topIntersection?.y).toBe(-1)
+            expect(topIntersection?.collision.x).toBe(0)
+            expect(topIntersection?.collision.y).toBe(-1)
 
-            expect(leftIntersection?.x).toBeUndefined()
-            expect(leftIntersection?.y).toBeUndefined()
+            expect(leftIntersection?.collision.x).toBeUndefined()
+            expect(leftIntersection?.collision.y).toBeUndefined()
 
-            expect(bottomIntersection?.x).toBe(0)
-            expect(bottomIntersection?.y).toBe(1)
+            expect(bottomIntersection?.collision.x).toBe(0)
+            expect(bottomIntersection?.collision.y).toBe(1)
 
-            expect(rightIntersection?.x).toBeUndefined()
-            expect(rightIntersection?.y).toBeUndefined() 
+            expect(rightIntersection?.collision.x).toBeUndefined()
+            expect(rightIntersection?.collision.y).toBeUndefined()
         })
 
         test('should intersect a rectable at two points when moving horizontal', () => {
             const circle = new Character({ location: { x: -20, y: 0 } })
-            //move straight down
-            const direction = { x: 20, y: 0 }
+            //move to the right
+            const end = { x: 20, y: 0 }
             const rect = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
             const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(rect)
 
-            const topIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topLeft, end: topRight })
-            const leftIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomLeft, end: topLeft })
-            const bottomIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: bottomRight, end: bottomLeft })
-            const rightIntersection = gameEngine.calculateRaySegmentIntersection({ origin: circle.location, direction: direction }, { start: topRight, end: bottomRight })
+            const topIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: topLeft, end: topRight })
+            const leftIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: bottomLeft, end: topLeft })
+            const bottomIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: bottomRight, end: bottomLeft })
+            const rightIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: topRight, end: bottomRight })
 
-            expect(topIntersection?.x).toBeUndefined()
-            expect(topIntersection?.y).toBeUndefined()
+            expect(topIntersection?.collision.x).toBeUndefined()
+            expect(topIntersection?.collision.y).toBeUndefined()
 
-            expect(leftIntersection?.x).toBe(-2)
-            expect(leftIntersection?.y).toBe(0)
+            expect(leftIntersection?.collision.x).toBe(-2)
+            expect(leftIntersection?.collision.y).toBeCloseTo(0)
 
-            expect(bottomIntersection?.x).toBeUndefined()
-            expect(bottomIntersection?.y).toBeUndefined()
+            expect(bottomIntersection?.collision.x).toBeUndefined()
+            expect(bottomIntersection?.collision.y).toBeUndefined()
 
-            expect(rightIntersection?.x).toBe(2)
-            expect(rightIntersection?.y).toBe(0) 
+            expect(rightIntersection?.collision.x).toBe(2)
+            expect(rightIntersection?.collision.y).toBeCloseTo(0)
         })
+
+        test('should intersect a rectable at two adjacent sides when moving diagonal', () => {
+            const circle = new Character({ location: { x: 0, y: -13 } })
+            //move diagonal to the right
+            const end = { x: 13, y: 0 }
+            const rect = new WorldObject({ shape: SHAPE.RECT, width: 20, height: 20 })
+            const [topRight, topLeft, bottomLeft, bottomRight] = gameEngine.calculateRectanglePoints(rect)
+
+            expect(topRight.x).toBe(10)
+            expect(topRight.y).toBe(-10)
+            expect(topLeft.x).toBe(-10)
+            expect(topLeft.y).toBe(-10)
+            expect(bottomLeft.x).toBe(-10)
+            expect(bottomLeft.y).toBe(10)
+            expect(bottomRight.x).toBe(10)
+            expect(bottomRight.y).toBe(10)
+
+            const topIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: topLeft, end: topRight })
+            const leftIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: bottomLeft, end: topLeft })
+            const bottomIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: bottomRight, end: bottomLeft })
+            const rightIntersection = gameEngine.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: topRight, end: bottomRight })
+
+            expect(leftIntersection?.collision.x).toBeUndefined()
+            expect(leftIntersection?.collision.y).toBeUndefined()
+
+            expect(bottomIntersection?.collision.x).toBeUndefined()
+            expect(bottomIntersection?.collision.y).toBeUndefined()
+
+            expect(rightIntersection?.collision.x).toBe(10)
+            expect(rightIntersection?.collision.y).toBeCloseTo(-3)
+
+            expect(topIntersection?.collision.x).toBeCloseTo(3)
+            expect(topIntersection?.collision.y).toBe(-10)
+        })
+
 
     })
 
@@ -322,17 +435,7 @@ describe('GameEngine', () => {
         })
     })
 
-    //calculateCollisionPoint
-    describe("calculateCollisionPoint", () => {
-        test('should hit the top of the rectangle', () => {
-            const character = new Character({ location: { x: 0, y: -10 } })
-            const direction = { x: 0, y: 10 }
-            const rect = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2 })
-            const collisionPoint = gameEngine.calculateCollisionPoint(character, direction, rect)
-            expect(collisionPoint?.x).toBe(0)
-            expect(collisionPoint?.y).toBe(-1)
-        })
-    })
+
 
     describe("calculateAutoRotation", () => {
 
