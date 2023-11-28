@@ -1,4 +1,4 @@
-export type Point = {
+export default interface Point {
     x: number
     y: number
 }

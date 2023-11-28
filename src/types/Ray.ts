@@ -1,6 +1,6 @@
-import { Point } from "./Point";
+import Point from "./Point";
 
-export interface Ray {
-    origin: Point;
-    direction: Point;
+export default interface Ray {
+    origin: Point
+    direction: Point
 }

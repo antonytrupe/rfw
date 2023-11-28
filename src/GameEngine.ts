@@ -3,13 +3,12 @@ import Character from "./types/Character"
 import * as CONSTANTS from "./types/CONSTANTS"
 import GameWorld from "./GameWorld"
 import { roll } from "./utility"
-import { GameEvent } from "./types/GameEvent"
+import GameEvent from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
-import { Point } from "./types/Point"
+import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { Ray } from "./types/Ray"
-import { LineSegment } from "./types/LineSegment"
+import { calculateCollisionPoint, getDistancePointPoint, getRotation, getRotationDelta } from "./Geometry"
 
 const LEFT = 1
 const RIGHT = -1
@@ -157,7 +156,7 @@ export default class GameEngine {
                         }
 
                         //check range
-                        const distance = this.getDistancePointPoint(target.location, character.location)
+                        const distance = getDistancePointPoint(target.location, character.location)
                         if (distance <= (target.radiusX + character.radiusX) * 1.1) {
                             //console.log('distance', distance)
                             //always spend an action
@@ -225,14 +224,14 @@ export default class GameEngine {
                     }
                 }
                 else if (action.action == 'move' && !!action.location) {
-                    const dist = this.getDistancePointPoint(action.location, character.location)
+                    const dist = getDistancePointPoint(action.location, character.location)
                     let targetRotation
                     let turnRotation = 0
                     let speedAcceleration = 0
                     let actions = character.actions
                     if (dist > character.radiusX) {
                         //console.log('turn/accelerate/stop')
-                        targetRotation = this.getRotation(character.location, action.location)
+                        targetRotation = getRotation(character.location, action.location)
 
                         //turn right or left
                         turnRotation = this.calculateRotationAcceleration(character.rotation, targetRotation)
@@ -249,7 +248,7 @@ export default class GameEngine {
                         .filter((it) => { return it.id != character.id && it.hp > -10 })
                     if (charactersAtTarget.length > 0) {
                         //console.log('characters at target')
-                        const dist = this.getDistancePointPoint(character.location, charactersAtTarget[0].location)
+                        const dist = getDistancePointPoint(character.location, charactersAtTarget[0].location)
                         if (dist < (character.radiusX + charactersAtTarget[0].radiusX)) {
                             //console.log('colliding with characters at target')
                             turnRotation = 0
@@ -309,9 +308,9 @@ export default class GameEngine {
     }
 
     private slide(character: Character, newPosition: Point): Point {
-        let collisions: WorldObject[] =
+        let collisionObjects: WorldObject[] =
             //get world objects
-            this.gameWorld.getObjectsNearSegment({ start: character.location, stop: newPosition, width: character.radiusX })
+            this.gameWorld.getObjectsInWay(character, newPosition)
                 //filter out shapes we don't know how to handle yet
                 .filter((o) => {
                     return false && [SHAPE.CIRCLE, SHAPE.RECT].includes(o.shape)
@@ -322,25 +321,27 @@ export default class GameEngine {
                         //filter out current character and dead characters
                         .filter((it) => { return it.id != character.id && it.hp > -10 })
                 )
-        if (collisions.length > 0) {
+        if (collisionObjects.length > 0) {
             //"sum up" all the new positions from colliding objects
-            const collisionSum = collisions.reduce((previousValue, currentObject) => {
+            const collisionSum = collisionObjects.reduce((previousValue, currentObject, index) => {
                 let x = 0, y = 0
                 if (currentObject.shape == SHAPE.CIRCLE) {
                     //get the rotation to the colliding object
-                    const d = this.getRotation(currentObject.location, newPosition)
+                    const d = getRotation(currentObject.location, newPosition)
 
                     //get the distance along that path of both objects size/2
+                    //aka push our character out of the circle via the closest direction
                     x = currentObject.location.x + Math.cos(d) * (character.radiusX + currentObject.radiusX)
                     y = currentObject.location.y - Math.sin(d) * (character.radiusX + currentObject.radiusX)
                 }
                 else if (currentObject.shape == SHAPE.RECT) {
 
-                    // might be a future collision
-                    const cp = this.calculateCollisionPoint(character, newPosition, currentObject)
-                    //check to see if the collision point is on the line segment we moved this tick
+                    const cp = calculateCollisionPoint(character, newPosition, currentObject)
+                    console.log('cp', cp)
                     if (!!cp) {
-                        x = cp?.x
+                        console.log('using cp')
+
+                        x = cp.x
                         y = cp.y
                     }
                     else {
@@ -353,341 +354,63 @@ export default class GameEngine {
                 return previousValue
             }, { x: 0, y: 0 })
             //then get the average position
-            newPosition = { x: collisionSum.x / collisions.length, y: collisionSum.y / collisions.length }
+            newPosition = { x: collisionSum.x / collisionObjects.length, y: collisionSum.y / collisionObjects.length }
         }
         return newPosition
     }
 
     private calculatePerpendicularPoint(rectangle: WorldObject, pointOnEdge: Point, distance: number): Point | null {
-        const { location, width, height, rotation } = rectangle;
+        const { location, width, height, rotation } = rectangle
 
         // Translate the point on the edge to the local coordinate system of the rotated rectangle
         const translatedPoint = {
             x: (pointOnEdge.x - location.x) * Math.cos(-rotation) - (pointOnEdge.y - location.y) * Math.sin(-rotation),
             y: (pointOnEdge.x - location.x) * Math.sin(-rotation) + (pointOnEdge.y - location.y) * Math.cos(-rotation),
-        };
+        }
 
         // Check if the translated point is on the left or right edge of the rectangle
-        const onLeftEdge = translatedPoint.x < -width / 2;
-        const onRightEdge = translatedPoint.x > width / 2;
+        const onLeftEdge = translatedPoint.x < -width / 2
+        const onRightEdge = translatedPoint.x > width / 2
 
         // Check if the translated point is on the top or bottom edge of the rectangle
-        const onTopEdge = translatedPoint.y < -height / 2;
-        const onBottomEdge = translatedPoint.y > height / 2;
+        const onTopEdge = translatedPoint.y < -height / 2
+        const onBottomEdge = translatedPoint.y > height / 2
 
         // Calculate the direction vector along the edge
-        let direction: Point;
+        let direction: Point
 
         if (onLeftEdge) {
-            direction = { x: -1, y: 0 };
+            direction = { x: -1, y: 0 }
         } else if (onRightEdge) {
-            direction = { x: 1, y: 0 };
+            direction = { x: 1, y: 0 }
         } else if (onTopEdge) {
-            direction = { x: 0, y: -1 };
+            direction = { x: 0, y: -1 }
         } else if (onBottomEdge) {
-            direction = { x: 0, y: 1 };
+            direction = { x: 0, y: 1 }
         } else {
             console.log('The point is not on any edge')
-            return null; // The point is not on any edge
+            return null // The point is not on any edge
         }
 
         // Normalize the direction vector
         const normalizedDirection = {
             x: direction.x / Math.sqrt(direction.x ** 2 + direction.y ** 2),
             y: direction.y / Math.sqrt(direction.x ** 2 + direction.y ** 2),
-        };
+        }
 
         // Calculate the perpendicular point at the specified distance
         const perpendicularPoint = {
             x: location.x + translatedPoint.x + normalizedDirection.y * distance,
             y: location.y + translatedPoint.y - normalizedDirection.x * distance,
-        };
+        }
 
         // Transform the perpendicular point back to the global coordinate system
         const globalPerpendicularPoint = {
             x: perpendicularPoint.x * Math.cos(rotation) - perpendicularPoint.y * Math.sin(rotation) + location.x,
             y: perpendicularPoint.x * Math.sin(rotation) + perpendicularPoint.y * Math.cos(rotation) + location.y,
-        };
-
-        return globalPerpendicularPoint;
-    }
-
-    private isPointOnLineSegment(point: Point, segment: LineSegment): boolean {
-        const { start, end } = segment;
-
-        // Check if the point is within the bounding box of the line segment
-        if (
-            (point.x >= Math.min(start.x, end.x) && point.x <= Math.max(start.x, end.x)) &&
-            (point.y >= Math.min(start.y, end.y) && point.y <= Math.max(start.y, end.y))
-        ) {
-            // Calculate the cross product of the vectors formed by the point and the endpoints
-            const crossProduct =
-                (point.y - start.y) * (end.x - start.x) - (point.x - start.x) * (end.y - start.y);
-
-            // Allow for a small epsilon to handle floating-point imprecisions
-            const epsilon = 1e-10;
-
-            // Check if the point is close enough to be considered on the line
-            return Math.abs(crossProduct) < epsilon;
         }
 
-        return false;
-    }
-
-    calculateRectanglePoints(rectangle: WorldObject): Point[] {
-        const { location, width, height, rotation } = rectangle
-
-        const halfWidth = width / 2
-        const halfHeight = height / 2
-
-        const cosA = Math.cos(rotation)
-        const sinA = Math.sin(rotation)
-
-        const topRight: Point = {
-            x: location.x + halfWidth * cosA - halfHeight * sinA,
-            y: location.y - halfWidth * sinA - halfHeight * cosA
-        }
-
-        const topLeft: Point = {
-            x: location.x - halfWidth * cosA - halfHeight * sinA,
-            y: location.y + halfWidth * sinA - halfHeight * cosA
-        }
-
-        const bottomLeft: Point = {
-            x: location.x - halfWidth * cosA + halfHeight * sinA,
-            y: location.y + halfWidth * sinA + halfHeight * cosA
-        }
-
-        const bottomRight: Point = {
-            x: location.x + halfWidth * cosA + halfHeight * sinA,
-            y: location.y - halfWidth * sinA + halfHeight * cosA
-        }
-
-        return [topRight, topLeft, bottomLeft, bottomRight]
-    }
-
-    private rayIntersectsSegment(ray: Ray, a: Point, b: Point): Point | null {
-        const [x1, y1] = [a.x, a.y]
-        const [x2, y2] = [b.x, b.y]
-        const [x3, y3] = [ray.origin.x, ray.origin.y]
-        const [x4, y4] = [ray.origin.x + ray.direction.x, ray.origin.y + ray.direction.y]
-
-        const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-
-        if (denominator === 0) {
-            return null //The ray and segment are parallel
-        }
-
-        const t =
-            ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator
-        const u =
-            -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator
-
-        if (t > 0 && t < 1 && u > 0) {
-            const intersectionX = x1 + t * (x2 - x1)
-            const intersectionY = y1 + t * (y2 - y1)
-            return { x: intersectionX, y: intersectionY }
-        }
-
-        return null //No intersection
-    }
-
-    private findIntersectionPoint(ray: Ray, polygon: Point[]): Point | null {
-        let intersectionPoint = null
-
-        for (let i = 0; i < polygon.length; i++) {
-            const startPoint = polygon[i]
-            const endPoint = polygon[(i + 1) % polygon.length]
-
-            const intersection = this.rayIntersectsSegment(ray, startPoint, endPoint)
-
-            if (intersection) {
-                if (!intersectionPoint || intersection.x < intersectionPoint.x) {
-                    intersectionPoint = intersection
-                }
-            }
-        }
-
-        return intersectionPoint
-    }
-
-    calculateSegmentsIntersection(segment1: LineSegment, segment2: LineSegment): { collision: Point, segment: LineSegment } | undefined {
-        const { start: p1, end: q1 } = segment1;
-        const { start: p2, end: q2 } = segment2;
-
-        const orientation = (p: Point, q: Point, r: Point): number => {
-            const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-            if (val === 0) return 0; // Collinear
-            return val > 0 ? 1 : 2; // Clockwise or counterclockwise
-        };
-
-        const onSegment = (p: Point, q: Point, r: Point): boolean => {
-            return (
-                q.x <= Math.max(p.x, r.x) &&
-                q.x >= Math.min(p.x, r.x) &&
-                q.y <= Math.max(p.y, r.y) &&
-                q.y >= Math.min(p.y, r.y)
-            );
-        };
-
-        const orientation1 = orientation(p1, q1, p2);
-        const orientation2 = orientation(p1, q1, q2);
-        const orientation3 = orientation(p2, q2, p1);
-        const orientation4 = orientation(p2, q2, q1);
-
-        // General case
-        if (orientation1 !== orientation2 && orientation3 !== orientation4) {
-            const intersectionX =
-                ((p1.x * q1.y - p1.y * q1.x) * (p2.x - q2.x) - (p1.x - q1.x) * (p2.x * q2.y - p2.y * q2.x)) /
-                ((p1.x - q1.x) * (p2.y - q2.y) - (p1.y - q1.y) * (p2.x - q2.x));
-
-            const intersectionY =
-                ((p1.x * q1.y - p1.y * q1.x) * (p2.y - q2.y) - (p1.y - q1.y) * (p2.x * q2.y - p2.y * q2.x)) /
-                ((p1.x - q1.x) * (p2.y - q2.y) - (p1.y - q1.y) * (p2.x - q2.x));
-
-            const intersectionPoint: Point = { x: intersectionX, y: intersectionY };
-
-            // Check if the intersection point lies on both line segments
-            if (onSegment(p1, intersectionPoint, q1) && onSegment(p2, intersectionPoint, q2)) {
-                return { collision: intersectionPoint, segment: segment1 }
-            }
-        }
-
-        // No intersection
-        return undefined;
-    }
-
-    private calculateRaySegmentIntersection(ray: Ray, segment: LineSegment): Point | null {
-        const { origin, direction } = ray;
-        const { start, end } = segment;
-
-        const rayDir = direction
-        const segmentDir = { x: end.x - start.x, y: end.y - start.y };
-        const rayStartToSegmentStart = { x: start.x - origin.x, y: start.y - origin.y };
-
-        // Calculate the determinant
-        const determinant = rayDir.x * segmentDir.y - rayDir.y * segmentDir.x;
-
-        if (determinant === 0) {
-            // The ray and segment are parallel
-            return null;
-        }
-
-        // Calculate the parameters 't' and 'u'
-        const t = (rayStartToSegmentStart.x * segmentDir.y - rayStartToSegmentStart.y * segmentDir.x) / determinant;
-        const u = (rayStartToSegmentStart.x * rayDir.y - rayStartToSegmentStart.y * rayDir.x) / determinant;
-
-
-        if (t >= 0 && u >= 0 && u <= 1) {
-            // Intersection point is within the segment
-
-            // Calculate the intersection point
-            const intersectionX = origin.x + t * rayDir.x;
-            const intersectionY = origin.y + t * rayDir.y;
-
-            // Ensure the intersection point is along the ray (not behind the origin)
-            if (t >= 0) {
-                return { x: intersectionX, y: intersectionY };
-            }
-        }
-
-        // No intersection
-        return null;
-    }
-
-    calculatePerpendicularPointOnSameSide(
-        segment: LineSegment,
-        pointOnSegment: Point,
-        pointNotOnSegment: Point,
-        distance: number
-    ): Point | undefined {
-        const { start, end } = segment;
-
-        // Calculate the vector along the segment
-        const segmentVector = { x: end.x - start.x, y: end.y - start.y };
-
-        // Calculate the vector from the point on the segment to the point not on the segment
-        const pointVector = { x: pointNotOnSegment.x - pointOnSegment.x, y: pointNotOnSegment.y - pointOnSegment.y };
-
-        // Calculate the dot product of the two vectors
-        const dotProduct = segmentVector.x * pointVector.x + segmentVector.y * pointVector.y;
-
-        // Calculate the projection of pointVector onto segmentVector
-        const projection = {
-            x: (dotProduct / (segmentVector.x * segmentVector.x + segmentVector.y * segmentVector.y)) * segmentVector.x,
-            y: (dotProduct / (segmentVector.x * segmentVector.x + segmentVector.y * segmentVector.y)) * segmentVector.y,
-        };
-
-        // Calculate the perpendicular vector
-        const perpendicularVector = { x: pointVector.x - projection.x, y: pointVector.y - projection.y };
-
-        // Calculate the length of the perpendicular vector
-        const perpendicularVectorLength = Math.sqrt(
-            perpendicularVector.x * perpendicularVector.x + perpendicularVector.y * perpendicularVector.y
-        );
-
-        // Calculate the unit vector in the direction of the perpendicular vector
-        const unitPerpendicularVector = {
-            x: perpendicularVector.x / perpendicularVectorLength,
-            y: perpendicularVector.y / perpendicularVectorLength,
-        };
-
-        // Calculate the new point at the specified distance along the perpendicular vector
-        const newPoint = {
-            x: pointOnSegment.x + unitPerpendicularVector.x * distance,
-            y: pointOnSegment.y + unitPerpendicularVector.y * distance,
-        };
-
-        return newPoint;
-    }
-
-    private calculateCollisionPoint(circle: WorldObject, end: Point, shape: WorldObject): Point | undefined {
-        //get all the vertices
-        let vertices: Point[] = []
-        if (shape.shape == SHAPE.RECT) {
-            vertices = this.calculateRectanglePoints(shape)
-        }
-
-        //get all the collisions of all the segments
-        let collisions: { collision: Point, segment: LineSegment }[] = []
-        vertices.forEach((a, i) => {
-            const b = vertices[i == 0 ? vertices.length - 1 : i - 1]
-            const c = this.calculateSegmentsIntersection({ start: circle.location, end: end }, { start: a, end: b })
-            if (!!c) {
-                collisions.push(c)
-            }
-        })
-
-        //now get the collision point closest to the original location
-        const closest = this.findClosestPoint(circle.location, collisions)
-
-        //now back off from where we collided
-        if (!!closest) {
-            const p = this.calculatePerpendicularPointOnSameSide({ start: closest.segment.start, end: closest.segment.end }, circle.location, closest.collision, circle.radiusX)
-            return p
-        }
-        return undefined
-    }
-
-    findClosestPoint(referencePoint: Point, points: { collision: Point, segment: LineSegment }[]): { collision: Point, segment: LineSegment } | undefined {
-        if (points.length === 0) {
-            return undefined; // Return null if the list of points is empty
-        }
-
-        let closestPoint = points[0];
-        let closestDistance = this.getDistancePointPoint(referencePoint, closestPoint.collision);
-
-        for (let i = 1; i < points.length; i++) {
-            const currentPoint = points[i];
-            const currentDistance = this.getDistancePointPoint(referencePoint, currentPoint.collision);
-
-            if (currentDistance < closestDistance) {
-                closestPoint = currentPoint;
-                closestDistance = currentDistance;
-            }
-        }
-
-        return closestPoint;
+        return globalPerpendicularPoint
     }
 
     private recruitHelp(character: Character) {
@@ -705,8 +428,8 @@ export default class GameEngine {
             })
             //sort them by distance
             .sort((a, b) => {
-                const distancetoA = this.getDistancePointPoint(character.location, a.location)
-                const distancetoB = this.getDistancePointPoint(character.location, b.location)
+                const distancetoA = getDistancePointPoint(character.location, a.location)
+                const distancetoB = getDistancePointPoint(character.location, b.location)
                 return distancetoA == distancetoB ? 0 : distancetoA > distancetoB ? 1 : -1
             })
         //console.log('nearby', nearby)
@@ -724,8 +447,8 @@ export default class GameEngine {
 
     calculateAcceleration(character: Character, target: Point): number {
         const currentRotation = character.rotation
-        const targetRotation = this.getRotation(character.location, target)
-        const delta = this.getRotationDelta(currentRotation, targetRotation)
+        const targetRotation = getRotation(character.location, target)
+        const delta = getRotationDelta(currentRotation, targetRotation)
 
         let acceleration = 0
 
@@ -737,7 +460,7 @@ export default class GameEngine {
 
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
-        const dist = this.getDistancePointPoint(target, loc)
+        const dist = getDistancePointPoint(target, loc)
         if (dist <= character.radiusX) {
             acceleration = 0
         }
@@ -745,25 +468,13 @@ export default class GameEngine {
     }
 
     calculateRotationAcceleration(current: number, target: number) {
-        let delta = this.getRotationDelta(current, target)
+        let delta = getRotationDelta(current, target)
         //do something about creeping up on 0
         let a = this.clamp(delta / (Math.PI / 4), -1, 1)
         if (Math.abs(a) > .01 || a == 0)
             return a
         else
             return Math.abs(a) / a * .01
-    }
-
-    getRotationDelta(current: number, target: number) {
-        let delta = (target - current + (Math.PI * 8 / 4)) % (Math.PI * 2)
-        if (delta > Math.PI) {
-            delta = -(Math.PI * 2 - delta)
-        }
-        return delta
-    }
-
-    getRotation(src: Point, dest: Point) {
-        return (Math.atan2(-dest.y - -src.y, dest.x - src.x) + (4 / 2 * Math.PI)) % (Math.PI * 2)
     }
 
     moveCharacter(characterId: string, location: Point) {
@@ -1051,13 +762,6 @@ export default class GameEngine {
 
     private clamp(number: number, min: number, max: number) {
         return Math.max(min, Math.min(number, max))
-    }
-
-    getDistancePointPoint(p1: Point, p2: Point) {
-        const deltaX = p2.x - p1.x
-        const deltaY = p2.y - p1.y
-        const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
-        return distance
     }
 
     private calculateSpeed(character: Character, dt: number) {

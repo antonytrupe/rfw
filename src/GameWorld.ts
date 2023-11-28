@@ -1,8 +1,10 @@
 import isEqual from "lodash.isequal"
 import Character from "./types/Character"
 import { Zones, Zone, Zones2, Zone2 } from "./types/Zones"
-import { Point } from "./types/Point"
+import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
+import { SHAPE } from "./types/SHAPE"
+import { calculateRectanglePoints, getDistancePointSegment, calculateDistanceSegmentPolygon } from "./Geometry"
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
@@ -92,7 +94,6 @@ export default class GameWorld {
         return this
     }
 
-
     updateCharacters(characters: Character[]): GameWorld {
         characters.forEach((character) => {
             this.updateCharacter(character)
@@ -121,48 +122,23 @@ export default class GameWorld {
     getCharactersNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
-            const d = this.getDistancePointSegment({ start, stop, point: character.location }) - character.radiusX
+            const d = getDistancePointSegment(character.location, { start, end: stop }) - character.radiusX
             return d < width
         })
     }
 
-    getObjectsNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): WorldObject[] {
+    getObjectsInWay(character: Character, stop: Point) {
         return Array.from(this.worldObjects.values()).filter((wo): boolean => {
-            const d = this.getDistancePointSegment({ start, stop, point: wo.location }) - wo.radiusX
-            return d < width
+            if (wo.shape == SHAPE.CIRCLE) {
+                const d = getDistancePointSegment(wo.location, { start: character.location, end: stop },) - wo.radiusX
+                return d < character.radiusX
+            }
+            else if (wo.shape == SHAPE.RECT) {
+                const d = calculateDistanceSegmentPolygon({ start: character.location, end: stop }, calculateRectanglePoints(wo))
+                return d != undefined && d < character.radiusX
+            }
+            return false
         })
-    }
-
-    getDistancePointSegment({ point: { x, y }, start: { x: x1, y: y1 }, stop: { x: x2, y: y2 } }: { point: Point, start: Point, stop: Point }) {
-        var A = x - x1;
-        var B = y - y1;
-        var C = x2 - x1;
-        var D = y2 - y1;
-
-        var dot = A * C + B * D;
-        var len_sq = C * C + D * D;
-        var param = -1;
-        if (len_sq != 0) //in case of 0 length line
-            param = dot / len_sq;
-
-        var xx, yy;
-
-        if (param < 0) {
-            xx = x1;
-            yy = y1;
-        }
-        else if (param > 1) {
-            xx = x2;
-            yy = y2;
-        }
-        else {
-            xx = x1 + param * C;
-            yy = y1 + param * D;
-        }
-
-        var dx = x - xx;
-        var dy = y - yy;
-        return Math.sqrt(dx * dx + dy * dy);
     }
 
     getObjectsNearPoint({ location, distance }: { location: Point, distance: number }): WorldObject[] {

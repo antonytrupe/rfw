@@ -1,7 +1,7 @@
 import './CharacterUI.scss'
 
 import Character from "@/types/Character"
-import { Point } from '@/types/Point'
+import Point from '@/types/Point'
 
 export default function CharacterUI({ character, position, children = undefined }: {
     character: Character | undefined, position: Point | undefined, children?: any

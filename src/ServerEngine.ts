@@ -1,6 +1,6 @@
 import EventEmitter from "events"
 import GameEngine from "@/GameEngine"
-import { ClassPopulation } from "./types/ClassPopulation"
+import ClassPopulation from "./types/ClassPopulation"
 import * as CONSTANTS from "@/types/CONSTANTS"
 import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
@@ -10,13 +10,12 @@ import { getSession } from "next-auth/react"
 import Player from "./types/Player"
 import { v4 as uuidv4 } from 'uuid'
 import { getRandomPoint, roll } from "./utility"
-import { GameEvent } from "./types/GameEvent"
+import GameEvent from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
-import { Point } from "./types/Point"
+import Point from "./types/Point"
 import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, TEMPLATE_DB_PATH, ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
-import { SHAPE } from "./types/SHAPE"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter

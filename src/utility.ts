@@ -1,4 +1,4 @@
-import { Point } from "./types/Point"
+import Point from "./types/Point"
 
 export function roll({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }) {
     let sum = modifier
