@@ -8,7 +8,7 @@ import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { calculateCollisionPoint, getDistancePointPoint, getRotation, getRotationDelta } from "./Geometry"
+import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
 
 const LEFT = 1
 const RIGHT = -1
@@ -156,7 +156,7 @@ export default class GameEngine {
                         }
 
                         //check range
-                        const distance = getDistancePointPoint(target.location, character.location)
+                        const distance = distanceBetweenPoints(target.location, character.location)
                         if (distance <= (target.radiusX + character.radiusX) * 1.1) {
                             //console.log('distance', distance)
                             //always spend an action
@@ -224,7 +224,7 @@ export default class GameEngine {
                     }
                 }
                 else if (action.action == 'move' && !!action.location) {
-                    const dist = getDistancePointPoint(action.location, character.location)
+                    const dist = distanceBetweenPoints(action.location, character.location)
                     let targetRotation
                     let turnRotation = 0
                     let speedAcceleration = 0
@@ -248,7 +248,7 @@ export default class GameEngine {
                         .filter((it) => { return it.id != character.id && it.hp > -10 })
                     if (charactersAtTarget.length > 0) {
                         //console.log('characters at target')
-                        const dist = getDistancePointPoint(character.location, charactersAtTarget[0].location)
+                        const dist = distanceBetweenPoints(character.location, charactersAtTarget[0].location)
                         if (dist < (character.radiusX + charactersAtTarget[0].radiusX)) {
                             //console.log('colliding with characters at target')
                             turnRotation = 0
@@ -313,7 +313,7 @@ export default class GameEngine {
             this.gameWorld.getObjectsInWay(character, newPosition)
                 //filter out shapes we don't know how to handle yet
                 .filter((o) => {
-                    return false && [SHAPE.CIRCLE, SHAPE.RECT].includes(o.shape)
+                    return true && [SHAPE.CIRCLE, SHAPE.RECT].includes(o.shape)
                 })
                 //get characters
                 .concat(
@@ -323,7 +323,7 @@ export default class GameEngine {
                 )
         if (collisionObjects.length > 0) {
             //"sum up" all the new positions from colliding objects
-            const collisionSum = collisionObjects.reduce((previousValue, currentObject, index) => {
+            const collisionSum = collisionObjects.reduce((previousValue, currentObject) => {
                 let x = 0, y = 0
                 if (currentObject.shape == SHAPE.CIRCLE) {
                     //get the rotation to the colliding object
@@ -336,7 +336,7 @@ export default class GameEngine {
                 }
                 else if (currentObject.shape == SHAPE.RECT) {
 
-                    const cp = calculateCollisionPoint(character, newPosition, currentObject)
+                    const cp = polygonSlide(character, newPosition, currentObject)
                     console.log('cp', cp)
                     if (!!cp) {
                         console.log('using cp')
@@ -362,21 +362,21 @@ export default class GameEngine {
     private calculatePerpendicularPoint(rectangle: WorldObject, pointOnEdge: Point, distance: number): Point | null {
         const { location, width, height, rotation } = rectangle
 
-        // Translate the point on the edge to the local coordinate system of the rotated rectangle
+        //Translate the point on the edge to the local coordinate system of the rotated rectangle
         const translatedPoint = {
             x: (pointOnEdge.x - location.x) * Math.cos(-rotation) - (pointOnEdge.y - location.y) * Math.sin(-rotation),
             y: (pointOnEdge.x - location.x) * Math.sin(-rotation) + (pointOnEdge.y - location.y) * Math.cos(-rotation),
         }
 
-        // Check if the translated point is on the left or right edge of the rectangle
+        //Check if the translated point is on the left or right edge of the rectangle
         const onLeftEdge = translatedPoint.x < -width / 2
         const onRightEdge = translatedPoint.x > width / 2
 
-        // Check if the translated point is on the top or bottom edge of the rectangle
+        //Check if the translated point is on the top or bottom edge of the rectangle
         const onTopEdge = translatedPoint.y < -height / 2
         const onBottomEdge = translatedPoint.y > height / 2
 
-        // Calculate the direction vector along the edge
+        //Calculate the direction vector along the edge
         let direction: Point
 
         if (onLeftEdge) {
@@ -389,22 +389,22 @@ export default class GameEngine {
             direction = { x: 0, y: 1 }
         } else {
             console.log('The point is not on any edge')
-            return null // The point is not on any edge
+            return null //The point is not on any edge
         }
 
-        // Normalize the direction vector
+        //Normalize the direction vector
         const normalizedDirection = {
             x: direction.x / Math.sqrt(direction.x ** 2 + direction.y ** 2),
             y: direction.y / Math.sqrt(direction.x ** 2 + direction.y ** 2),
         }
 
-        // Calculate the perpendicular point at the specified distance
+        //Calculate the perpendicular point at the specified distance
         const perpendicularPoint = {
             x: location.x + translatedPoint.x + normalizedDirection.y * distance,
             y: location.y + translatedPoint.y - normalizedDirection.x * distance,
         }
 
-        // Transform the perpendicular point back to the global coordinate system
+        //Transform the perpendicular point back to the global coordinate system
         const globalPerpendicularPoint = {
             x: perpendicularPoint.x * Math.cos(rotation) - perpendicularPoint.y * Math.sin(rotation) + location.x,
             y: perpendicularPoint.x * Math.sin(rotation) + perpendicularPoint.y * Math.cos(rotation) + location.y,
@@ -428,8 +428,8 @@ export default class GameEngine {
             })
             //sort them by distance
             .sort((a, b) => {
-                const distancetoA = getDistancePointPoint(character.location, a.location)
-                const distancetoB = getDistancePointPoint(character.location, b.location)
+                const distancetoA = distanceBetweenPoints(character.location, a.location)
+                const distancetoB = distanceBetweenPoints(character.location, b.location)
                 return distancetoA == distancetoB ? 0 : distancetoA > distancetoB ? 1 : -1
             })
         //console.log('nearby', nearby)
@@ -460,7 +460,7 @@ export default class GameEngine {
 
         //get our location in .6 seconds if we stopped accelerating now
         const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
-        const dist = getDistancePointPoint(target, loc)
+        const dist = distanceBetweenPoints(target, loc)
         if (dist <= character.radiusX) {
             acceleration = 0
         }

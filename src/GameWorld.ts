@@ -4,7 +4,7 @@ import { Zones, Zone, Zones2, Zone2 } from "./types/Zones"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { calculateRectanglePoints, getDistancePointSegment, calculateDistanceSegmentPolygon } from "./Geometry"
+import { rectanglePoints, distancePointSegment, distanceSegmentPolygon } from "./Geometry"
 
 //keeps track of the world state and has helper functions to interact with world state
 //keeps track of rooms/zones/regions and what's in them
@@ -122,7 +122,7 @@ export default class GameWorld {
     getCharactersNearSegment({ start, stop, width }: { start: Point, stop: Point, width: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
-            const d = getDistancePointSegment(character.location, { start, end: stop }) - character.radiusX
+            const d = distancePointSegment(character.location, { start, end: stop }) - character.radiusX
             return d < width
         })
     }
@@ -130,11 +130,11 @@ export default class GameWorld {
     getObjectsInWay(character: Character, stop: Point) {
         return Array.from(this.worldObjects.values()).filter((wo): boolean => {
             if (wo.shape == SHAPE.CIRCLE) {
-                const d = getDistancePointSegment(wo.location, { start: character.location, end: stop },) - wo.radiusX
+                const d = distancePointSegment(wo.location, { start: character.location, end: stop },) - wo.radiusX
                 return d < character.radiusX
             }
             else if (wo.shape == SHAPE.RECT) {
-                const d = calculateDistanceSegmentPolygon({ start: character.location, end: stop }, calculateRectanglePoints(wo))
+                const d = distanceSegmentPolygon({ start: character.location, end: stop }, rectanglePoints(wo))
                 return d != undefined && d < character.radiusX
             }
             return false

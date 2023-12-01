@@ -4,7 +4,7 @@ import Character from "./types/Character"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import LineSegment from "./types/LineSegment"
-import { calculateCollisionPoint, calculatePerpendicularPointOnSameSide, calculateRectanglePoints, calculateIntersectionSegmentSegment, findClosestPoint, getRotation, getRotationDelta, E, LEFT, N, NE, NW, RIGHT, S, SE, SW, W } from "./Geometry"
+import { polygonSlide, perpendicularPointOnSameSide, rectanglePoints, intersectionSegmentSegment, closestPointPoints, getRotation, getRotationDelta, E, LEFT, N, NE, NW, RIGHT, S, SE, SW, W } from "./Geometry"
 
 describe('GameEngine', () => {
     let gameEngine: GameEngine
