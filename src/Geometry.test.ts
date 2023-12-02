@@ -1,4 +1,11 @@
-import { E, N, NE, NW, S, SE, SW, W, polygonSlide, distanceSegmentPolygon, intersectionSegmentSegment, rectanglePoints, distancePointSegment, distanceSegmentSegment, getRotation, extendSegment, intersectionLineLine } from "./Geometry"
+import {
+    E, N, NE, NW, S, SE, SW, W,
+    polygonSlide, distanceSegmentPolygon,
+    intersectionSegmentSegment, rectanglePoints,
+    distancePointSegment, distanceSegmentSegment,
+    getRotation, extendSegment,
+    intersectionLineLine, intersectingSegment
+} from "./Geometry"
 import Character from "./types/Character"
 import LineSegment from "./types/LineSegment"
 import Point from "./types/Point"
@@ -46,11 +53,9 @@ describe("Geometry", () => {
         })
     })
 
-    describe.skip("intersectingSegment", () => {
-        function intersectingSegment(circle: WorldObject, end: Point, segments: Point[]): LineSegment {
-            return { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } }
-        }
-        test('2', () => {
+    describe("intersectingSegment", () => {
+
+        test('1', () => {
             const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { x: 1, y: 1 }, radiusX: 2.5 })
             const end: Point = { x: 10, y: 2 }
             const rect: WorldObject = new WorldObject({ shape: SHAPE.RECT, location: { x: 10, y: 1 }, width: 4, height: 20 })
@@ -61,6 +66,19 @@ describe("Geometry", () => {
             expect(i?.end.x).toBeCloseTo(8)
             expect(i?.end.y).toBeCloseTo(13.5)
         })
+
+        //TODO
+        test('when we start already against the rectangle', () => {
+            const circle: WorldObject = new WorldObject({ "location": { "x": 2, "y": -0.5 }, "rotation": 4.873380789808216, radiusX: 2.5 })
+            const end: Point = { x: 2.1, y: -0.6 }
+            const segments = [{ "x": 5, "y": -5 }, { "x": -5, "y": -5 }, { "x": -5, "y": -3 }, { "x": 5, "y": -3 }]
+            const i = intersectingSegment(circle, end, segments)
+            expect(i?.start.x).toBeCloseTo(-7.5)
+            expect(i?.start.y).toBeCloseTo(-3)
+            expect(i?.end.x).toBeCloseTo(7.5)
+            expect(i?.end.y).toBeCloseTo(-3)
+        })
+
     })
 
     describe("polygonSlide", () => {
@@ -258,32 +276,32 @@ describe("Geometry", () => {
         })
 
         test('should find intersection point for non-parallel line segments', () => {
-            const segment1: LineSegment = { start: { x: 1, y: 3 }, end: { x: 4, y: 3 } };
-            const segment2: LineSegment = { start: { x: 2, y: 1 }, end: { x: 4, y: 6 } };
+            const segment1: LineSegment = { start: { x: 1, y: 3 }, end: { x: 4, y: 3 } }
+            const segment2: LineSegment = { start: { x: 2, y: 1 }, end: { x: 4, y: 6 } }
 
-            const intersectionPoint = intersectionLineLine(segment1, segment2);
+            const intersectionPoint = intersectionLineLine(segment1, segment2)
 
-            expect(intersectionPoint?.x).toEqual(2.8);
-            expect(intersectionPoint?.y).toEqual(3);
-        });
+            expect(intersectionPoint?.x).toEqual(2.8)
+            expect(intersectionPoint?.y).toEqual(3)
+        })
 
         test('should find intersection point for other non-parallel line segments', () => {
-            const segment1: LineSegment = { start: { x: 1, y: 2 }, end: { x: 3, y: 6 } };
-            const segment2: LineSegment = { start: { x: 2, y: 1 }, end: { x: 4, y: 8 } }; // Parallel segment
+            const segment1: LineSegment = { start: { x: 1, y: 2 }, end: { x: 3, y: 6 } }
+            const segment2: LineSegment = { start: { x: 2, y: 1 }, end: { x: 4, y: 8 } } //Parallel segment
 
-            const intersectionPoint = intersectionLineLine(segment1, segment2);
+            const intersectionPoint = intersectionLineLine(segment1, segment2)
 
             expect(intersectionPoint).toEqual({ x: 4, y: 8 })
-        });
+        })
 
         it('should find intersection point for even more non-parallel line segments', () => {
-            const segment1: LineSegment = { start: { x: 1, y: 2 }, end: { x: 3, y: 6 } };
-            const segment2: LineSegment = { start: { x: 2, y: 1 }, end: { x: 4, y: 3 } };
+            const segment1: LineSegment = { start: { x: 1, y: 2 }, end: { x: 3, y: 6 } }
+            const segment2: LineSegment = { start: { x: 2, y: 1 }, end: { x: 4, y: 3 } }
 
-            const intersectionPoint = intersectionLineLine(segment1, segment2);
+            const intersectionPoint = intersectionLineLine(segment1, segment2)
 
-            expect(intersectionPoint).toEqual({ x: -1, y: -2 });
-        });
+            expect(intersectionPoint).toEqual({ x: -1, y: -2 })
+        })
     })
 
     describe("intersectionSegmentSegment", () => {

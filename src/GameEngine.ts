@@ -337,9 +337,9 @@ export default class GameEngine {
                 else if (currentObject.shape == SHAPE.RECT) {
 
                     const cp = polygonSlide(character, newPosition, currentObject)
-                    console.log('cp', cp)
+                    //console.log('cp', cp)
                     if (!!cp) {
-                        console.log('using cp')
+                        //console.log('using cp')
 
                         x = cp.x
                         y = cp.y
