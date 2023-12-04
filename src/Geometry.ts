@@ -55,15 +55,17 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
     //console.log('segmentVector', segmentVector)
 
     //flip the segment if we got the opposite vector
-    if (segmentVector == segmentVector2) {
+    //if (segmentVector == segmentVector2) {
         //why don't do this?
         //collidingSegment = { start: collidingSegment.end, end: collidingSegment.start }
-    }
+    //}
     //console.log('collidingSegment', collidingSegment)
 
     //const intersection = intersectionSegmentSegment(circleSegment, collidingSegment)
     const intersection = intersectionRaySegment(convertToRay(circleSegment), collidingSegment)
     //console.log('circleSegment', circleSegment)
+
+    //TODO see if we're past the edge of the colliding segment
 
     //console.log('intersection', intersection)
     if (!intersection) {
@@ -440,7 +442,8 @@ export function intersectingSegment(circle: WorldObject, end: Point, polygon: Po
         let rd = undefined
         if (!!rightIntersection) {
             console.log('rightIntersection', rightIntersection)
-            rd = distanceBetweenPoints(rightIntersection, circle.location)
+            //rd = distanceBetweenPoints(rightIntersection, circle.location)
+            rd = distancePointSegment(circle.location,segment2 )
             if (rightIntersection == segment2.start) {
                 console.log('rightIntersection hit segment start')
             }
