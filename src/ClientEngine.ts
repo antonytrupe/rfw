@@ -732,7 +732,7 @@ export default class ClientEngine {
             })
         }
         else if (wo.shape == SHAPE.POLY) {
-            ctx.strokeText('POLY', 0, 0)
+            this.drawPoly(ctx, wo)
         }
         else {
             //maybe it's using a template
@@ -746,6 +746,15 @@ export default class ClientEngine {
             }
         }
 
+        ctx.restore()
+    }
+
+    drawPoly(ctx: CanvasRenderingContext2D, wo: WorldObject) {
+        //TODO
+        ctx.strokeText('POLY', 0, 0)
+        ctx.save()
+
+        ctx.fill()
         ctx.restore()
     }
 

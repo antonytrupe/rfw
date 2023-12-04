@@ -56,7 +56,8 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
 
     //flip the segment if we got the opposite vector
     if (segmentVector == segmentVector2) {
-        collidingSegment = { start: collidingSegment.end, end: collidingSegment.start }
+        //why don't do this?
+        //collidingSegment = { start: collidingSegment.end, end: collidingSegment.start }
     }
     //console.log('collidingSegment', collidingSegment)
 
@@ -419,8 +420,11 @@ function closestPointsBetweenSegments(segment1: LineSegment, segment2: LineSegme
 
 export function intersectingSegment(circle: WorldObject, end: Point, polygon: Point[]): LineSegment | undefined {
     //const { end: extendedEnd } = extendSegment({ start: circle.location, end: end }, circle.radiusX * 2)
-    const circleRay = convertToRay({ start: circle.location, end: end })
-    console.log('circleRay', circleRay)
+    //const circleRay = convertToRay({ start: circle.location, end: end })
+    const rightRay = convertToRay(getParallelLine({ start: circle.location, end: end }, circle.radiusX))
+    const leftRay = convertToRay(getParallelLine({ start: circle.location, end: end }, -circle.radiusX))
+    //get the left side ray and right side ray
+    //console.log('circleRay', circleRay)
 
     //collector variables
     let closestIntersectionDistance: number | undefined = undefined
@@ -430,53 +434,56 @@ export function intersectingSegment(circle: WorldObject, end: Point, polygon: Po
     polygon.forEach((a, i) => {
         const b = polygon[i == 0 ? polygon.length - 1 : i - 1]
         const segment2 = { start: a, end: b }
-        console.log('segment2', segment2)
+        const rightIntersection = intersectionRaySegment(rightRay, segment2)
+        const leftIntersection = intersectionRaySegment(leftRay, segment2)
+        let ld = undefined
+        let rd = undefined
+        if (!!rightIntersection) {
+            console.log('rightIntersection', rightIntersection)
+            rd = distanceBetweenPoints(rightIntersection, circle.location)
+            if (rightIntersection == segment2.start) {
+                console.log('rightIntersection hit segment start')
+            }
+            if (rightIntersection == segment2.end) {
+                console.log('rightIntersection hit segment end')
+            }
+        }
+        if (!!leftIntersection) {
+            console.log('leftIntersection', leftIntersection)
+            ld = distanceBetweenPoints(leftIntersection, circle.location)
+            if (leftIntersection == segment2.start) {
+                console.log('leftIntersection hit segment start')
+            }
+            if (leftIntersection == segment2.end) {
+                console.log('leftIntersection hit segment end')
+            }
+        }
+        let intersection
+        let d
+        if (!rd || !!ld && (ld < rd)) {
+            intersection = leftIntersection
+            d = ld
+        }
+        else if (!!rd) {
+            intersection = rightIntersection
+            d = rd
+        }
 
-        const intersection = intersectionRaySegment(circleRay, segment2)
-        console.log('intersection',intersection)
-        if (!!intersection) {
-            const d = distanceBetweenPoints(intersection, circle.location)
+        if (!!intersection && !!d) {
+            console.log('intersection', intersection)
+            console.log('segment2', segment2)
+            console.log('d', d)
+
             if (closestIntersectionDistance == undefined || d < closestIntersectionDistance) {
+                console.log('is closest so far segment')
                 closestIntersectionDistance = d
+                //extend the segment out the radius of the cirlce on both sides
                 intersectingSegment = { start: extendSegment(segment2, circle.radiusX).end, end: extendSegment({ start: segment2.end, end: segment2.start }, circle.radiusX).end }
             }
         }
     })
-    //if we found an intersectig segment, we're done
-    if (!!intersectingSegment) {
-        return intersectingSegment
-    }
-    //if we didn't, see if we hit an outside segment
-    polygon.forEach((a, i) => {
-        const b = polygon[i == 0 ? polygon.length - 1 : i - 1]
-        const segment2 = { start: a, end: b }
 
-        const segment2a = { start: a, end: extendSegment({ start: b, end: a }, circle.radiusX).end }
-        const segment2b = { start: b, end: extendSegment({ start: a, end: b }, circle.radiusX).end }
-
-        let intersection = intersectionRaySegment(circleRay, segment2a)
-        if (!!intersection) {
-            const d = distanceBetweenPoints(intersection, circle.location)
-            if (closestIntersectionDistance == undefined || d > closestIntersectionDistance) {
-                closestIntersectionDistance = d
-                intersectingSegment = { start: extendSegment(segment2, circle.radiusX).end, end: extendSegment({ start: segment2.end, end: segment2.start }, circle.radiusX).end }
-            }
-        }
-        intersection = intersectionRaySegment(circleRay, segment2b)
-        if (!!intersection) {
-            const d = distanceBetweenPoints(intersection, circle.location)
-            if (closestIntersectionDistance == undefined || d > closestIntersectionDistance) {
-                closestIntersectionDistance = d
-                intersectingSegment = { start: extendSegment(segment2, circle.radiusX).end, end: extendSegment({ start: segment2.end, end: segment2.start }, circle.radiusX).end }
-            }
-        }
-    })
-    //if we found an intersectig segment, we're done
-    if (!!intersectingSegment) {
-        return intersectingSegment
-    }
-    //if we didn't hit an outside segment either, then return undefined
-    return undefined
+    return intersectingSegment
 }
 
 function calculateLine(segment: LineSegment): { m: number | undefined, b: number } {
