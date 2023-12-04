@@ -70,13 +70,11 @@ export default function ClientUI() {
    */
   useEffect(() => {
     //connect automatically once the clientengine is setup
-    connect()
+    if (!clientEngine?.connected) {
+      //setConnecting(true)
+      clientEngine?.connect()
+    }
   }, [clientEngine])
-
-  function connect() {
-    //setConnecting(true)
-    clientEngine?.connect()
-  }
 
   const onClick = (event: any) => {
     clientEngine?.clickHandler(event)

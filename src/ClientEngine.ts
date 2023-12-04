@@ -20,7 +20,7 @@ export default class ClientEngine {
 
     //state things
     private stopped: boolean = false //control the draw loop
-    private connected: boolean = false
+    connected: boolean = false
     private gameEngine: GameEngine
     private player: Player | undefined
 
