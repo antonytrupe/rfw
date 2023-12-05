@@ -8,6 +8,9 @@ export const OBJECT_PATH = '/OBJECT/'
 export const PLAYER_PATH = '/PLAYER/'
 export const TEMPLATE_PATH = '/TEMPLATE/'
 
+const LEFT = 1
+const RIGHT = -1
+
 export const CHAT = 'chat'
 //client connect
 export const CONNECT = 'connect'

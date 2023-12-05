@@ -5,6 +5,7 @@ import { SHAPE } from "./SHAPE"
 import WorldObject from "./WorldObject"
 
 export default class Character extends WorldObject implements CharacterInterface {
+    //matterId: number
     playerId: string
     maxSpeed: number
     speed: number
@@ -29,6 +30,7 @@ export default class Character extends WorldObject implements CharacterInterface
 
     constructor({
         id = "__test__",
+        //matterId = 0,
         playerId = "",
         rotation = 0,
         location = { x: 0, y: 0 },
@@ -53,6 +55,7 @@ export default class Character extends WorldObject implements CharacterInterface
     }: CharacterInterface) {
         super({ id: id, location: location, rotation: rotation, shape: SHAPE.CIRCLE, radiusX: 2.5, zoneType: [ZONETYPE.TACTICAL] })
         this.id = id
+        //this.matterId = matterId
         this.playerId = playerId
         this.maxSpeed = maxSpeed
         this.location = location
@@ -80,6 +83,7 @@ export default class Character extends WorldObject implements CharacterInterface
 
 interface CharacterInterface {
     id?: string
+    //matterId?: number
     playerId?: string
     rotation?: number
     location?: Point

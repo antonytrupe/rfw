@@ -56,8 +56,8 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
 
     //flip the segment if we got the opposite vector
     //if (segmentVector == segmentVector2) {
-        //why don't do this?
-        //collidingSegment = { start: collidingSegment.end, end: collidingSegment.start }
+    //why don't do this?
+    //collidingSegment = { start: collidingSegment.end, end: collidingSegment.start }
     //}
     //console.log('collidingSegment', collidingSegment)
 
@@ -443,7 +443,7 @@ export function intersectingSegment(circle: WorldObject, end: Point, polygon: Po
         if (!!rightIntersection) {
             console.log('rightIntersection', rightIntersection)
             //rd = distanceBetweenPoints(rightIntersection, circle.location)
-            rd = distancePointSegment(circle.location,segment2 )
+            rd = distancePointSegment(circle.location, segment2)
             if (rightIntersection == segment2.start) {
                 console.log('rightIntersection hit segment start')
             }
@@ -558,6 +558,20 @@ function convertToRay(lineSegment: LineSegment): Ray {
     const direction = normalizeVector(subtractVectors(lineSegment.end, lineSegment.start))
 
     return { origin, direction }
+}
+
+export function angleToVector(angle: number): Point {
+    // Calculate the components of the vector
+    const xComponent = Math.cos(angle);
+    const yComponent = Math.sin(angle);
+
+    // Calculate the magnitude of the vector
+    const magnitude = Math.sqrt(xComponent ** 2 + yComponent ** 2);
+
+    // Create a normalized vector
+    const normalizedVector = { x: xComponent / magnitude, y: yComponent / magnitude }
+
+    return normalizedVector;
 }
 
 function getParallelLine(lineSegment: LineSegment, distance: number): LineSegment {

@@ -8,10 +8,9 @@ import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
+import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, RIGHT, LEFT, angleToVector } from "./Geometry"
+//import { Engine, Body, Bodies, Constraint, Composite, World } from 'matter-js';
 
-const LEFT = 1
-const RIGHT = -1
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
@@ -23,6 +22,7 @@ export default class GameEngine {
     private eventNames: () => (string | symbol)[]
     //data object
     gameWorld: GameWorld
+    //engine = Engine.create({ gravity: { x: 0, y: 0 } })
 
     activeCharacters: Set<string> = new Set()
 
@@ -31,7 +31,7 @@ export default class GameEngine {
     private lastTimestamp: DOMHighResTimeStamp | undefined
     //lower number means faster, higher means slower
     private accelerationMultiplier: number = 20
-    private turnMultiplier: number = 1000 / Math.PI
+    private rotationMultiplier: number = 1000 / Math.PI
     //1px/ft
     //5ft/s*1000ms/s
     //30ft/6seconds
@@ -93,6 +93,7 @@ export default class GameEngine {
     step(dt: number, now: number): Set<string> {
         //console.log('GameEngine.step')
         const started = (new Date()).getTime()
+        //Engine.update(this.engine, dt)
 
         //figure out if this is the first step of a new turn
         const lastTurn = Math.floor((now - dt) / 1000 / 6)
@@ -284,9 +285,9 @@ export default class GameEngine {
             newPosition = this.slide(character, newPosition)
 
             this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, rotation: newRotation })
-            if (newPosition.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
-                //updatedCharacters.add(character.id)
-            }
+            //if (newPosition?.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
+            //updatedCharacters.add(character.id)
+            //}
         })
 
         if (updatedCharacters.size > 0) {
@@ -691,8 +692,38 @@ export default class GameEngine {
     }
 
     updateCharacter(updates: Partial<Character>): GameEngine {
+        /*
+        if (!updates.id) {
+            return this
+        }
+        const old = this.getCharacter(updates.id)
+        let matterObject
+        if (!!old?.matterId) {
+            matterObject = Composite.get(this.engine.world, old.matterId, "body")
+        }
+
+        let matterBody: Body
+
+        if (!!matterObject) {
+            matterBody = matterObject as Body
+        }
+        else {
+            matterBody = Bodies.circle(0, 0, old?.radiusX || updates.radiusX || 2.5)
+            Composite.add(this.engine.world, matterBody)
+            updates.matterId = matterBody.id
+            //console.log('created matterBody', matterBody.id)
+        }
+        */
         const character = this.gameWorld.updateCharacter(updates)
-            .getCharacter(updates.id)
+            .getCharacter(updates.id)!
+
+        //Body.setAngle(matterBody, character.rotation)
+        //Body.setAngularSpeed(matterBody, character.rotationAcceleration)
+        //Body.setAngularVelocity(matterBody, character.rotationAcceleration)
+        //Body.setPosition(matterBody, character.location)
+        //Body.setSpeed(matterBody, character.speed)
+        //Body.applyForce(matterBody, matterBody.position, angleToVector(character.rotation))
+        //Body.setVelocity(matterBody,1)
         //console.log(character)
 
         //check for things that make this an active character
@@ -874,7 +905,7 @@ export default class GameEngine {
     private calculateRotation(character: Character, dt: number) {
         let newAngle = character.rotation
         if (character.rotationAcceleration != 0) {
-            newAngle = character.rotation + character.rotationAcceleration * dt / this.turnMultiplier
+            newAngle = character.rotation + character.rotationAcceleration * dt / this.rotationMultiplier
         }
         //normalize it to between -2pi and 2pi
         newAngle %= (Math.PI * 2)
@@ -886,7 +917,7 @@ export default class GameEngine {
     }
 
     private calculatePosition(character: Character, dt: number) {
-        const w = character.rotationAcceleration / this.turnMultiplier
+        const w = character.rotationAcceleration / this.rotationMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
         if (character.speed != 0) {

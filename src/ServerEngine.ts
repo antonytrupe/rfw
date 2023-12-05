@@ -111,7 +111,10 @@ export default class ServerEngine {
                 //console.log('socket.rooms', socket.rooms.size)
                 //only send characters the client didn't already have in its old viewport
                 if (characters.length > 0) {
-                    socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters)
+                    socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, characters.map((character) => {
+                        //const { matterId, ...c } = character
+                        return character
+                    }))
                 }
                 if (worldObjects.length > 0) {
                     socket.emit(CONSTANTS.WORLD_OBJECTS, worldObjects)
@@ -544,13 +547,13 @@ export default class ServerEngine {
         //console.log(a)
 
         a.forEach((characters, zoneName) => {
-            characters.forEach((character, characerId) => {
+            characters.forEach((character, characterId) => {
                 //persist the character
                 if (!!character) {
                     //character still exists
                     try {
                         //TODO maybe don't persist so frequently?
-                        this.characterDB.push(CONSTANTS.CHARACTER_PATH + characerId, character)
+                        this.characterDB.push(CONSTANTS.CHARACTER_PATH + characterId, character)
                     }
                     catch (e) {
                         console.log('failed to save character', character)
@@ -564,7 +567,11 @@ export default class ServerEngine {
                 }
             })
             //send the zone
-            this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()))
+            this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()).map((character) => {
+                //don't send the server's matterId to the client
+                //const { matterId, ...c } = character
+                return character
+            }))
         })
     }
 

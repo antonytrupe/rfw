@@ -185,7 +185,7 @@ export default class GameWorld {
 
             let zone: Zone2 | undefined = zones.get(zoneName)
             if (!zone) {
-                zone = new Map<string, Character | undefined>()
+                zone = new Map<string, Character>()
             }
             zone.set(characerId, character)
             zones.set(zoneName, zone)
@@ -218,14 +218,15 @@ export default class GameWorld {
      */
     updateCharacter(character: Partial<Character>): GameWorld {
         //if we don't have a character id, give up
-        //console.log('character.id',character.id)
+        //console.log('character', character)
         if (!character?.id) {
             return this
         }
 
         const old: Character | undefined = this.characters.get(character.id)
         //console.log('old',old)
-        const merged: Character = { ...new Character({}), ...old, ...character }
+        const merged: Character = { ...new Character({}), ...old, ...character, }
+        //console.log('merged', merged)
 
         if ((!merged.location.x && merged.location.x != 0) || (!merged.location.y && merged.location.y != 0)) {
             //bail if it doesn't have a location
