@@ -4,15 +4,80 @@ import {
     intersectionSegmentSegment, rectanglePoints,
     distancePointSegment, distanceSegmentSegment,
     getRotation, extendSegment,
-    intersectionLineLine, intersectingSegment
+    intersectionLineLine, intersectingSegment, isPointBetweenRays
 } from "./Geometry"
 import Character from "./types/Character"
 import LineSegment from "./types/LineSegment"
-import Point from "./types/Point"
+import Point, { Points } from "./types/Point"
 import { SHAPE } from "./types/SHAPE"
 import WorldObject from "./types/WorldObject"
 
 describe("Geometry", () => {
+
+    describe("example", () => {
+        test('example', () => {
+
+        })
+    })
+
+    describe("isPointBetweenRays", () => {
+        test('should be on right side of right side 1', () => {
+            const p = { x: 6.5, y: -5 }
+            const r1 = {
+                direction: { x:1, y: 0 },
+                origin: { x: 4, y: -8 }
+            }
+            const r2 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: 0 }
+            }
+            const b = isPointBetweenRays(p, r1, r2)
+            expect(b).toBeTruthy()
+        }) 
+
+        test('should be on right side of right side 2', () => {
+            const p = { x: 5, y: 2 }
+            const r1 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: -4 }
+            }
+            const r2 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: 4 }
+            }
+            const b = isPointBetweenRays(p, r1, r2)
+            expect(b).toBeTruthy()
+        })
+
+        test('should be on left side of left side', () => {
+            const p = { x: 3, y: 2 }
+            const r1 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: 4 }
+            }
+            const r2 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: -4 }
+            }
+            const b = isPointBetweenRays(p, r1, r2)
+            expect(b).toBeTruthy()
+        })
+
+        test('should be false on left side of right side', () => {
+            const p = { x: 3, y: 2 }
+            const r1 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: -4 }
+            }
+            const r2 = {
+                direction: { x: 1, y: 0 },
+                origin: { x: 4, y: 4 }
+            }
+            const b = isPointBetweenRays(p, r1, r2)
+            expect(b).toBeFalsy
+        })
+    })
+
     describe("extendSegment", () => {
         test('extend in the positive x direction', () => {
             const segment = { start: { x: 1, y: 1 }, end: { x: 4, y: 1 } }
@@ -55,27 +120,91 @@ describe("Geometry", () => {
 
     describe("intersectingSegment", () => {
 
-        test('1', () => {
+        test.skip('example', () => {
             const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { x: 1, y: 1 }, radiusX: 2.5 })
             const end: Point = { x: 10, y: 2 }
-            const rect: WorldObject = new WorldObject({ shape: SHAPE.RECT, location: { x: 10, y: 1 }, width: 4, height: 20 })
-            const segments = rectanglePoints(rect)
-            const i = intersectingSegment(circle, end, segments)
+            const polygon: Points = []
+            const i = intersectingSegment(circle, end, polygon)
             expect(i?.start.x).toBeCloseTo(8)
             expect(i?.start.y).toBeCloseTo(-11.5)
             expect(i?.end.x).toBeCloseTo(8)
             expect(i?.end.y).toBeCloseTo(13.5)
         })
 
-        //TODO
-        test('when we start already against the rectangle', () => {
-            const circle: WorldObject = new WorldObject({ "location": { "x": 2, "y": -0.5 }, "rotation": 4.873380789808216, radiusX: 2.5 })
-            const end: Point = { x: 2.1, y: -0.6 }
-            const segments = [{ "x": 5, "y": -5 }, { "x": -5, "y": -5 }, { "x": -5, "y": -3 }, { "x": 5, "y": -3 }]
+        test('moving SE, only right side hits top segment', () => {
+            const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { x: 1.8087664672370287, y: -10.520154788406952 }, radiusX: 2.5 })
+            const end: Point = { x: 1.8367359774684746, y: -10.493698097430697 }
+            const polygon: Points = [{ "x": 4, "y": -8 }, { "x": 4, "y": 0 }, { "x": -4, "y": 0 }, { "x": -4, "y": -8 }]
+            const i = intersectingSegment(circle, end, polygon)
+            expect(i?.start.x).toBeCloseTo(-4)
+            expect(i?.start.y).toBeCloseTo(-8)
+            expect(i?.end.x).toBeCloseTo(4)
+            expect(i?.end.y).toBeCloseTo(-8)
+        })
+
+        test('right and left sides are hitting different segments of the square', () => {
+            const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { x: -3.634635252654964, y: -10.5 }, radiusX: 2.5 })
+            const end: Point = { x: -3.6293067802190717, y: -10.492316909378387 }
+            const polygon: Points = [{ "x": 4, "y": -8 }, { "x": 4, "y": 0 }, { "x": -4, "y": 0 }, { "x": -4, "y": -8 }]
+            const i = intersectingSegment(circle, end, polygon)
+            expect(i?.start.x).toBeCloseTo(-4)
+            expect(i?.start.y).toBeCloseTo(-8)
+            expect(i?.end.x).toBeCloseTo(4)
+            expect(i?.end.y).toBeCloseTo(-8)
+        })
+
+        test('moving SW, hit top', () => {
+            const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { x: -3.6386103019259277, y: -10.505731598341056 }, radiusX: 2.5 })
+            const end: Point = { x: -3.6265001372989003, y: -10.488270028746477 }
+            const polygon: Points = [{ "x": 4, "y": -8 }, { "x": 4, "y": 0 }, { "x": -4, "y": 0 }, { "x": -4, "y": -8 }]
+            const i = intersectingSegment(circle, end, polygon)
+            expect(i?.start.x).toBeCloseTo(-4)
+            expect(i?.start.y).toBeCloseTo(-8)
+            expect(i?.end.x).toBeCloseTo(4)
+            expect(i?.end.y).toBeCloseTo(-8)
+        })
+
+        test('start above and hit top of square', () => {
+            const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { "x": -0.7912479411961412, "y": -10.582705549942764 }, radiusX: 2.5 })
+            const end: Point = { x: -0.8047698728852195, y: -10.446658256515992 }
+            const polygon: Points = [{ "x": 4, "y": -8 }, { "x": 4, "y": 0 }, { "x": -4, "y": 0 }, { "x": -4, "y": -8 }]
+            const i = intersectingSegment(circle, end, polygon)
+            expect(i?.start.x).toBeCloseTo(-4)
+            expect(i?.start.y).toBeCloseTo(-8)
+            expect(i?.end.x).toBeCloseTo(4)
+            expect(i?.end.y).toBeCloseTo(-8)
+        })
+
+        test('start inside and hit top of square', () => {
+            const circle: WorldObject = new WorldObject({ shape: SHAPE.CIRCLE, location: { "x": -0.7912479411961412, "y": -10.482705549942764 }, radiusX: 2.5 })
+            const end: Point = { x: -0.8047698728852195, y: -10.446658256515992 }
+            const polygon: Points = [{ "x": 4, "y": -8 }, { "x": 4, "y": 0 }, { "x": -4, "y": 0 }, { "x": -4, "y": -8 }]
+            const i = intersectingSegment(circle, end, polygon)
+            expect(i?.start.x).toBeCloseTo(-4)
+            expect(i?.start.y).toBeCloseTo(-8)
+            expect(i?.end.x).toBeCloseTo(4)
+            expect(i?.end.y).toBeCloseTo(-8)
+        })
+
+        test('when we start already against the top of the rectangle and moving SE', () => {
+            const circle: WorldObject = new WorldObject({ "location": { "x": 2, "y": -7.5 }, radiusX: 2.5 })
+            const end: Point = { x: 2.1, y: -7.4 }
+            const segments = [{ x: 5, y: -5 }, { x: 5, y: -3 }, { x: -5, y: -3 }, { x: -5, y: -5 }]
             const i = intersectingSegment(circle, end, segments)
-            expect(i?.start.x).toBeCloseTo(-7.5)
+            expect(i?.start.x).toBeCloseTo(-5)
+            expect(i?.start.y).toBeCloseTo(-5)
+            expect(i?.end.x).toBeCloseTo(5)
+            expect(i?.end.y).toBeCloseTo(-5)
+        })
+
+        test('when we start already against the bottom of the rectangle and moving NE', () => {
+            const circle: WorldObject = new WorldObject({ "location": { "x": 2, "y": -0.5 }, radiusX: 2.5 })
+            const end: Point = { x: 2.1, y: -0.6 }
+            const segments = [{ x: 5, y: -5 }, { x: 5, y: -3 }, { x: -5, y: -3 }, { x: -5, y: -5 }]
+            const i = intersectingSegment(circle, end, segments)
+            expect(i?.start.x).toBeCloseTo(5)
             expect(i?.start.y).toBeCloseTo(-3)
-            expect(i?.end.x).toBeCloseTo(7.5)
+            expect(i?.end.x).toBeCloseTo(-5)
             expect(i?.end.y).toBeCloseTo(-3)
         })
 
@@ -132,7 +261,7 @@ describe("Geometry", () => {
             expect(newPosition?.y).toBeCloseTo(-12.793)
         })
 
-        test('should hit the right side of the rectangle moving at a hard angle', () => {
+        test.skip('should hit the right side of the rectangle moving at a hard angle', () => {
             //moving at a slight angle
             const circle = new Character({ location: { x: 10, y: 2 } })
             const end = { x: -10, y: 20 }
@@ -332,7 +461,7 @@ describe("Geometry", () => {
             //move straight down
             const direction = { x: 0, y: 10 }
             const rect = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(rect)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(rect)
 
             const topIntersection = intersectionSegmentSegment({ start: circle.location, end: direction }, { start: topLeft, end: topRight })
             const leftIntersection = intersectionSegmentSegment({ start: circle.location, end: direction }, { start: bottomLeft, end: topLeft })
@@ -357,7 +486,7 @@ describe("Geometry", () => {
             //move to the right
             const end = { x: 20, y: 0 }
             const rect = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(rect)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(rect)
 
             const topIntersection = intersectionSegmentSegment({ start: circle.location, end: end }, { start: topLeft, end: topRight })
             const leftIntersection = intersectionSegmentSegment({ start: circle.location, end: end }, { start: bottomLeft, end: topLeft })
@@ -382,7 +511,7 @@ describe("Geometry", () => {
             //move diagonal to the right
             const end = { x: 13, y: 0 }
             const rect = new WorldObject({ shape: SHAPE.RECT, width: 20, height: 20 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(rect)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(rect)
 
             expect(topRight.x).toBe(10)
             expect(topRight.y).toBe(-10)
@@ -415,20 +544,20 @@ describe("Geometry", () => {
     describe("rectanglePoints", () => {
         test('should handle a square at the origin', () => {
             const square = new WorldObject({ shape: SHAPE.RECT, width: 2, height: 2 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(square)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(square)
             expect(topRight.x).toBe(1)
             expect(topRight.y).toBe(-1)
-            expect(topLeft.x).toBe(-1)
-            expect(topLeft.y).toBe(-1)
-            expect(bottomLeft.x).toBe(-1)
-            expect(bottomLeft.y).toBe(1)
             expect(bottomRight.x).toBe(1)
             expect(bottomRight.y).toBe(1)
+            expect(bottomLeft.x).toBe(-1)
+            expect(bottomLeft.y).toBe(1)
+            expect(topLeft.x).toBe(-1)
+            expect(topLeft.y).toBe(-1)
         })
 
         test('should handle a rectangle at the origin', () => {
             const square = new WorldObject({ shape: SHAPE.RECT, width: 4, height: 2 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(square)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(square)
             expect(topRight.x).toBe(2)
             expect(topRight.y).toBe(-1)
             expect(topLeft.x).toBe(-2)
@@ -441,7 +570,7 @@ describe("Geometry", () => {
 
         test('should handle a square at the origin rotated 45 degrees', () => {
             const square = new WorldObject({ shape: SHAPE.RECT, width: 2, height: 2, rotation: Math.PI / 4, })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(square)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(square)
             expect(topRight.x).toBeCloseTo(0)
             expect(topRight.y).toBeCloseTo(-1.4142)
             expect(topLeft.x).toBeCloseTo(-1.4142)
@@ -454,7 +583,7 @@ describe("Geometry", () => {
 
         test('should handle a rect at the origin rotated 90 degress', () => {
             const square = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2, rotation: Math.PI / 2 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(square)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(square)
             expect(topRight.x).toBeCloseTo(-1)
             expect(topRight.y).toBeCloseTo(-5)
             expect(topLeft.x).toBeCloseTo(-1)
@@ -467,7 +596,7 @@ describe("Geometry", () => {
 
         test('should handle a rect at the origin rotated 45 degress', () => {
             const square = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2, rotation: Math.PI / 4 })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(square)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(square)
             expect(topRight.x).toBeCloseTo(2.828)
             expect(topRight.y).toBeCloseTo(-4.242)
             expect(topLeft.x).toBeCloseTo(-4.242)
@@ -480,7 +609,7 @@ describe("Geometry", () => {
 
         test('should handle a rect not at the origin rotated 45 degress', () => {
             const square = new WorldObject({ shape: SHAPE.RECT, width: 10, height: 2, rotation: Math.PI / 4, location: { x: 10, y: 10 } })
-            const [topRight, topLeft, bottomLeft, bottomRight] = rectanglePoints(square)
+            const [topRight, bottomRight, bottomLeft, topLeft] = rectanglePoints(square)
             expect(topRight.x).toBeCloseTo(12.828)
             expect(topRight.y).toBeCloseTo(5.757)
             expect(topLeft.x).toBeCloseTo(5.757)

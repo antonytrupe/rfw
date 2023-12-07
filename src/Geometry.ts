@@ -1,5 +1,6 @@
+import Line from "./types/Line"
 import LineSegment from "./types/LineSegment"
-import Point from "./types/Point"
+import Point, { Points } from "./types/Point"
 import Ray from "./types/Ray"
 import { SHAPE } from "./types/SHAPE"
 import WorldObject from "./types/WorldObject"
@@ -15,6 +16,69 @@ export const SE = 7 / 4 * Math.PI
 export const LEFT = 1
 export const RIGHT = -1
 
+function nextSegment(point: Point, vertices: Points): LineSegment {
+    const i = vertices.findIndex((p) => { return p.x == point.x && p.y == point.y })
+    return { start: vertices[i], end: vertices[i == vertices.length - 1 ? 0 : i + 1] }
+}
+
+function perpendicularRay(segment: LineSegment, pointOnSegment: Point, externalPoint: Point): Ray {
+    //console.log('pointOnSegment', pointOnSegment)
+
+    // Find the closest point on the segment to the given point that is not on the segment
+    const closestPoint = closestPointOnLine(segmentToLine(segment), externalPoint)
+    //console.log('closestPoint', closestPoint)
+
+    // Calculate the direction vector from the closest point on the segment to the given point
+    const directionVector = normalizeVector({ x: externalPoint.x - closestPoint.x, y: externalPoint.y - closestPoint.y })
+    //console.log('directionVector', directionVector)
+
+    // Define the equation of the perpendicular ray using the closest point and perpendicular vector
+    const perpendicularRay: Ray = {
+        origin: pointOnSegment,
+        direction: directionVector,
+    }
+
+    return perpendicularRay
+}
+
+function closestPointOnLine(line: Line, externalPoint: Point): Point {
+    const { a, b } = line
+
+    // Calculate the direction vector of the line
+    const lineVector = { x: b.x - a.x, y: b.y - a.y }
+
+    // Calculate the vector from point1 to the external point
+    const vectorToPoint = { x: externalPoint.x - a.x, y: externalPoint.y - a.y }
+
+    // Calculate the scalar projection of vectorToPoint onto the lineVector
+    const scalarProjection = (vectorToPoint.x * lineVector.x + vectorToPoint.y * lineVector.y) /
+        (lineVector.x * lineVector.x + lineVector.y * lineVector.y)
+
+    // Calculate the closest point on the line
+    const closestPoint: Point = {
+        x: a.x + scalarProjection * lineVector.x,
+        y: a.y + scalarProjection * lineVector.y,
+    }
+
+    return closestPoint
+}
+
+export function isPointBetweenRays(point: Point, ray1: Ray, ray2: Ray): boolean {
+    // Calculate vectors representing the two rays
+    const vector1 = ray1.direction;
+    const vector2 = ray2.direction;
+
+    // Calculate vectors from the origin of each ray to the test point
+    const vectorToPoint1 = { x: point.x - ray1.origin.x, y: point.y - ray1.origin.y };
+    const vectorToPoint2 = { x: point.x - ray2.origin.x, y: point.y - ray2.origin.y };
+
+    // Calculate the cross products of the vectors
+    const crossProduct1 = vector1.x * vectorToPoint1.y - vector1.y * vectorToPoint1.x;
+    const crossProduct2 = vector2.x * vectorToPoint2.y - vector2.y * vectorToPoint2.x;
+
+    // Check if the orientations are different (one positive, one negative)
+    return (crossProduct1 < 0 && crossProduct2 > 0) || (crossProduct1 > 0 && crossProduct2 < 0);
+}
 
 export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject): Point {
     console.log('--->POLYGONSLIDE')
@@ -22,8 +86,8 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
     //console.log('end', end)
     //console.log('shape', { shape: 'SHAPE.' + shape.shape, location: shape.location, width: shape.width, height: shape.height })
     const circleSegment = { start: circle.location, end }
-    const circleVector = normalizedVector(circleSegment)
-    const circleRay = convertToRay(circleSegment)
+    const circleVector = normalizedVectorFromLineSegment(circleSegment)
+    //const circleRay = convertToRay(circleSegment)
     //console.log('circleVector', circleVector)
     let remainingDistance = distanceBetweenPoints(circle.location, end)
 
@@ -31,9 +95,8 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
     let vertices: Point[] = []
     if (shape.shape == SHAPE.RECT) {
         vertices = rectanglePoints(shape)
-        //console.log('vertices', vertices)
     }
-
+    //console.log('vertices', vertices)
     let collidingSegment = intersectingSegment(circle, end, vertices)
     //console.log('collidingSegment', collidingSegment)
 
@@ -45,36 +108,52 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
 
         return end
     }
-    const segmentVector1 = normalizedVector(collidingSegment)
+    const segmentVector1 = normalizedVectorFromLineSegment(collidingSegment)
     //console.log('segmentVector1', segmentVector1)
 
-    const segmentVector2 = normalizedVector({ start: collidingSegment.end, end: collidingSegment.start })
+    const segmentVector2 = normalizedVectorFromLineSegment({ start: collidingSegment.end, end: collidingSegment.start })
     //console.log('segmentVector2', segmentVector2)
 
     const segmentVector = closestVectorToTarget(circleVector, [segmentVector1, segmentVector2])
     //console.log('segmentVector', segmentVector)
 
-    //flip the segment if we got the opposite vector
-    //if (segmentVector == segmentVector2) {
-    //why don't do this?
-    //collidingSegment = { start: collidingSegment.end, end: collidingSegment.start }
-    //}
+    //const intersection = intersectionSegmentSegment(circleSegment, collidingSegment)
+    //const intersection = intersectionRaySegment(convertToRay(circleSegment), collidingSegment)
     //console.log('collidingSegment', collidingSegment)
 
-    //const intersection = intersectionSegmentSegment(circleSegment, collidingSegment)
-    const intersection = intersectionRaySegment(convertToRay(circleSegment), collidingSegment)
-    //console.log('circleSegment', circleSegment)
+    //console.log('circle.location', circle.location)
 
     //TODO see if we're past the edge of the colliding segment
+    const startPerp = perpendicularRay(collidingSegment, collidingSegment.start, circle.location)
+    //console.log('startPerp', startPerp)
 
-    //console.log('intersection', intersection)
-    if (!intersection) {
-        console.log('wat2')
-        return end
+    const endPerp = perpendicularRay(collidingSegment, collidingSegment.end, circle.location)
+    //console.log('endPerp', endPerp)
+
+    //end, I think, but maybe character.location
+    const isBetweenSegment = isPointBetweenRays(circle.location, startPerp, endPerp)
+    //console.log('isBetweenSegment', isBetweenSegment)
+    if (!isBetweenSegment) {
+        console.log('slide around corner time')
+        //TODO move in a circle around the end point
+        //find the vector of the end perp(maybe start perp?)
+        //console.log('endPerp', endPerp)
+        const endVector = normalizeVector(endPerp.direction)
+        //console.log('endVector', endVector)
+        //find the next segment
+        const seg2 = nextSegment(collidingSegment.end, vertices)
+        //find the vector of the next segment's perp endpoint thingy
+        //find the distance between those two vectors
     }
 
-    //find the parellel line to the intersectingsegment
-    const parallelSegment = getParallelLine(collidingSegment, circle.radiusX)
+    //console.log('intersection', intersection)
+    //if (!intersection) {
+    //console.log('wat2')
+    //return end
+    //}
+
+    //find the parellel line to the intersectingsegment to move along
+    const parallelSegment = getParallelLine(collidingSegment, -circle.radiusX)
     //console.log('parallelSegment', parallelSegment)
 
     //find the intersection on the parallelsegment and circlesegment
@@ -91,7 +170,7 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
     //console.log('remainingDistance', remainingDistance)
 
     //get how far we have to slide
-    const collidingSegmentDistanceRemaining = distanceBetweenPoints(intersection, collidingSegment.end)
+    const collidingSegmentDistanceRemaining = distanceBetweenPoints(circle.location, parallelSegment.end)
     //console.log('collidingSegmentDistanceRemaining', collidingSegmentDistanceRemaining)
 
     //now move parallel to the segment up to the min of remainingDistance and the remaining distance in the collidingSegment
@@ -105,7 +184,7 @@ export function polygonSlide(circle: WorldObject, end: Point, shape: WorldObject
 
     //now continue in the circle's original vector however
     newPoint = calculateNewPoint(newPoint, multiplyVectorByScalar(circleVector, remainingDistance))
-    //console.log('newPoint', newPoint)
+    console.log('newPoint', newPoint)
     console.log('<----POLYGONSLIDE')
     return newPoint
 }
@@ -128,7 +207,7 @@ export function intersectionRayPolygon(ray: Ray, polygon: Point[]): Point | null
     return intersectionPoint
 }
 
-function normalizedVector(lineSegment: LineSegment): { x: number, y: number } {
+function normalizedVectorFromLineSegment(lineSegment: LineSegment): Point {
     const segmentVector = { x: lineSegment.end.x - lineSegment.start.x, y: lineSegment.end.y - lineSegment.start.y }
     return normalizeVector(segmentVector)
 }
@@ -188,7 +267,7 @@ export function rectanglePoints(rectangle: WorldObject): Point[] {
         y: location.y - halfWidth * sinA + halfHeight * cosA
     }
 
-    return [topRight, topLeft, bottomLeft, bottomRight]
+    return [topRight, bottomRight, bottomLeft, topLeft]
 }
 
 export function distanceSegmentPolygon(segment: LineSegment, polygon: Point[]): number | undefined {
@@ -287,6 +366,10 @@ export function normalizeVector(vector: { x: number, y: number }): Point {
     return { x: vector.x / length, y: vector.y / length }
 }
 
+function normalizedVectorRay(ray: Ray) {
+    return normalizeVector(ray.direction)
+}
+
 function pointOnRay(ray: Ray, distance: number): Point {
     const normalizedDirection = normalizeVector(ray.direction)
 
@@ -298,7 +381,7 @@ function pointOnRay(ray: Ray, distance: number): Point {
     return point
 }
 
-function intersectionRaySegment(ray: Ray, segment: LineSegment): Point | null {
+function intersectionRaySegment(ray: Ray, segment: LineSegment): Point | undefined {
     const { origin, direction } = ray
     const { start, end } = segment
 
@@ -311,7 +394,7 @@ function intersectionRaySegment(ray: Ray, segment: LineSegment): Point | null {
 
     if (determinant === 0) {
         //The ray and segment are parallel
-        return null
+        return undefined
     }
 
     //Calculate the parameters 't' and 'u'
@@ -333,7 +416,7 @@ function intersectionRaySegment(ray: Ray, segment: LineSegment): Point | null {
     }
 
     //No intersection
-    return null
+    return undefined
 }
 
 export function extendSegment(segment: LineSegment, extensionLength: number): LineSegment {
@@ -421,120 +504,140 @@ function closestPointsBetweenSegments(segment1: LineSegment, segment2: LineSegme
 }
 
 export function intersectingSegment(circle: WorldObject, end: Point, polygon: Point[]): LineSegment | undefined {
-    //const { end: extendedEnd } = extendSegment({ start: circle.location, end: end }, circle.radiusX * 2)
-    //const circleRay = convertToRay({ start: circle.location, end: end })
+    //console.log('circle', circle.location)
+    //console.log('end', end)
+    //console.log('polygon', JSON.stringify(polygon))
     const rightRay = convertToRay(getParallelLine({ start: circle.location, end: end }, circle.radiusX))
+    const centerRay = convertToRay({ start: circle.location, end: end })
     const leftRay = convertToRay(getParallelLine({ start: circle.location, end: end }, -circle.radiusX))
-    //get the left side ray and right side ray
-    //console.log('circleRay', circleRay)
 
     //collector variables
     let closestIntersectionDistance: number | undefined = undefined
-    let intersectingSegment = undefined
+    let intersectingSegment: LineSegment | undefined = undefined
+    let centerIntersect = false
 
-    //see if we hit an inside segment
     polygon.forEach((a, i) => {
-        const b = polygon[i == 0 ? polygon.length - 1 : i - 1]
+        //console.log('side', i)
+        //get the next point, wrapping at the end
+        const b = polygon[i == polygon.length - 1 ? 0 : i + 1]
         const segment2 = { start: a, end: b }
+        let ci = false
+        //console.log(segment2)
+
+        //if the center ray intersects with a different segment 
+        if (!!intersectionRaySegment(centerRay, segment2)) {
+            ci = true
+            //console.log('center hit this segment')
+        }
+
         const rightIntersection = intersectionRaySegment(rightRay, segment2)
         const leftIntersection = intersectionRaySegment(leftRay, segment2)
         let ld = undefined
         let rd = undefined
         if (!!rightIntersection) {
-            console.log('rightIntersection', rightIntersection)
-            //rd = distanceBetweenPoints(rightIntersection, circle.location)
             rd = distancePointSegment(circle.location, segment2)
-            if (rightIntersection == segment2.start) {
-                console.log('rightIntersection hit segment start')
-            }
-            if (rightIntersection == segment2.end) {
-                console.log('rightIntersection hit segment end')
-            }
         }
         if (!!leftIntersection) {
-            console.log('leftIntersection', leftIntersection)
             ld = distanceBetweenPoints(leftIntersection, circle.location)
-            if (leftIntersection == segment2.start) {
-                console.log('leftIntersection hit segment start')
-            }
-            if (leftIntersection == segment2.end) {
-                console.log('leftIntersection hit segment end')
-            }
         }
         let intersection
         let d
-        if (!rd || !!ld && (ld < rd)) {
-            intersection = leftIntersection
-            d = ld
+        if (!!rd && !!ld) {
+            if (ld < rd) {
+                intersection = leftIntersection
+                d = ld
+                //console.log('left side is closest')
+            }
+            else {
+                intersection = rightIntersection
+                d = ld
+                //console.log('right side is closest')
+            }
         }
         else if (!!rd) {
             intersection = rightIntersection
             d = rd
+            //console.log('right side is closest')
+        }
+        else if (!!ld) {
+            intersection = leftIntersection
+            d = ld
+            //console.log('left side is closest')
         }
 
         if (!!intersection && !!d) {
-            console.log('intersection', intersection)
-            console.log('segment2', segment2)
-            console.log('d', d)
+            //console.log('intersectingSegment', intersectingSegment)
+            //console.log('closestIntersectionDistance', closestIntersectionDistance)
+            //console.log('d', d)
 
-            if (closestIntersectionDistance == undefined || d < closestIntersectionDistance) {
-                console.log('is closest so far segment')
+            if (
+                //first segment we hit at all
+                closestIntersectionDistance == undefined ||
+                //or its the closest segment so far and the centerRay hits it
+                (d < closestIntersectionDistance && ci == true) ||
+                //or its the closes segment so far and the center ray hasnt hit anything yet
+                (d < closestIntersectionDistance && centerIntersect == false) ||
+                //or is the first segment that the center hits
+                (centerIntersect == false && ci == true)) {
+                //console.log('is closest so far segment')
                 closestIntersectionDistance = d
-                //extend the segment out the radius of the cirlce on both sides
-                intersectingSegment = { start: extendSegment(segment2, circle.radiusX).end, end: extendSegment({ start: segment2.end, end: segment2.start }, circle.radiusX).end }
+                intersectingSegment = segment2
+                if (ci) {
+                    centerIntersect = true
+                }
             }
         }
     })
-
+    //console.log('intersectingSegment', intersectingSegment)
     return intersectingSegment
 }
 
 function calculateLine(segment: LineSegment): { m: number | undefined, b: number } {
-    const dx = segment.end.x - segment.start.x;
+    const dx = segment.end.x - segment.start.x
 
     // Check if the line is vertical
     if (dx === 0) {
         return {
             m: undefined, // Slope is undefined for vertical lines
             b: segment.start.x, // x-coordinate of the vertical line
-        };
+        }
     }
 
-    const m = (segment.end.y - segment.start.y) / dx;
-    const b = segment.start.y - m * segment.start.x;
+    const m = (segment.end.y - segment.start.y) / dx
+    const b = segment.start.y - m * segment.start.x
 
-    return { m, b };
+    return { m, b }
 }
 
 export function intersectionLineLine(segment1: LineSegment, segment2: LineSegment): Point | undefined {
-    const line1 = calculateLine(segment1);
-    const line2 = calculateLine(segment2);
+    const line1 = calculateLine(segment1)
+    const line2 = calculateLine(segment2)
 
     // Check if either or both lines are vertical
     if (line1.m === undefined && line2.m === undefined) {
         // Both lines are vertical, check if they overlap on the same x-coordinate
         if (line1.b === line2.b) {
-            return { x: line1.b, y: (segment1.start.y + segment1.end.y + segment2.start.y + segment2.end.y) / 4 };
+            return { x: line1.b, y: (segment1.start.y + segment1.end.y + segment2.start.y + segment2.end.y) / 4 }
         } else {
-            return undefined; // Parallel vertical lines with different x-coordinates, no intersection
+            return undefined // Parallel vertical lines with different x-coordinates, no intersection
         }
     }
 
     if (line1.m === undefined && line2.m !== undefined) {
         // Line 1 is vertical, calculate intersection using Line 2's parameters
-        const y = line2.m * line1.b + line2.b;
-        return { x: line1.b, y };
+        const y = line2.m * line1.b + line2.b
+        return { x: line1.b, y }
     }
 
     if (line2.m === undefined && line1.m !== undefined) {
         // Line 2 is vertical, calculate intersection using Line 1's parameters
-        const y = line1.m * line2.b + line1.b;
-        return { x: line2.b, y };
+        const y = line1.m * line2.b + line1.b
+        return { x: line2.b, y }
     }
 
     // Check if lines are parallel (same slope)
     if (line1.m === line2.m) {
-        return undefined; // No intersection
+        return undefined // No intersection
     }
 
     if (line1.m == undefined || line2.m == undefined) {
@@ -543,14 +646,14 @@ export function intersectionLineLine(segment1: LineSegment, segment2: LineSegmen
     }
 
     // Calculate intersection point
-    const x = (line2.b - line1.b) / (line1.m - line2.m);
-    const y = line1.m * x + line1.b;
+    const x = (line2.b - line1.b) / (line1.m - line2.m)
+    const y = line1.m * x + line1.b
 
-    return { x, y };
+    return { x, y }
 }
 
 function arePointsCollinear(p1: Point, p2: Point, p3: Point): boolean {
-    return dotProduct(subtractVectors(p2, p1), subtractVectors(p3, p1)) === 0;
+    return dotProduct(subtractVectors(p2, p1), subtractVectors(p3, p1)) === 0
 }
 
 function convertToRay(lineSegment: LineSegment): Ray {
@@ -562,16 +665,16 @@ function convertToRay(lineSegment: LineSegment): Ray {
 
 export function angleToVector(angle: number): Point {
     // Calculate the components of the vector
-    const xComponent = Math.cos(angle);
-    const yComponent = Math.sin(angle);
+    const xComponent = Math.cos(angle)
+    const yComponent = Math.sin(angle)
 
     // Calculate the magnitude of the vector
-    const magnitude = Math.sqrt(xComponent ** 2 + yComponent ** 2);
+    const magnitude = Math.sqrt(xComponent ** 2 + yComponent ** 2)
 
     // Create a normalized vector
     const normalizedVector = { x: xComponent / magnitude, y: yComponent / magnitude }
 
-    return normalizedVector;
+    return normalizedVector
 }
 
 function getParallelLine(lineSegment: LineSegment, distance: number): LineSegment {
@@ -594,16 +697,16 @@ function addVectors(v1: Point, v2: Point): Point {
     return { x: v1.x + v2.x, y: v1.y + v2.y }
 }
 
-function subtractVectors(v1: Point, v2: Point): Point {
-    return { x: v1.x - v2.x, y: v1.y - v2.y }
-}
-
 function multiplyVectorByScalar(vector: Point, scalar: number): Point {
     return { x: vector.x * scalar, y: vector.y * scalar }
 }
 
 function subtractPoints(p1: Point, p2: Point): Point {
     return { x: p1.x - p2.x, y: p1.y - p2.y }
+}
+
+function subtractVectors(v1: Point, v2: Point): Point {
+    return { x: v1.x - v2.x, y: v1.y - v2.y }
 }
 
 function calculateNewPoint(startingPoint: Point, vector: Point): Point {
@@ -655,7 +758,7 @@ function closestPointOnSegment({ start, end }: LineSegment, point: Point): Point
     }
 }
 
-function perpendicularPoint(referencePoint: Point, lineSegment: LineSegment, distance: number): Point {
+function perpendicularPoint(lineSegment: LineSegment, referencePoint: Point, distance: number): Point {
     //get the closest point on the segment
     const a = closestPointOnSegment(lineSegment, referencePoint)
 
@@ -768,4 +871,8 @@ export function getRotationDelta(current: number, target: number) {
         delta = -(Math.PI * 2 - delta)
     }
     return delta
+}
+
+function segmentToLine(segment: LineSegment): Line {
+    return { a: segment.start, b: segment.end }
 }

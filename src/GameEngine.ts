@@ -8,7 +8,7 @@ import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, RIGHT, LEFT, angleToVector } from "./Geometry"
+import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, RIGHT, LEFT } from "./Geometry"
 //import { Engine, Body, Bodies, Constraint, Composite, World } from 'matter-js';
 
 //processes game logic
@@ -31,7 +31,8 @@ export default class GameEngine {
     private lastTimestamp: DOMHighResTimeStamp | undefined
     //lower number means faster, higher means slower
     private accelerationMultiplier: number = 20
-    private rotationMultiplier: number = 1000 / Math.PI
+    //private rotationMultiplier: number = 1000 / Math.PI
+    private rotationMultiplier: number = 500
     //1px/ft
     //5ft/s*1000ms/s
     //30ft/6seconds
@@ -280,7 +281,7 @@ export default class GameEngine {
             //TODO if they don't have an action to use for running, don't let them run
             let newSpeed = this.calculateSpeed(character, dt)
 
-            let newPosition: Point = this.calculatePosition(character, dt)
+            let newPosition = this.calculatePosition(character, dt)
             //check for collisions
             newPosition = this.slide(character, newPosition)
 
@@ -917,6 +918,14 @@ export default class GameEngine {
     }
 
     private calculatePosition(character: Character, dt: number) {
+
+        //r = v ^ 2 / g * sin(2θ)
+        //const distanceTraveled = character.speed * dt / this.speedMultiplier
+        //const angleInRadians = getRotationDelta(character.rotation, this.calculateRotation(character, dt))
+        //const radius = distanceTraveled / angleInRadians;
+        //console.log('radius', radius)
+
+
         const w = character.rotationAcceleration / this.rotationMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
