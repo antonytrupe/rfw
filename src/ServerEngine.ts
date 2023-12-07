@@ -507,7 +507,7 @@ export default class ServerEngine {
             .then(() => {
                 this.templateDB.getObject<{}>(CONSTANTS.TEMPLATE_PATH).then((c: {}) => {
                     Object.entries(c).map(([id, template]: [id: string, object: any]) => {
-                        //console.log(object)
+                        //console.log('template',template)
                         this.templates.set(template.id, template)
                     })
                 }).catch(err => {
@@ -633,6 +633,7 @@ export default class ServerEngine {
         //barbarians
         let characters = this.populateClass({
             className: 'BARBARIAN',
+            race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         })
@@ -640,7 +641,7 @@ export default class ServerEngine {
 
         //bards
         characters = characters.concat(this.populateClass({
-            className: 'BARD',
+            className: 'BARD', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -648,7 +649,7 @@ export default class ServerEngine {
 
         //clerics 
         characters = characters.concat(this.populateClass({
-            className: 'BARD',
+            className: 'BARD', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -656,7 +657,7 @@ export default class ServerEngine {
 
         //druid
         characters = characters.concat(this.populateClass({
-            className: 'DRUID',
+            className: 'DRUID', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -664,7 +665,7 @@ export default class ServerEngine {
 
         //fighter 
         characters = characters.concat(this.populateClass({
-            className: 'FIGHTER',
+            className: 'FIGHTER', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -672,7 +673,7 @@ export default class ServerEngine {
 
         //monk 
         characters = characters.concat(this.populateClass({
-            className: 'MONK',
+            className: 'MONK', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -680,7 +681,7 @@ export default class ServerEngine {
 
         //paladin 
         characters = characters.concat(this.populateClass({
-            className: 'PALADIN',
+            className: 'PALADIN', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -688,7 +689,7 @@ export default class ServerEngine {
 
         //ranger 
         characters = characters.concat(this.populateClass({
-            className: 'RANGER',
+            className: 'RANGER', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -696,7 +697,7 @@ export default class ServerEngine {
 
         //rogue 
         characters = characters.concat(this.populateClass({
-            className: 'ROGUE',
+            className: 'ROGUE', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -704,7 +705,7 @@ export default class ServerEngine {
 
         //sorcerer 
         characters = characters.concat(this.populateClass({
-            className: 'SORCERER',
+            className: 'SORCERER', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -712,7 +713,7 @@ export default class ServerEngine {
 
         //wizard 
         characters = characters.concat(this.populateClass({
-            className: 'WIZARD',
+            className: 'WIZARD', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -721,7 +722,7 @@ export default class ServerEngine {
         //npc classes
         //adepts  
         characters = characters.concat(this.populateClass({
-            className: 'ADEPT',
+            className: 'ADEPT', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -729,7 +730,7 @@ export default class ServerEngine {
 
         //aristocrats
         characters = characters.concat(this.populateClass({
-            className: 'ARISTOCRAT',
+            className: 'ARISTOCRAT', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -737,7 +738,7 @@ export default class ServerEngine {
 
         //commoner 
         characters = characters.concat(this.populateClass({
-            className: 'COMMONER',
+            className: 'COMMONER', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -745,7 +746,7 @@ export default class ServerEngine {
 
         //expert 
         characters = characters.concat(this.populateClass({
-            className: 'EXPERT',
+            className: 'EXPERT', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -753,7 +754,7 @@ export default class ServerEngine {
 
         //warrior
         characters = characters.concat(this.populateClass({
-            className: 'WARRIOR',
+            className: 'WARRIOR', race: race,
             diceCount: 2, diceSize: 4, modifier: modifier,
             origin: location, radius: radius
         }))
@@ -771,7 +772,7 @@ export default class ServerEngine {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "ARISTOCRAT", location: p })
+            const c = this.createCharacter({ characterClass: "ARISTOCRAT", location: p, race: race })
             createdCount++
             characters.push(c)
         }
@@ -784,7 +785,7 @@ export default class ServerEngine {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c: string = this.createCharacter({ characterClass: "ADEPT", location: p })
+            const c: string = this.createCharacter({ characterClass: "ADEPT", location: p, race: race })
             createdCount++
             characters.push(c)
         }
@@ -797,7 +798,7 @@ export default class ServerEngine {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "EXPERT", location: p })
+            const c = this.createCharacter({ characterClass: "EXPERT", location: p, race: race })
             createdCount++
             characters.push(c)
         }
@@ -810,7 +811,7 @@ export default class ServerEngine {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "WARRIOR", location: p })
+            const c = this.createCharacter({ characterClass: "WARRIOR", location: p, race: race })
             createdCount++
             characters.push(c)
         }
@@ -825,7 +826,7 @@ export default class ServerEngine {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c = this.createCharacter({ characterClass: "COMMONER", location: p })
+            const c = this.createCharacter({ characterClass: "COMMONER", location: p, race: race })
             createdCount++
             characters.push(c)
         }
@@ -839,7 +840,7 @@ export default class ServerEngine {
         }
     }
 
-    private populateClass({ className, diceCount, diceSize, modifier, origin, radius }: ClassPopulation): string[] {
+    private populateClass({ className, diceCount, diceSize, modifier, origin, radius, race }: ClassPopulation): string[] {
         let location: Point
         const buffer = 10
         let createdCharacterIds: string[] = []
@@ -860,7 +861,7 @@ export default class ServerEngine {
 
                 const level = Math.round(l)
                 const xp = LEVELS[level.toString() as keyof typeof LEVELS]
-                const id = this.createCharacter({ characterClass: className, level: level, xp: xp, location: location })
+                const id = this.createCharacter({ characterClass: className, level: level, xp: xp, location: location, race: race })
                 //console.log('c', c)
                 createdCharacterIds = [...createdCharacterIds, id]
                 ///updatedZones = new Map([...updatedZones, ...zones])

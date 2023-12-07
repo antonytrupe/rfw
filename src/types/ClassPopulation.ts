@@ -7,4 +7,5 @@ export default interface ClassPopulation {
     modifier: number
     origin: Point
     radius: number
+    race:string
 }

@@ -735,10 +735,14 @@ export default class ClientEngine {
             this.drawPoly(ctx, wo)
         }
         else {
+            //console.log(wo.shape)
             //maybe it's using a template
             const template = this.templates.get(wo.shape)
             if (!!template) {
+                //console.log('template', template)
+
                 const merged = { ...template, id: wo.id }
+                //console.log('merged', merged)
                 this.drawWorldObject(ctx, merged)
             }
             else {
@@ -751,9 +755,21 @@ export default class ClientEngine {
 
     drawPoly(ctx: CanvasRenderingContext2D, wo: WorldObject) {
         //TODO
-        ctx.strokeText('POLY', 0, 0)
+        //ctx.strokeText('POLY', 0, 0)
         ctx.save()
+        ctx.beginPath();
 
+        wo.points.forEach((p, i) => {
+            //console.log(p)
+            if (i == 0) {
+                ctx.moveTo(p.x * this.PIXELS_PER_FOOT, p.y * this.PIXELS_PER_FOOT);
+            }
+            else {
+                ctx.lineTo(p.x * this.PIXELS_PER_FOOT, p.y * this.PIXELS_PER_FOOT);
+            }
+        })
+
+        ctx.closePath();
         ctx.fill()
         ctx.restore()
     }
@@ -786,8 +802,8 @@ export default class ClientEngine {
     }
 
     doubleClickHandler(e: MouseEvent) {
-        e.stopPropagation()
-        e.preventDefault()
+        //e.stopPropagation()
+        //e.preventDefault()
         //console.log('doubleclick')
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
 
@@ -1010,20 +1026,23 @@ export default class ClientEngine {
             //character location data
             this.socket?.on(CONSTANTS.CLIENT_CHARACTER_UPDATE, (characters: Character[]) => {
                 //tell the gameengine we got an update 
-                //console.log(characters)
+                //console.log('characters',characters)
                 this.gameEngine.updateCharacters(characters)
             })
 
             //world object location data
             this.socket?.on(CONSTANTS.WORLD_OBJECTS, (worldObjects: WorldObject[]) => {
                 //tell the gameengine we got an update 
-                //console.log(characters)
+                //console.log('worldObjects',worldObjects)
                 this.gameEngine.updateObjects(worldObjects)
             })
 
             //template data
             this.socket?.on(CONSTANTS.TEMPLATE_OBJECTS, (templates: [string, WorldObject][]) => {
+                //console.log('templates', templates)
                 this.templates = new Map<string, WorldObject>(templates)
+                //console.log('this.templates', this.templates)
+
             })
         }
         catch (e) {

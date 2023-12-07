@@ -17,7 +17,6 @@ import Player from '@/types/Player'
 
 //steamworks.electronEnableSteamOverlay()
 //const client = steamworks.init()
-//console.log(client.localplayer.getName())
 
 export default function ClientUI() {
   //@ts-ignore
@@ -85,6 +84,8 @@ export default function ClientUI() {
   }
 
   function onRightClick(event: any): void {
+    event.stopPropagation()
+    event.preventDefault()
     console.log('right click')
     clientEngine?.rightClickHandler(event)
   }
