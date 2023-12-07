@@ -5,17 +5,6 @@ import Ray from "./types/Ray"
 import { SHAPE } from "./types/SHAPE"
 import WorldObject from "./types/WorldObject"
 
-export const E = 0 / 4 * Math.PI
-export const NE = 1 / 4 * Math.PI
-export const N = 2 / 4 * Math.PI
-export const NW = 3 / 4 * Math.PI
-export const W = 4 / 4 * Math.PI
-export const SW = 5 / 4 * Math.PI
-export const S = 6 / 4 * Math.PI
-export const SE = 7 / 4 * Math.PI
-export const LEFT = 1
-export const RIGHT = -1
-
 function nextSegment(point: Point, vertices: Points): LineSegment {
     const i = vertices.findIndex((p) => { return p.x == point.x && p.y == point.y })
     return { start: vertices[i], end: vertices[i == vertices.length - 1 ? 0 : i + 1] }

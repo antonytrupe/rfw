@@ -8,7 +8,8 @@ import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, RIGHT, LEFT } from "./Geometry"
+import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
+import { LEFT, RIGHT } from "./types/CONSTANTS"
 //import { Engine, Body, Bodies, Constraint, Composite, World } from 'matter-js';
 
 //processes game logic

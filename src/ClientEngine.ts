@@ -50,6 +50,12 @@ export default class ClientEngine {
         })
         observer.observe(getCanvas())
 
+        this.start()
+    }
+
+    start() {
+        this.gameEngine.start()
+
         let renderLoop = () => {
             if (this.stopped) {
                 return
@@ -57,7 +63,7 @@ export default class ClientEngine {
             this.draw()
             window.requestAnimationFrame(renderLoop.bind(this))
         }
-        this.gameEngine.start()
+
         window.requestAnimationFrame(renderLoop.bind(this))
     }
 

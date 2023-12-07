@@ -2,7 +2,7 @@ import { useState } from 'react';
 import styles from './CommunityCreation.module.scss'
 
 
-export default function CommunityCreation({ children, action }: { children: any, action: any }) {
+export default function CommunityCreation({ action }: { action: any }) {
 
     const [size, setSize] = useState('THORP')
     const [race, setRace] = useState('HUMAN')

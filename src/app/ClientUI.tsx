@@ -26,6 +26,12 @@ export default function ClientUI() {
     return canvasRef.current
   }
 
+  useEffect(() => {
+    clientEngine?.stop()
+    clientEngine?.start()
+
+  }, [canvasRef]);
+
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [connected, setConnected] = useState(false)
   const [player, setPlayer] = useState<Player>()
@@ -184,8 +190,7 @@ export default function ClientUI() {
                 <button onClick={createObject}>Create Object</button>
               </div>
               <div>
-                <CommunityCreation action={createCommunity}>
-                </CommunityCreation>
+                <CommunityCreation action={createCommunity} />
               </div>
             </>
             )}

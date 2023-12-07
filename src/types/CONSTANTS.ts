@@ -8,8 +8,16 @@ export const OBJECT_PATH = '/OBJECT/'
 export const PLAYER_PATH = '/PLAYER/'
 export const TEMPLATE_PATH = '/TEMPLATE/'
 
-const LEFT = 1
-const RIGHT = -1
+export const E = 0 / 4 * Math.PI
+export const NE = 1 / 4 * Math.PI
+export const N = 2 / 4 * Math.PI
+export const NW = 3 / 4 * Math.PI
+export const W = 4 / 4 * Math.PI
+export const SW = 5 / 4 * Math.PI
+export const S = 6 / 4 * Math.PI
+export const SE = 7 / 4 * Math.PI
+export const LEFT = 1
+export const RIGHT = -1
 
 export const CHAT = 'chat'
 //client connect
@@ -19,7 +27,7 @@ export const CONNECTION = 'connection'
 //server and client socket disconnect
 export const DISCONNECT = 'disconnect'
 //message
-export const MESSAGE_CLIENT_SEND = "message.client.send"
+export const MESSAGE_CLIENT_SEND = "message.client.sendd"
 export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 
 export interface ViewPort {
