@@ -10,6 +10,7 @@ import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
 import { LEFT, RIGHT } from "./types/CONSTANTS"
+import { Actions, AttackAction } from "./types/Action"
 //import { Engine, Body, Bodies, Constraint, Composite, World } from 'matter-js';
 
 //processes game logic
@@ -18,9 +19,9 @@ import { LEFT, RIGHT } from "./types/CONSTANTS"
 export default class GameEngine {
 
     //EventEmitter function
-    private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
+    //private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     private emit: (eventName: string | symbol, ...args: any[]) => boolean
-    private eventNames: () => (string | symbol)[]
+    //private eventNames: () => (string | symbol)[]
     //data object
     gameWorld: GameWorld
     //engine = Engine.create({ gravity: { x: 0, y: 0 } })
@@ -49,9 +50,9 @@ export default class GameEngine {
      */
     constructor({ ticksPerSecond, doGameLogic = true }: { ticksPerSecond: number, doGameLogic?: boolean }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
-        this.on = eventEmitter.on.bind(eventEmitter)
+        //this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
-        this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
+        //this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
         this.doGameLogic = doGameLogic
     }
@@ -211,8 +212,10 @@ export default class GameEngine {
                             //done doing attacks
                             console.log('call for help')
                             //call for help 
-                            const helper = this.recruitHelp(target)
-                            updatedCharacters.add(helper.id)
+                            if (action.triggerSocialAgro) {
+                                const helper = this.recruitHelp(target)
+                                updatedCharacters.add(helper.id)
+                            }
                             if (!target.target) {
                                 //fight back
                                 this.attack(target.id, character.id)
@@ -418,7 +421,8 @@ export default class GameEngine {
 
     private recruitHelp(character: Character) {
         console.log('recruitHelp')
-        //TODO call for help 
+        //TODO figure out who the aggressor was 
+        //call for help 
         //just get the nearest level character that's nearby to attack
         const nearby = this.gameWorld.getCharactersNearPoint({ location: character.location, distance: 60 })
             //get rid of the two already fighting
@@ -487,7 +491,8 @@ export default class GameEngine {
             return
         }
         //clear other move actions and add new move action
-        const actions = [...character.actions.filter((action) => { return action.action != 'move' }), { action: 'move', location: location }]
+        //add the new action to the end or beginning?
+        const actions: Actions = [{ action: 'move', location: location }, ...character.actions.filter((action) => { return action.action != 'move' })]
 
         this.updateCharacter({ id: characterId, actions: actions })
     }
@@ -514,7 +519,8 @@ export default class GameEngine {
     attack(attackerId: string, attackeeId: string): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
-        const actions = [...attacker.actions.filter((action) => { return action.action != 'attack' }), { action: 'attack', targetId: attackeeId }]
+        const newAttackAction: AttackAction = { action: 'attack', targetId: attackeeId, triggerSocialAgro: false }
+        const actions = [...attacker.actions.filter((action) => { return action.action != 'attack' }), newAttackAction]
 
         this.updateCharacter({ id: attackerId, target: attackeeId, actions: actions })
         if (attackeeId) {

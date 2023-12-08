@@ -1,4 +1,4 @@
-import { Action } from "./Action"
+import { Action, Actions } from "./Action"
 import Point from "./Point"
 import { ZONETYPE } from "./ZONETYPE"
 import { SHAPE } from "./SHAPE"
@@ -21,7 +21,7 @@ export default class Character extends WorldObject implements CharacterInterface
     bab: number[]
     target: string
     targeters: string[]
-    actions: Action[]
+    actions: Actions
     actionsRemaining: number
     birthdate: Date
     age: number

@@ -1,3 +1,25 @@
+.uncontrol,
+.patrol,
+.unclaim {
+    display: none;
+}
+
+.clock {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+}
+
+.action {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    border: thin black solid;
+    border-radius: 5px;
+    padding: 4px;
+    background-color: rgba(255,255,255,.8);
+}
+
 .actions {
     display: flex;
     flex-direction: column;

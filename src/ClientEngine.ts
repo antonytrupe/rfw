@@ -15,8 +15,7 @@ export default class ClientEngine {
 
     //event things
     private socket: Socket | undefined
-    private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
-    private emit: (eventName: string | symbol, ...args: any[]) => boolean
+    //private emit: (eventName: string | symbol, ...args: any[]) => boolean
 
     //state things
     private stopped: boolean = false //control the draw loop
@@ -36,12 +35,12 @@ export default class ClientEngine {
     game_events: GameEvent[] = []
     templates: Map<string, WorldObject> = new Map()
 
-    constructor(eventEmitter: EventEmitter, getCanvas: (() => HTMLCanvasElement)) {
+    constructor(getCanvas: (() => HTMLCanvasElement)) {
         //console.log('ClientEngine.constructor')
         this.getCanvas = getCanvas
+        let eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ ticksPerSecond: 30, doGameLogic: false }, eventEmitter)
-        this.on = eventEmitter.on.bind(eventEmitter)
-        this.emit = eventEmitter.emit.bind(eventEmitter)
+        //this.emit = eventEmitter.emit.bind(eventEmitter)
 
         const observer = new ResizeObserver(() => {
             const canvas = getCanvas()
@@ -68,20 +67,30 @@ export default class ClientEngine {
     }
 
     chat(message: string) {
-        if (!!this.player?.controlledCharacter) {
-            this.game_events.push({
-                target: this.player?.controlledCharacter,
-                message: message,
-                type: 'say',
-                time: new Date().getTime()
-            })
-            //console.log('sending chat event to the server')
+        if (message[0] == '/') {
             this.socket?.emit(CONSTANTS.CHAT, {
                 target: this.player?.controlledCharacter,
                 message: message,
-                type: 'say',
+                type: 'command',
                 time: new Date().getTime()
             })
+        }
+        else {
+            if (!!this.player?.controlledCharacter) {
+                this.game_events.push({
+                    target: this.player?.controlledCharacter,
+                    message: message,
+                    type: 'say',
+                    time: new Date().getTime()
+                })
+                //console.log('sending chat event to the server')
+                this.socket?.emit(CONSTANTS.CHAT, {
+                    target: this.player?.controlledCharacter,
+                    message: message,
+                    type: 'say',
+                    time: new Date().getTime()
+                })
+            }
         }
     }
 
@@ -116,8 +125,6 @@ export default class ClientEngine {
     control(characterId: string) {
         if (this.player) {
             this.player.controlledCharacter = characterId
-            //tell the ui
-            this.emit(CONSTANTS.CONTROL_CHARACTER, this.player.controlledCharacter)
             //tell the server
             this.socket?.emit(CONSTANTS.CONTROL_CHARACTER, characterId)
         }
@@ -796,15 +803,13 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.CREATE_COMMUNITY, { ...options, location: origin })
     }
 
-    clickHandler(e: MouseEvent) {
-        if (!!this.player?.controlledCharacter) {
-            const location = this.getMousePosition(e)
-            this.move(this.player.controlledCharacter, location)
-        }
-    }
     move(characterId: string, location: Point) {
         this.gameEngine.moveCharacter(characterId, location)
         this.socket?.emit(CONSTANTS.MOVE_TO, characterId, location)
+    }
+
+    clickHandler(e: MouseEvent) {
+
     }
 
     doubleClickHandler(e: MouseEvent) {
@@ -837,7 +842,16 @@ export default class ClientEngine {
     }
 
     rightClickHandler(e: MouseEvent) {
-        //TODO right click handler
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
+
+        console.log('client engine right click handler')
+
+        console.log('this.player?.controlledCharacter', this.player?.controlledCharacter)
+
+        if (!!this.player?.controlledCharacter) {
+            const location = this.getMousePosition(e)
+            this.move(this.player.controlledCharacter, location)
+        }
     }
 
     attackStop(attackerId: string) {
@@ -1012,7 +1026,7 @@ export default class ClientEngine {
 
             this.socket?.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
                 this.player = player
-                this.emit(CONSTANTS.CURRENT_PLAYER, player)
+                //this.emit(CONSTANTS.CURRENT_PLAYER, player)
             })
 
             //disconnect handler
@@ -1023,6 +1037,7 @@ export default class ClientEngine {
             this.socket?.on(CONSTANTS.CHAT, (chat: GameEvent) => {
                 console.log(chat)
                 this.game_events = this.game_events.concat(chat)
+
             })
 
             this.socket?.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
@@ -1063,7 +1078,7 @@ export default class ClientEngine {
     private onDisconnect(reason: any) {
         console.log('DISCONNECT', reason)
         this.connected = false
-        this.emit(CONSTANTS.DISCONNECT)
+        //this.emit(CONSTANTS.DISCONNECT)
     }
 
     private onServerInitial(characters: Character[]) {
@@ -1075,7 +1090,7 @@ export default class ClientEngine {
         console.log('successfully connected to the server')
         this.connected = true
         //tell the ui we connected
-        this.emit(CONSTANTS.CONNECT)
+        //this.emit(CONSTANTS.CONNECT)
 
         //restart/reset the gameengine and gameworld
         this.gameEngine.restart()

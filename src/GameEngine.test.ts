@@ -1,22 +1,20 @@
 import EventEmitter from "events"
 import GameEngine from "./GameEngine"
 import Character from "./types/Character"
-import WorldObject from "./types/WorldObject"
-import { SHAPE } from "./types/SHAPE"
-import LineSegment from "./types/LineSegment"
-import { polygonSlide, perpendicularPointOnSameSide, rectanglePoints, intersectionSegmentSegment, closestPointPoints, getRotation, getRotationDelta, E, LEFT, N, NE, NW, RIGHT, S, SE, SW, W } from "./Geometry"
+import { getRotationDelta, } from "./Geometry"
+import { E, NE, N, NW, W, SW, S, SE, LEFT, RIGHT } from "./types/CONSTANTS"
 
 describe('GameEngine', () => {
     let gameEngine: GameEngine
     let eventEmitter: EventEmitter
-   
+
 
     beforeEach(() => {
         const ticksPerSecond = 1
         eventEmitter = new EventEmitter()
         gameEngine = new GameEngine({ ticksPerSecond }, eventEmitter)
     })
- 
+
     test('should add 3 new chararacters', () => {
         gameEngine.createCharacter({ id: '1', location: { x: 0, y: 0 } })
         gameEngine.createCharacter({ id: '2', location: { x: 0, y: 0 } })

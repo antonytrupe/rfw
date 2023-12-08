@@ -1,9 +1,19 @@
-import  Point   from "./Point";
+import Point from "./Point";
 
-export class Action {
-    action: string = ''
-    targetId?: string = ''
-    location?: Point
-    repeat?: boolean = false
-    cycle?: boolean = false
+export type Action = MoveAction | AttackAction
+export type Actions = Action[]
+type BaseAction = {
+    repeat?: boolean
+    cycle?: boolean
 }
+
+type MoveAction = BaseAction & {
+    action: 'move'
+    location?: Point
+}
+
+export type AttackAction = BaseAction & {
+    action: 'attack'
+    triggerSocialAgro: boolean;
+    targetId?: string
+} 

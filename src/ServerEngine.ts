@@ -19,7 +19,7 @@ import WorldObject from "./types/WorldObject"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
-    private emit: (eventName: string | symbol, ...args: any[]) => boolean
+    //private emit: (eventName: string | symbol, ...args: any[]) => boolean
     private gameEngine: GameEngine
     private io: Server
     private characterDB: JsonDB
@@ -33,7 +33,7 @@ export default class ServerEngine {
         const eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
-        this.emit = eventEmitter.emit.bind(eventEmitter)
+        //this.emit = eventEmitter.emit.bind(eventEmitter)
 
         this.characterDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
         this.objectDB = new JsonDB(new Config(OBJECT_DB_PATH, true, true, '/'))
@@ -51,7 +51,7 @@ export default class ServerEngine {
         })
 
         this.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
-            //console.log('serverengine GAME_EVENTS')
+            console.log('serverengine GAME_EVENTS')
             this.sendEvents(events)
         })
 
@@ -75,9 +75,29 @@ export default class ServerEngine {
             //CONSTANTS.CHAT
             socket.on(CONSTANTS.CHAT, async (event: GameEvent) => {
                 //console.log('CONSTANTS.CHAT', event)
+                console.log('event.message', event.message![0])
+                //console.log('event.message[0]', event?.message[0])
+                if (!!event.message && event.message[0] == '/') {
+                    console.log('command')
+                    const command = event.message.substring(1)
+                    switch (command) {
+                        case "unclaim":
+                            if (player?.controlledCharacter) {
+                                this.unClaimCharacter(player.controlledCharacter, player?.email)
+                            }
+                            break
+                        case "uncontrol":
+                            if (player?.controlledCharacter) {
+                                this.controlCharacter('', player?.email)
+                            }
+                            break
+                    }
+                }
                 //just send it back to everyone
                 //TODO only send it to clients in range
-                socket.broadcast.emit(CONSTANTS.CHAT, event)
+                else {
+                    socket.broadcast.emit(CONSTANTS.CHAT, event)
+                }
             })
 
 
@@ -227,8 +247,7 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.UNCLAIM_CHARACTER, async (characterId: string) => {
                 if (!!player) {
-                    let character
-                    [player, character] = await this.unClaimCharacter(characterId, player.email)
+                    [player,] = await this.unClaimCharacter(characterId, player.email)
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
                     //TODO send character update
                 }
