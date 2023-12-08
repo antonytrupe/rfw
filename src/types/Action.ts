@@ -15,5 +15,6 @@ type MoveAction = BaseAction & {
 export type AttackAction = BaseAction & {
     action: 'attack'
     triggerSocialAgro: boolean;
+    triggerSocialAssist: boolean;
     targetId?: string
 } 

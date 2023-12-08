@@ -861,7 +861,7 @@ export default class ClientEngine {
     }
 
     attack(attackerId: string, attackeeId: string) {
-        this.gameEngine.attack(attackerId, attackeeId)
+        this.gameEngine.attack(attackerId, attackeeId,true,true)
         //tell the server
         this.socket?.emit(CONSTANTS.ATTACK, attackerId, attackeeId)
     }

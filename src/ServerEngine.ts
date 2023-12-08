@@ -328,7 +328,7 @@ export default class ServerEngine {
 
     attack(attacker: string, attackee: string) {
         //console.log('serverengine.attack')
-        this.gameEngine.attack(attacker, attackee)
+        this.gameEngine.attack(attacker, attackee, true, true)
         this.sendAndSaveCharacterUpdates([attacker, attackee])
     }
 

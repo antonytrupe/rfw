@@ -14,33 +14,39 @@ magical portals that let you fast travel but age you based on normal travel spee
 
 ## TODO LIST
 2. low level monsters
-3. maximize the canvas
-4. fix the tooltip
-5. follow a character
-6. buildings
-7. walls/caves
-8. fog-of-war
-9. fight/flight/assist/social/factions
-10. pathing/patrol
-11. healing/long/short rest
-12. running away
-13. character age
-14. attack of opportunities
-15. say/yell/whisper
-16. teleport
-17. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
-18. touch controls
-19. random stats when spawning 
-20. strafing 
-21. package as exe/etc with electron
-22. add steam support
-23. admin tool to interact with world
-24. stay centered on selected characters
-25. rightclick move the screen
-26. change selected character stats
-27. randomly spawn new characters
-28. randomly move characters
-29. character health ui
+3. generate random encounter
+4. generate buildings with communitties
+5. zoom out visuals
+6. assign roles to characters
+7. delete character command
+8. delete all characters command
+9. maximize the canvas
+10. fix the tooltip
+11. follow a character
+12. buildings
+13. walls/caves
+14. fog-of-war
+15. fight/flight/assist/social/factions
+16. pathing/patrol
+17. healing/long/short rest
+18. running away
+19. character age
+20. attack of opportunities
+21. say/yell/whisper
+22. teleport
+23. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
+24. touch controls
+25. random stats when spawning 
+26. strafing 
+27. package as exe/etc with electron
+28. add steam support
+29. admin tool to interact with world
+30. stay centered on selected characters
+31. rightclick move the screen
+32. change selected character stats
+33. randomly spawn new characters
+34. randomly move characters
+35. character health ui
 
 ## DONE
 turn dead characters into tombstones

@@ -213,12 +213,14 @@ export default class GameEngine {
                             console.log('call for help')
                             //call for help 
                             if (action.triggerSocialAgro) {
-                                const helper = this.recruitHelp(target)
+                                const helper = this.recruitHelp(target, false)
                                 updatedCharacters.add(helper.id)
                             }
                             if (!target.target) {
                                 //fight back
-                                this.attack(target.id, character.id)
+                                const triggerSocialAgro = false
+                                const triggerSocialAssist = true
+                                this.attack(target.id, character.id, triggerSocialAgro, triggerSocialAssist)
                                 updatedCharacters.add(target.id)
                             }
                         }
@@ -419,7 +421,7 @@ export default class GameEngine {
         return globalPerpendicularPoint
     }
 
-    private recruitHelp(character: Character) {
+    private recruitHelp(character: Character, triggerSocialAgro: boolean) {
         console.log('recruitHelp')
         //TODO figure out who the aggressor was 
         //call for help 
@@ -447,7 +449,7 @@ export default class GameEngine {
             console.log('found someone to help')
             //move first, then attack. order matters    
             this.moveCharacter(nearby[0].id, aggressor.location)
-            this.attack(nearby[0].id, aggressor.id)
+            this.attack(nearby[0].id, aggressor.id, triggerSocialAgro, false)
         }
         return helper
     }
@@ -516,10 +518,10 @@ export default class GameEngine {
         return this
     }
 
-    attack(attackerId: string, attackeeId: string): GameEngine {
+    attack(attackerId: string, attackeeId: string, triggerSocialAgro: boolean, triggerSocialAssist: boolean): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
-        const newAttackAction: AttackAction = { action: 'attack', targetId: attackeeId, triggerSocialAgro: false }
+        const newAttackAction: AttackAction = { action: 'attack', targetId: attackeeId, triggerSocialAgro: triggerSocialAgro, triggerSocialAssist: triggerSocialAssist }
         const actions = [...attacker.actions.filter((action) => { return action.action != 'attack' }), newAttackAction]
 
         this.updateCharacter({ id: attackerId, target: attackeeId, actions: actions })
