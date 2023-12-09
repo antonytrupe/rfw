@@ -12,41 +12,50 @@ play muliple characters but not at once
 able to give characters goals(move to a new location, focus on a career)  
 magical portals that let you fast travel but age you based on normal travel speed
 
+## commands
+/create thorp|hamlet|village|small_town|large_town|small_city|large_city|metropolis human|etc
+
 ## TODO LIST
 2. low level monsters
 3. generate random encounter
 4. generate buildings with communitties
 5. zoom out visuals
 6. assign roles to characters
-7. delete character command
-8. delete all characters command
+7. "delete character" command
+8. "delete all characters" command
 9. maximize the canvas
 10. fix the tooltip
 11. follow a character
-12. buildings
-13. walls/caves
-14. fog-of-war
-15. fight/flight/assist/social/factions
-16. pathing/patrol
-17. healing/long/short rest
-18. running away
-19. character age
-20. attack of opportunities
-21. say/yell/whisper
-22. teleport
-23. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
-24. touch controls
-25. random stats when spawning 
-26. strafing 
-27. package as exe/etc with electron
-28. add steam support
-29. admin tool to interact with world
-30. stay centered on selected characters
-31. rightclick move the screen
-32. change selected character stats
-33. randomly spawn new characters
-34. randomly move characters
-35. character health ui
+12. line of sight
+13. vision distance
+14. low light/dark light vision
+15. characters having their own verion/copy of the world/map
+16. characters sharing maps
+17. characters editing their map
+18. buildings
+19. walls/caves
+20. fog-of-war
+21. fight/flight/assist/social/factions
+22. pathing/patrol
+23. healing/long/short rest
+24. running away
+25. character age
+26. attack of opportunities
+27. say/yell/whisper
+28. teleport
+29. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
+30. touch controls
+31. random stats when spawning 
+32. strafing 
+33. package as exe/etc with electron
+34. add steam support
+35. admin tool to interact with world
+36. stay centered on selected characters
+37. rightclick move the screen
+38. change selected character stats
+39. randomly spawn new characters
+40. randomly move characters
+41. character health ui
 
 ## DONE
 turn dead characters into tombstones

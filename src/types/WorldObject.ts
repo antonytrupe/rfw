@@ -14,6 +14,7 @@ export default class WorldObject implements WorldObjectInterface {
     points: Point[] = []
     subObjects: WorldObject[] = []
     zoneType: ZONETYPE[] = [ZONETYPE.TACTICAL]
+    physics: boolean
 
     constructor({ id = '__test__',
         location = { x: 0, y: 0 },
@@ -25,7 +26,8 @@ export default class WorldObject implements WorldObjectInterface {
         width = 1,
         points = [],
         subObjects = [],
-        zoneType = [ZONETYPE.TACTICAL] }: WorldObjectInterface) {
+        zoneType = [ZONETYPE.TACTICAL],
+        physics = true }: WorldObjectInterface) {
         this.id = id
         this.location = location
         this.rotation = rotation
@@ -37,6 +39,7 @@ export default class WorldObject implements WorldObjectInterface {
         this.points = points
         this.subObjects = subObjects
         this.zoneType = zoneType
+        this.physics = physics
     }
 }
 
@@ -52,4 +55,5 @@ interface WorldObjectInterface {
     points?: Point[]
     subObjects?: WorldObject[]
     zoneType?: ZONETYPE[]
+    physics?: boolean
 }

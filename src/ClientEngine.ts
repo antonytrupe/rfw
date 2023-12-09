@@ -68,12 +68,29 @@ export default class ClientEngine {
 
     chat(message: string) {
         if (message[0] == '/') {
-            this.socket?.emit(CONSTANTS.CHAT, {
-                target: this.player?.controlledCharacter,
-                message: message,
-                type: 'command',
-                time: new Date().getTime()
-            })
+
+            const parts = message.split(' ')
+            //if any of the parts are the word "here", then replace it with the center of the viewport
+
+            switch (parts[0].substring(1)) {
+                case "create":
+                    switch (parts[1].toLocaleLowerCase()) {
+                        case "thorp":
+                        case "hamlet":
+                        case "village":
+                            this.createCommunity({ size: parts[1], race: parts[2] })
+                            break
+                    }
+                    break
+                default:
+                    this.socket?.emit(CONSTANTS.CHAT, {
+                        target: this.player?.controlledCharacter,
+                        message: message,
+                        type: 'command',
+                        time: new Date().getTime()
+                    })
+                    break
+            }
         }
         else {
             if (!!this.player?.controlledCharacter) {
@@ -163,11 +180,24 @@ export default class ClientEngine {
         const newScale = Math.min(Math.max(1, this.scale + zoom), 100000)
         if (newScale != this.scale) {
             this.scale = newScale
-            this.translateX += deltaX
-            this.translateY += deltaY
-            //tell the server our viewport changed
-            this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
+            const newX = this.translateX + deltaX
+            const newY = this.translateY + deltaY
+            this.setOffset({ x: newX, y: newY, scale: newScale })
         }
+    }
+
+    setOffset({ x, y, scale }: { x?: number, y?: number, scale?: number }) {
+        if (!!x) {
+            this.translateX = x
+        }
+        if (!!y) {
+            this.translateY = y
+        }
+        if (!!scale) {
+            this.scale = scale
+        }
+        //tell the server our viewport changed 
+        this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
     }
 
     private draw() {
@@ -180,6 +210,40 @@ export default class ClientEngine {
         //Use the identity matrix while clearing the canvas
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+        //keep the controlled character in frame
+        //TODO do a smooth pan instead of a jerk
+        const vp = this.getViewPort()
+        if (this.player?.controlledCharacter) {
+            //console.log(this.player?.controlledCharacter)
+            const c = this.getCharacter(this.player?.controlledCharacter)
+            if (c?.location) {
+
+                if (c?.location.x > vp.right - c.radiusX * 2) {
+                    //const delta=vp.right
+                    const newLocal = c.location.x - (vp.right - vp.left) + c.radiusX * 2
+                    //console.log(newLocal)
+                    this.setOffset({ x: newLocal })
+                }
+                if (c?.location.x < vp.left + c.radiusX * 2) {
+                    const newLocal = c.location.x - c.radiusX * 2
+                    //console.log(newLocal)
+                    this.setOffset({ x: newLocal })
+                }
+
+                if (c?.location.y > vp.bottom - c.radiusX * 2) {
+                    //const delta=vp.right
+                    const newLocal = c.location.y - (vp.bottom - vp.top) + c.radiusX * 2
+                    //console.log(newLocal)
+                    this.setOffset({ y: newLocal })
+                }
+                if (c?.location.y < vp.top + c.radiusX * 2) {
+                    const newLocal = c.location.y - c.radiusX * 2
+                    //console.log(newLocal)
+                    this.setOffset({ y: newLocal })
+                }
+            }
+        }
 
         //background color
         ctx.save()
@@ -682,7 +746,7 @@ export default class ClientEngine {
         }
 
         if (claimed) {
-            //TODO draw a star or something
+            //draw a star or something
             this.drawStar(ctx, 0, 0, 6, 0.8 * this.PIXELS_PER_FOOT, 0.4 * this.PIXELS_PER_FOOT)
         }
 
@@ -767,8 +831,6 @@ export default class ClientEngine {
     }
 
     drawPoly(ctx: CanvasRenderingContext2D, wo: WorldObject) {
-        //TODO
-        //ctx.strokeText('POLY', 0, 0)
         ctx.save()
         ctx.beginPath();
 
@@ -861,7 +923,7 @@ export default class ClientEngine {
     }
 
     attack(attackerId: string, attackeeId: string) {
-        this.gameEngine.attack(attackerId, attackeeId,true,true)
+        this.gameEngine.attack(attackerId, attackeeId, true, true)
         //tell the server
         this.socket?.emit(CONSTANTS.ATTACK, attackerId, attackeeId)
     }

@@ -17,6 +17,12 @@ import { Actions, AttackAction } from "./types/Action"
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+    getCharacters(ids: string[]) {
+        return this.gameWorld.getCharacters(ids)
+    }
+    getObject(id: string): any {
+        return this.gameWorld.getObject(id)
+    }
 
     //EventEmitter function
     //private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -321,7 +327,7 @@ export default class GameEngine {
             this.gameWorld.getObjectsInWay(character, newPosition)
                 //filter out shapes we don't know how to handle yet
                 .filter((o) => {
-                    return true && [SHAPE.CIRCLE, SHAPE.RECT].includes(o.shape)
+                    return true && [SHAPE.CIRCLE, SHAPE.RECT].includes(o.shape) && o.physics
                 })
                 //get characters
                 .concat(
@@ -543,6 +549,7 @@ export default class GameEngine {
     }
 
     getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
+        //TODO scale determines what kind of zones to use, not viewport, I think
         const area = (right - left) * (bottom - top)
         let zones = []
         if (area < 1000000) {
@@ -555,6 +562,11 @@ export default class GameEngine {
         }
         else {
             //TODO do local zone names
+            for (let x = left; x < right; x += 300) {
+                for (let y = top; y < bottom; y += 300) {
+                    zones.push(this.gameWorld.getLocalZoneName({ x: x, y: y }))
+                }
+            }
         }
         return zones
     }
@@ -702,38 +714,10 @@ export default class GameEngine {
     }
 
     updateCharacter(updates: Partial<Character>): GameEngine {
-        /*
-        if (!updates.id) {
-            return this
-        }
-        const old = this.getCharacter(updates.id)
-        let matterObject
-        if (!!old?.matterId) {
-            matterObject = Composite.get(this.engine.world, old.matterId, "body")
-        }
 
-        let matterBody: Body
-
-        if (!!matterObject) {
-            matterBody = matterObject as Body
-        }
-        else {
-            matterBody = Bodies.circle(0, 0, old?.radiusX || updates.radiusX || 2.5)
-            Composite.add(this.engine.world, matterBody)
-            updates.matterId = matterBody.id
-            //console.log('created matterBody', matterBody.id)
-        }
-        */
         const character = this.gameWorld.updateCharacter(updates)
             .getCharacter(updates.id)!
 
-        //Body.setAngle(matterBody, character.rotation)
-        //Body.setAngularSpeed(matterBody, character.rotationAcceleration)
-        //Body.setAngularVelocity(matterBody, character.rotationAcceleration)
-        //Body.setPosition(matterBody, character.location)
-        //Body.setSpeed(matterBody, character.speed)
-        //Body.applyForce(matterBody, matterBody.position, angleToVector(character.rotation))
-        //Body.setVelocity(matterBody,1)
         //console.log(character)
 
         //check for things that make this an active character

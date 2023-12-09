@@ -4,7 +4,7 @@ import ClassPopulation from "./types/ClassPopulation"
 import * as CONSTANTS from "@/types/CONSTANTS"
 import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
-import { Server } from "socket.io"
+import { Server, Socket } from "socket.io"
 import { Zones2 } from "./types/Zones"
 import { getSession } from "next-auth/react"
 import Player from "./types/Player"
@@ -16,6 +16,8 @@ import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, TEMPLATE_DB_PATH, ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
+import { ZONETYPE } from "./types/ZONETYPE"
+import { SHAPE } from "./types/SHAPE"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -55,7 +57,7 @@ export default class ServerEngine {
             this.sendEvents(events)
         })
 
-        io.on(CONSTANTS.CONNECTION, async socket => {
+        io.on(CONSTANTS.CONNECTION, async (socket: Socket) => {
             //console.log(CONNECTION, socket.id) 
             let player: Player | undefined
             //let session: Session | null
@@ -69,6 +71,12 @@ export default class ServerEngine {
                     socket.join(player.id)
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
+                    //send the players characters
+                    if(player.claimedCharacters)
+                    {
+                        const chars=this.gameEngine.getCharacters(player.claimedCharacters)
+                        socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE,chars)
+                    }
                 }
             })
 
@@ -91,6 +99,8 @@ export default class ServerEngine {
                                 this.controlCharacter('', player?.email)
                             }
                             break
+                        case "create":
+                            break
                     }
                 }
                 //just send it back to everyone
@@ -100,32 +110,15 @@ export default class ServerEngine {
                 }
             })
 
-
             //tell the client where all the character are
             //client is 
             socket.on(CONSTANTS.CLIENT_VIEWPORT, (viewPort: ViewPort) => {
                 //console.log('CLIENT_VIEWPORT')
                 //console.log('viewport', (viewPort.right - viewPort.left) * (viewPort.bottom - viewPort.top))
                 const started = (new Date()).getTime()
-                //join the right zones/rooms
-                let oldZones = socket.rooms
-                //TODO switch to bigger zones if we're zoomed out a bunch
-                let newZones = this.gameEngine.getZonesIn(viewPort)
-                //leave zones we shouldn't be in
-                oldZones.forEach((zone) => {
-                    if (!newZones.includes(zone) && zone != player?.id) {
-                        //console.log('leaving a room')
-                        socket.leave(zone)
-                    }
-                })
-                //get the list of newZones that aren't in oldZones
-                const brandNewZones = new Set<string>()
-                newZones.forEach((zone) => {
-                    if (!Array.from(oldZones).includes(zone)) {
-                        socket.join(zone)
-                        brandNewZones.add(zone)
-                    }
-                })
+
+                const brandNewZones = this.updateZones(socket, viewPort, player)
+
                 const characters = this.gameEngine.gameWorld.getCharactersInZones(brandNewZones)
                 const worldObjects = this.gameEngine.gameWorld.getObjectsInZones(brandNewZones)
                 //console.log('socket.rooms', socket.rooms.size)
@@ -152,8 +145,7 @@ export default class ServerEngine {
                 //console.log('serverengine controlcharacter', characterId)
                 //console.log('player', player)
                 if (!!player && characterId != undefined) {
-                    let character
-                    [player, character] = await this.controlCharacter(characterId, player?.email)
+                    [player,] = await this.controlCharacter(characterId, player?.email)
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
                     //TODO send character update
                 }
@@ -235,8 +227,7 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
                 if (!!player) {
-                    let character
-                    [player, character] = await this.claimCharacter(characterId, player.email)
+                    [player,] = await this.claimCharacter(characterId, player.email)
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
                     //TODO send character update
                 }
@@ -265,24 +256,49 @@ export default class ServerEngine {
             })
         })
     }
-    createObject() {
-        const id = uuidv4()
-        const o = new WorldObject({ id })
-        this.saveObject(o)
+
+    updateZones(socket: Socket, viewPort: CONSTANTS.ViewPort, player: Player | undefined) {
+        //join the right zones/rooms
+        let oldZones = socket.rooms
+        //TODO switch to bigger zones if we're zoomed out a bunch
+        let newZones = this.gameEngine.getZonesIn(viewPort)
+        //leave zones we shouldn't be in
+        oldZones.forEach((zone) => {
+            if (!newZones.includes(zone) && zone != player?.id) {
+                //console.log('leaving a room')
+                socket.leave(zone)
+            }
+        })
+        //get the list of newZones that aren't in oldZones
+        const brandNewZones = new Set<string>()
+        newZones.forEach((zone) => {
+            if (!Array.from(oldZones).includes(zone)) {
+                socket.join(zone)
+                brandNewZones.add(zone)
+            }
+        })
+        return brandNewZones
     }
 
-    async saveObject(newObject: WorldObject) {
-        //look up the player first and then merge
+    async createObject(wo?: WorldObject) {
+        const id = uuidv4()
+        let o = new WorldObject({ id, ...wo })
+        o = await this.saveObject(o)
+        this.gameEngine.updateObjects([o])
+    }
+
+    saveObject(newObject: WorldObject) {
+        //look up the object first and then merge
         let old
         try {
-            old = await this.objectDB.getObject<WorldObject>(CONSTANTS.OBJECT_PATH + newObject.id)
+            old = this.gameEngine.getObject(newObject.id)
         }
         catch (error) {
             console.log('error looking up old object', newObject)
         }
         const merged = { ...new WorldObject({}), ...old, ...newObject }
         //console.log('merged', merged)
-        await this.objectDB.push(CONSTANTS.OBJECT_PATH + merged.id, merged)
+        this.objectDB.push(CONSTANTS.OBJECT_PATH + merged.id, merged)
         return merged
     }
 
@@ -604,7 +620,7 @@ export default class ServerEngine {
         let createdCount = 0
         let radius = 90
 
-        switch (size) {
+        switch (size.toUpperCase()) {
             case "THORP":
                 modifier = -3
                 totalSize = roll({ size: 60, modifier: 20 })
@@ -645,6 +661,11 @@ export default class ServerEngine {
                 radius = 3200
                 break
         }
+
+        //create the local zone object
+        const id = uuidv4()
+
+        this.createObject(new WorldObject({ id: id, location: location, zoneType: [ZONETYPE.LOCAL], shape: SHAPE.CIRCLE, radiusX: radius, physics: false }))
 
         if (logging) console.log('modifier', modifier)
 
