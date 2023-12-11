@@ -21,40 +21,41 @@ magical portals that let you fast travel but age you based on normal travel spee
 
 ## TODO LIST
 2. low level monsters
-3. generate random encounter
-4. generate buildings with communitties
-5. zoom out visuals
-6. assign roles to characters
-7. "delete character" command
-8. "delete all characters" command
-9.  fix the tooltip
-10. line of sight
-11. vision distance
-12. low light/dark light vision
-13. characters having their own verion/copy of the world/map
-14. characters sharing maps
-15. characters editing their map
-16. buildings
-17. walls/caves
-18. fog-of-war
-19. fight/flight/assist/social/factions
-20. pathing/patrol
-21. healing/long/short rest
-22. running away
-23. character age
-24. attack of opportunities
-25. say/yell/whisper
-26. teleport
-27. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
-28. touch controls
-29. random stats when spawning 
-30. strafing 
-31. package as exe/etc with electron
-32. add steam support
-33. admin tool to interact with world
-34. stay centered on selected characters
-35. rightclick move the screen
-36. change selected character stats
-37. randomly spawn new characters
-38. randomly move characters
-39. character health ui
+3. system to propose and approve new items/spells/abilities
+4. generate random encounter
+5. generate buildings with communitties
+6. zoom out visuals
+7. assign roles to characters
+8. "delete character" command
+9. "delete all characters" command
+10. fix the tooltip
+11. line of sight
+12. vision distance
+13. low light/dark light vision
+14. characters having their own verion/copy of the world/map
+15. characters sharing maps
+16. characters editing their map
+17. buildings
+18. walls/caves
+19. fog-of-war
+20. fight/flight/assist/social/factions
+21. pathing/patrol
+22. healing/long/short rest
+23. running away
+24. character age
+25. attack of opportunities
+26. say/yell/whisper
+27. teleport
+28. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
+29. touch controls
+30. random stats when spawning 
+31. strafing 
+32. package as exe/etc with electron
+33. add steam support
+34. admin tool to interact with world
+35. stay centered on selected characters
+36. rightclick move the screen
+37. change selected character stats
+38. randomly spawn new characters
+39. randomly move characters
+40. character health ui
