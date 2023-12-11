@@ -3,10 +3,10 @@ export const CHARACTER_DB_PATH = "data/characters"
 export const PLAYER_DB_PATH = "data/players"
 export const TEMPLATE_DB_PATH = "data/templates"
 export const OBJECT_DB_PATH = "data/objects"
-export const CHARACTER_PATH = '/CHARACTER/'
-export const OBJECT_PATH = '/OBJECT/'
-export const PLAYER_PATH = '/PLAYER/'
-export const TEMPLATE_PATH = '/TEMPLATE/'
+export const CHARACTER_KIND = 'CHARACTER'
+export const OBJECT_KIND = 'OBJECT'
+export const PLAYER_KIND = 'PLAYER'
+export const TEMPLATE_KIND = 'TEMPLATE'
 
 export const E = 0 / 4 * Math.PI
 export const NE = 1 / 4 * Math.PI

@@ -1,4 +1,4 @@
-import { CHARACTER_DB_PATH, CHARACTER_PATH } from "@/types/CONSTANTS"
+import { CHARACTER_DB_PATH, CHARACTER_KIND } from "@/types/CONSTANTS"
 import Character from "@/types/Character"
 import { Config, JsonDB } from "node-json-db"
 import { Suspense } from "react"
@@ -11,7 +11,7 @@ export default async function Page() {
 
     await worldDB.load()
 
-    return await worldDB.getObject<{}>(CHARACTER_PATH).then((charactersJSON) => {
+    return await worldDB.getObject<{}>(CHARACTER_KIND).then((charactersJSON) => {
       //console.log('then')
       const characters: Character[] = []
 

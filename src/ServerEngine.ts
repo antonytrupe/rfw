@@ -14,21 +14,25 @@ import GameEvent from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
-import { CHARACTER_DB_PATH, OBJECT_DB_PATH, PLAYER_DB_PATH, TEMPLATE_DB_PATH, ViewPort } from "@/types/CONSTANTS"
+import { OBJECT_DB_PATH, PLAYER_DB_PATH, TEMPLATE_DB_PATH, ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { ZONETYPE } from "./types/ZONETYPE"
 import { SHAPE } from "./types/SHAPE"
+import { Datastore } from '@google-cloud/datastore'
+
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     //private emit: (eventName: string | symbol, ...args: any[]) => boolean
     private gameEngine: GameEngine
     private io: Server
-    private characterDB: JsonDB
-    private objectDB: JsonDB
-    private playerDB: JsonDB
-    private templateDB: JsonDB
+    //private characterDB: JsonDB
+    //private objectDB: JsonDB
+    //private playerDB: JsonDB
+    //private templateDB: JsonDB
     private templates: Map<string, WorldObject> = new Map()
+    // Creates a client
+    datastore = new Datastore({ projectId: 'rfw2-403802' })
 
     constructor(io: Server) {
         this.io = io
@@ -37,10 +41,10 @@ export default class ServerEngine {
         this.on = eventEmitter.on.bind(eventEmitter)
         //this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        this.characterDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
-        this.objectDB = new JsonDB(new Config(OBJECT_DB_PATH, true, true, '/'))
-        this.playerDB = new JsonDB(new Config(PLAYER_DB_PATH, true, true, '/'))
-        this.templateDB = new JsonDB(new Config(TEMPLATE_DB_PATH, true, true, '/'))
+        //this.characterDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
+        //this.objectDB = new JsonDB(new Config(OBJECT_DB_PATH, true, true, '/'))
+        //this.playerDB = new JsonDB(new Config(PLAYER_DB_PATH, true, true, '/'))
+        //this.templateDB = new JsonDB(new Config(TEMPLATE_DB_PATH, true, true, '/'))
         this.loadWorld()
 
         //start the gameengines clock thingy
@@ -72,10 +76,9 @@ export default class ServerEngine {
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
                     //send the players characters
-                    if(player.claimedCharacters)
-                    {
-                        const chars=this.gameEngine.getCharacters(player.claimedCharacters)
-                        socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE,chars)
+                    if (player.claimedCharacters) {
+                        const chars = this.gameEngine.getCharacters(player.claimedCharacters)
+                        socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, chars)
                     }
                 }
             })
@@ -283,23 +286,23 @@ export default class ServerEngine {
     async createObject(wo?: WorldObject) {
         const id = uuidv4()
         let o = new WorldObject({ id, ...wo })
-        o = await this.saveObject(o)
+        this.saveObject(o)
         this.gameEngine.updateObjects([o])
     }
 
-    saveObject(newObject: WorldObject) {
-        //look up the object first and then merge
-        let old
-        try {
-            old = this.gameEngine.getObject(newObject.id)
-        }
-        catch (error) {
-            console.log('error looking up old object', newObject)
-        }
-        const merged = { ...new WorldObject({}), ...old, ...newObject }
-        //console.log('merged', merged)
-        this.objectDB.push(CONSTANTS.OBJECT_PATH + merged.id, merged)
-        return merged
+    async saveObject(newObject: WorldObject) {
+        const kind = CONSTANTS.OBJECT_KIND
+        // The name/ID for the new entity
+        const name = newObject.id
+        // The Cloud Datastore key for the new entity
+        const taskKey = this.datastore.key([kind, name]);
+        // Prepares the new entity
+        const task = {
+            key: taskKey,
+            data: newObject,
+        };
+        // Saves the entity
+        this.datastore.save(task);
     }
 
     move(characterId: string, location: Point) {
@@ -317,27 +320,60 @@ export default class ServerEngine {
     }
 
     async savePlayer(player: Partial<Player>): Promise<Player> {
-        //look up the player first and then merge
-        let old
-        try {
-            old = await this.playerDB.getObject<Player>(CONSTANTS.PLAYER_PATH + player.email)
-        }
-        catch (error) {
-            console.log('error saving player', player)
-        }
-        const merged = { ...new Player({}), ...old, ...player }
-        //console.log('merged', merged)
-        this.playerDB.push('/PLAYER/' + player.email, merged)
-        return merged
+
+        const kind = CONSTANTS.PLAYER_KIND
+        // The name/ID for the new entity
+        const id = player.email!
+        // The Cloud Datastore key for the new entity
+        const key = this.datastore.key([kind, id]);
+        // Prepares the new entity
+        const d = {
+            key: key,
+            data: player,
+        };
+        // Saves the entity
+        return new Promise(async () => {
+            await this.datastore.save(d)
+            return player
+        })
     }
 
     async getPlayerByEmail(email: string): Promise<Player | undefined> {
         //console.log('getPlayerByEmail')
-        let player: Player
-        try {
-            player = await this.playerDB.getObject<Player>(CONSTANTS.PLAYER_PATH + email)
+        let player: Player | undefined = undefined
+        const playerQuery = this.datastore.createQuery(CONSTANTS.PLAYER_KIND)
+        playerQuery.filter("email", email)
+        const [players]: [Player[], any] = await this.datastore.runQuery(playerQuery)
+
+        player = players[0]
+        if (!player) {
             return player
-        } catch (error) {
+        }
+
+        let updatePlayer = false
+        if (!!player?.controlledCharacter) {
+            const c = this.getCharacter(player.controlledCharacter)
+            if (!c) {
+                player.controlledCharacter = ''
+                updatePlayer = true
+            }
+        }
+        if (!!player?.claimedCharacters) {
+            const l: string[] = []
+            player.claimedCharacters.forEach((id) => {
+                const c = this.getCharacter(id)
+                if (!c) {
+                    updatePlayer = true
+                }
+                else {
+                    l.push(id)
+                }
+            })
+            player.claimedCharacters = l
+        }
+
+        if (updatePlayer) {
+            this.savePlayer(player)
         }
         return undefined
     }
@@ -517,63 +553,47 @@ export default class ServerEngine {
 
     }
 
-    private loadWorld() {
+    private async loadWorld() {
         console.log('loading world')
-        this.characterDB.load()
-            .then(() => {
-                this.characterDB.getObject<{}>(CONSTANTS.CHARACTER_PATH).then((c: {}) => {
-                    const characters: Character[] = []
-                    Object.entries(c).map(([id, character]: [id: string, character: any]) => {
-                        characters.push(character)
-                    })
-                    this.gameEngine.updateCharacters(characters)
-                }).catch(err => {
-                    console.log('empty player database', err)
-                })
-            })
-            .then(() => {
+
+        const characterQuery = this.datastore.createQuery(CONSTANTS.CHARACTER_KIND)
+        this.datastore.runQuery(characterQuery)
+            .then(([characters]) => {
+                this.gameEngine.updateCharacters(characters)
                 console.log('finished loading characters')
             })
-            .catch((error) => {
-                console.log('failed to load character db ', error)
+
+        const templateQuery = this.datastore.createQuery(CONSTANTS.TEMPLATE_KIND)
+        this.datastore.runQuery(templateQuery)
+            .then(([templates]) => {
+                templates.forEach((t: WorldObject) => {
+                    this.templates.set(t.id, t)
+                })
+                console.log('finished loading templates')
             })
 
-        this.templateDB.load()
-            .then(() => {
-                this.templateDB.getObject<{}>(CONSTANTS.TEMPLATE_PATH).then((c: {}) => {
-                    Object.entries(c).map(([id, template]: [id: string, object: any]) => {
-                        //console.log('template',template)
-                        this.templates.set(template.id, template)
-                    })
-                }).catch(err => {
-                    console.log('empty template database', err)
-                })
+        const objectQuery = this.datastore.createQuery(CONSTANTS.OBJECT_KIND)
+        this.datastore.runQuery(objectQuery)
+            .then(([objects]) => {
+                this.gameEngine.updateObjects(objects)
+                console.log('finished loading objects')
             })
-            .then(() => {
-                console.log('finished loading template objects')
-            })
-            .catch((error) => {
-                console.log('failed to load template objects db ', error)
-            })
+    }
 
-        this.objectDB.load()
-            .then(() => {
-                this.objectDB.getObject<{}>(CONSTANTS.OBJECT_PATH).then((c: {}) => {
-                    const objects: WorldObject[] = []
-                    Object.entries(c).map(([id, object]: [id: string, object: any]) => {
-                        objects.push(object)
-                    })
-                    this.gameEngine.updateObjects(objects)
-                }).catch(err => {
-                    console.log('empty player database', err)
-                })
-            })
-            .then(() => {
-                console.log('finished loading world objects')
-            })
-            .catch((error) => {
-                console.log('failed to load world objects db ', error)
-            })
+    async saveCharacter(character: Character) {
+        //console.log('saveCharacter')
+        const kind = CONSTANTS.CHARACTER_KIND
+        // The name/ID for the new entity
+        const id = character.id
+        // The Cloud Datastore key for the new entity
+        const key = this.datastore.key([kind, id]);
+        // Prepares the new entity
+        const d = {
+            key: key,
+            data: character,
+        };
+        // Saves the entity
+        await this.datastore.save(d)
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[]) {
@@ -582,17 +602,11 @@ export default class ServerEngine {
         //console.log(a)
 
         a.forEach((characters, zoneName) => {
-            characters.forEach((character, characterId) => {
+            characters.forEach((character) => {
                 //persist the character
                 if (!!character) {
                     //character still exists
-                    try {
-                        //TODO maybe don't persist so frequently?
-                        this.characterDB.push(CONSTANTS.CHARACTER_PATH + characterId, character)
-                    }
-                    catch (e) {
-                        console.log('failed to save character', character)
-                    }
+                    this.saveCharacter(character)
                 }
                 else {
                     //character doesn't exist
