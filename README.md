@@ -6,6 +6,19 @@ npm run dev, or npm run nodemon to pick up changes to the server
 gcloud beta emulators datastore env-init > set_vars.cmd && set_vars.cmd
 gcloud beta emulators datastore start --project=rfw2-403802 --no-store-on-disk 
 
+## game progression/tutorial
+1. zooming
+2. claiming a character
+3. movement
+4. attacking
+5. health
+6. short rest
+7. chat
+8. commands
+9. fast travel/aging
+10. long rest
+11. job
+12. 
 
 ## themes/principles/ideas
 perma death  

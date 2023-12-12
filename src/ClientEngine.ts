@@ -678,7 +678,6 @@ export default class ClientEngine {
             ctx.restore()
         }
 
-
         const drawHealth = () => {
             ctx.beginPath()
 
@@ -714,25 +713,25 @@ export default class ClientEngine {
 
         switch (character.characterClass) {
             case "BARBARIAN":
-                ctx.fillStyle = "#1c06f9"
+                ctx.fillStyle = "#9E9EFF"
                 break
             case "BARD":
-                ctx.fillStyle = "#fff500"
+                ctx.fillStyle = "#FFFCAC"
                 break
             case "CLERIC":
                 ctx.fillStyle = "#171cec"
                 break
             case "DRUID":
-                ctx.fillStyle = "#076802"
+                ctx.fillStyle = "#A0DBAA"
                 break
             case "FIGHTER":
-                ctx.fillStyle = "#d32c31"
+                ctx.fillStyle = "#EDA7A9"
                 break
             case "MONK":
-                ctx.fillStyle = "#ad8820"
+                ctx.fillStyle = "#EBD493"
                 break
             case "PALADIN":
-                ctx.fillStyle = "#934db2"
+                ctx.fillStyle = "#CCAADA"
                 break
             case "RANGER":
                 ctx.fillStyle = "#1ee134"
@@ -741,10 +740,10 @@ export default class ClientEngine {
                 ctx.fillStyle = "#d22b17"
                 break
             case "SORCERER":
-                ctx.fillStyle = "#df20d6"
+                ctx.fillStyle = "#F2A2EE"
                 break
             case "WIZARD":
-                ctx.fillStyle = "#9d1fe0"
+                ctx.fillStyle = "#D8A7F3"
                 break
 
             case "ADEPT":
@@ -765,11 +764,33 @@ export default class ClientEngine {
             default:
                 ctx.fillStyle = "#808080"
         }
+
+        ctx.save()
+        //the fill/inside
         ctx.beginPath()
-        //ctx.filter = "blur(1px)"
         ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT, 0, 2 * Math.PI)
         ctx.fill()
+        ctx.restore()
 
+        
+
+        //the blured border
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 4 / 2, 0, 2 * Math.PI)
+        ctx.filter = "blur(1px)"
+        ctx.lineWidth = 4
+        ctx.stroke()
+        ctx.restore()
+
+        //the solid border
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 2/2, 0, 2 * Math.PI)
+        ctx.lineWidth = 2
+        ctx.stroke()
+        ctx.restore()
+        
         //draw an arrow
         ctx.beginPath()
         ctx.strokeStyle = '#FFFFFF'
@@ -778,7 +799,8 @@ export default class ClientEngine {
         ctx.lineTo((character.radiusX) * .8 * this.PIXELS_PER_FOOT, 0)
 
         ctx.stroke()
-        drawHealth()
+
+        //drawHealth()
 
         if (isTargeted) {
             //draw a special circle around it
@@ -950,9 +972,9 @@ export default class ClientEngine {
     rightClickHandler(e: MouseEvent) {
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
 
-        console.log('client engine right click handler')
+        //console.log('client engine right click handler')
 
-        console.log('this.player?.controlledCharacter', this.player?.controlledCharacter)
+        //console.log('this.player?.controlledCharacter', this.player?.controlledCharacter)
 
         if (!!this.player?.controlledCharacter) {
             const location = this.getMousePosition(e)

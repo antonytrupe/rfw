@@ -18,8 +18,7 @@ import { ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { ZONETYPE } from "./types/ZONETYPE"
 import { SHAPE } from "./types/SHAPE"
-import { Datastore } from '@google-cloud/datastore'
-
+import { Datastore, PropertyFilter } from '@google-cloud/datastore'
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -62,11 +61,10 @@ export default class ServerEngine {
         })
 
         io.on(CONSTANTS.CONNECTION, async (socket: Socket) => {
-            //console.log(CONNECTION, socket.id) 
+            //console.log('CONSTANTS.CONNECTION', socket.id) 
             let player: Player | undefined
-            //let session: Session | null
             getSession({ req: socket.conn.request, }).then(async (session) => {
-                if (session?.user?.email) {
+                if (!!session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     if (!player) {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
@@ -323,26 +321,31 @@ export default class ServerEngine {
 
         const kind = CONSTANTS.PLAYER_KIND
         // The name/ID for the new entity
-        const id = player.email!
+        if (!player.email) {
+            throw new Error('no email for player')
+        }
+
+        if (!player.id) {
+            player.id = uuidv4()
+        }
+
         // The Cloud Datastore key for the new entity
-        const key = this.datastore.key([kind, id]);
+        const key = this.datastore.key([kind, player.email]);
         // Prepares the new entity
         const d = {
             key: key,
             data: player,
         };
         // Saves the entity
-        return new Promise(async () => {
-            await this.datastore.save(d)
-            return player
-        })
+        this.datastore.save(d)
+        return new Player(d.data)
     }
 
     async getPlayerByEmail(email: string): Promise<Player | undefined> {
         //console.log('getPlayerByEmail')
         let player: Player | undefined = undefined
         const playerQuery = this.datastore.createQuery(CONSTANTS.PLAYER_KIND)
-        playerQuery.filter("email", email)
+        playerQuery.filter(new PropertyFilter('email', '=', email))
         const [players]: [Player[], any] = await this.datastore.runQuery(playerQuery)
 
         player = players[0]
@@ -463,7 +466,8 @@ export default class ServerEngine {
         player.claimedCharacters.splice(player.claimedCharacters.indexOf(characterId), 1)
 
         player = await this.savePlayer({
-            email: player.email, claimedCharacters: player.claimedCharacters,
+            email: player.email,
+            claimedCharacters: player.claimedCharacters,
             //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
             controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
         })

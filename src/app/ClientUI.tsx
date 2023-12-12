@@ -78,7 +78,7 @@ export default function ClientUI() {
   function onRightClick(event: any): void {
     event.stopPropagation()
     event.preventDefault()
-    console.log('right click')
+    //console.log('right click')
     clientEngine?.rightClickHandler(event)
   }
 
