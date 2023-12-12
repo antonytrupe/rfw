@@ -112,11 +112,8 @@ export default function ClientUI() {
     }
   }
 
-  const onMouseMove = (e: any) => {
-    const c = clientEngine?.getCharacterAt(clientEngine.getMousePosition(e))
-    if (c) {
-      //setHoveredCharacter(c)
-    }
+  const onMouseMove = (e: React.MouseEvent) => {
+    clientEngine?.onMouseMove(clientEngine.getMousePosition(e.nativeEvent))
   }
 
   const onKeyUp = (e: any) => {
@@ -130,6 +127,7 @@ export default function ClientUI() {
   }
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const clockRef = useRef(null);
 
   return (
 
@@ -141,7 +139,7 @@ export default function ClientUI() {
       onKeyUp={onKeyUp}
       style={{ height: '100%' }}>
 
-      <Draggable><div><Clock /></div></Draggable>
+      <Draggable nodeRef={clockRef}><div ref={clockRef}><Clock /></div></Draggable>
 
       {!session?.user && <Link href={'/api/auth/signin'} className='session action signin'>Sign In</Link>}
       {!!session?.user && <Link href={'/api/auth/signout'} className='signOut session action' >

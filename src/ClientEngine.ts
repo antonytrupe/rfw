@@ -290,6 +290,50 @@ export default class ClientEngine {
         else if (this.scale <= 1000) {
             this.drawHourScale(ctx)
         }
+
+        //TODO draw stuff based on where the mouse is
+        const c = this.getCharacterAt(this.mousePosition)
+        //console.log(this.mousePosition)
+        if (!!c) {
+            this.drawCharacterPopup(ctx, c)
+        }
+    }
+    drawCharacterPopup(ctx: CanvasRenderingContext2D, character: Character) {
+        ctx.save()
+        //move center on character
+        ctx.translate(character.location.x * this.PIXELS_PER_FOOT, character.location.y * this.PIXELS_PER_FOOT)
+
+        const fontSize = 16 * this.scale
+        ctx.font = fontSize + "px Futura Extra Bold"
+        const info = []
+        info.push('Level ' + character.level + ' ' + character.race.toLowerCase() + ' ' + character.characterClass.toLowerCase())
+
+        const padding = 16 * this.scale
+        const width = ctx.measureText(info[0]).width + (padding * 2)
+        const height = fontSize + (padding * 2)
+        //console.log('height', height)
+        //console.log('width', width)
+
+        //move up
+        ctx.translate(-width / 2, -character.radiusX * this.PIXELS_PER_FOOT - height)
+        ctx.roundRect(0, 0, width, height, 10 * this.scale)
+
+        // Create gradient
+        const grd = ctx.createRadialGradient(75, 50, 5, 90, 60, 100);
+        grd.addColorStop(0, "white");
+        grd.addColorStop(1, "#faf0e6");
+
+        // Fill with gradient
+        ctx.fillStyle = grd;
+        ctx.fill()
+        ctx.stroke()
+
+        ctx.fillStyle = 'black';
+        ctx.fillText(info[0],
+            12 * this.scale,
+            padding * 2)
+
+        ctx.restore()
     }
 
     private drawCrossHair(ctx: CanvasRenderingContext2D) {
@@ -1068,6 +1112,10 @@ export default class ClientEngine {
                 this.accelerateDoubleStop(this.player.controlledCharacter)
             }
         }
+    }
+
+    onMouseMove(position: Point) {
+        this.mousePosition = position
     }
 
     disconnect() {

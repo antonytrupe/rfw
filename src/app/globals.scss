@@ -13,3 +13,10 @@ body {
     //flex-direction: column;
     height: 100%;
 }
+
+@font-face {
+    font-family: "Futura Extra Bold";
+    src:
+      local("Futura Extra Bold"),
+      url("../../public/Futura Extra Bold.otf") format("opentype") tech(color-COLRv1),
+  }
