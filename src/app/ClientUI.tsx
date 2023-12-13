@@ -159,11 +159,18 @@ export default function ClientUI() {
 
         onMouseMove={onMouseMove}
         data-testid="canvas" />
+      <div className='chatContainer'>
+        <div tabIndex={0} className='chatHistoryContainer'>
+          <textarea disabled>line one&#013; &#010;
+            line two&#013; &#010;
+          </textarea>
+        </div>
 
-      {chatMode && (<div
-        className={`${styles.chatContainer} chatContainer`}>
-        <input autoFocus value={chat} onChange={e => setChat(e.target.value)}></input>
-      </div>)}
+        {chatMode && (<div
+          className={`${styles.chatInputContainer} chatInputContainer`}>
+          <input autoFocus value={chat} onChange={e => setChat(e.target.value)}></input>
+        </div>)}
+      </div>
     </div>
 
   )

@@ -18,7 +18,8 @@ gcloud beta emulators datastore start --project=rfw2-403802 --no-store-on-disk
 9. fast travel/aging
 10. long rest
 11. job
-12. 
+12. first character death
+13. claiming a second character
 
 ## themes/principles/ideas
 perma death  
