@@ -113,7 +113,11 @@ export default function ClientUI() {
   }
 
   const onMouseMove = (e: React.MouseEvent) => {
-    clientEngine?.onMouseMove(clientEngine.getMousePosition(e.nativeEvent))
+    if (clientEngine) {
+      const newLocal = clientEngine.getGamePosition(e.nativeEvent)
+      const movement = { x: e.movementX, y: e.movementY }
+      clientEngine.onMouseMove(newLocal, movement, e.buttons)
+    }
   }
 
   const onKeyUp = (e: any) => {

@@ -172,7 +172,7 @@ export default class ClientEngine {
             zoom = - this.scale / 10
         }
 
-        const mouse = this.getMousePosition(e)
+        const mouse = this.getGamePosition(e)
 
         let deltaX = (this.translateX - mouse.x) * zoom / this.scale
         let deltaY = (this.translateY - mouse.y) * zoom / this.scale
@@ -772,8 +772,6 @@ export default class ClientEngine {
         ctx.fill()
         ctx.restore()
 
-        
-
         //the blured border
         ctx.save()
         ctx.beginPath()
@@ -786,11 +784,11 @@ export default class ClientEngine {
         //the solid border
         ctx.save()
         ctx.beginPath()
-        ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 2/2, 0, 2 * Math.PI)
+        ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 2 / 2, 0, 2 * Math.PI)
         ctx.lineWidth = 2
         ctx.stroke()
         ctx.restore()
-        
+
         //draw an arrow
         ctx.beginPath()
         ctx.strokeStyle = '#FFFFFF'
@@ -944,7 +942,7 @@ export default class ClientEngine {
         //e.stopPropagation()
         //e.preventDefault()
         //console.log('doubleclick')
-        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e))
 
         //if logged in 
         if (!!this.player) {
@@ -970,14 +968,14 @@ export default class ClientEngine {
     }
 
     rightClickHandler(e: MouseEvent) {
-        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getMousePosition(e))
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e))
 
         //console.log('client engine right click handler')
 
         //console.log('this.player?.controlledCharacter', this.player?.controlledCharacter)
 
         if (!!this.player?.controlledCharacter) {
-            const location = this.getMousePosition(e)
+            const location = this.getGamePosition(e)
             this.move(this.player.controlledCharacter, location)
         }
     }
@@ -1014,10 +1012,10 @@ export default class ClientEngine {
         return { x: middleX, y: middleY }
     }
 
-    getMousePosition(e: MouseEvent) {
+    getGamePosition(screenPosition: Point) {
         const rect = this.getCanvas().getBoundingClientRect()
-        const y = (e.clientY - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
-        const x = (e.clientX - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
+        const y = (screenPosition.y - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
+        const x = (screenPosition.x - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
 
         //console.log('y', y)
         return { x, y }
@@ -1136,8 +1134,12 @@ export default class ClientEngine {
         }
     }
 
-    onMouseMove(position: Point) {
+    onMouseMove(position: Point, movement: Point, buttons: number) {
         this.mousePosition = position
+        if (!!buttons) {
+            this.translateX -= (movement.x / this.PIXELS_PER_FOOT * this.scale)
+            this.translateY -= (movement.y / this.PIXELS_PER_FOOT * this.scale)
+        }
     }
 
     disconnect() {
