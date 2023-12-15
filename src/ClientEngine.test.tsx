@@ -30,6 +30,4 @@ describe('ClientEngine', () => {
     describe('Scrolling', () => {
         test.skip('something', () => { })
     })
-
-    
 })

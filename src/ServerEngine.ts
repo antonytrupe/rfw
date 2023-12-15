@@ -41,15 +41,15 @@ export default class ServerEngine {
 
         this.loadWorld()
 
-        this.setupListeners()
+        this.setUpListeners()
 
-        this.setupSocket()
+        this.setUpSocket()
 
         //start the gameengine
         this.start()
     }
 
-    setupListeners() {
+    setUpListeners() {
         //updated characters from the gameengine running on the server
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: string[]) => {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
@@ -62,7 +62,7 @@ export default class ServerEngine {
         })
     }
 
-    setupSocket() {
+    setUpSocket() {
 
         this.io.on(CONSTANTS.CONNECTION, async (socket: Socket) => {
             //console.log('CONSTANTS.CONNECTION', socket.id) 
@@ -81,6 +81,9 @@ export default class ServerEngine {
                     if (player.claimedCharacters) {
                         const chars = this.gameEngine.getCharacters(player.claimedCharacters)
                         socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, chars)
+                    }
+                    if (player.claimedCharacters.length==0) {
+                        socket.emit(CONSTANTS.CHAT, { message: 'You wander over the land. Chose a soul to become.' })
                     }
                 }
             })
@@ -104,7 +107,7 @@ export default class ServerEngine {
                                 this.controlCharacter('', player?.email)
                             }
                             break
-                        case "create":
+                        case "spawn":
                             break
                     }
                 }

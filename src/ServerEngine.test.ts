@@ -16,7 +16,6 @@ import Player from "./types/Player";
 
 
 describe('datastore basics', () => {
-    let serverEngine: ServerEngine
     let emulator: Emulator
     beforeEach(async () => {
         process.env.GCLOUD_PROJECT = 'rfw2-403802';
@@ -27,10 +26,9 @@ describe('datastore basics', () => {
         await emulator.start()
 
         const io = new Server()
-        serverEngine = new ServerEngine(io)
     })
     test('example datastore save', async () => {
-        const datastore = new Datastore({ projectId: 'rfw2-403802', apiEndpoint: 'localhost:8081' })
+        const datastore = new Datastore({ projectId: 'rfw2-403802' })
 
         // The kind for the new entity
         const kind = 'Task';

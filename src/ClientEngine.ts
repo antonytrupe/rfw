@@ -75,11 +75,16 @@ export default class ClientEngine {
             //if any of the parts are the word "here", then replace it with the center of the viewport
 
             switch (parts[0].substring(1)) {
-                case "create":
+                case "spawn":
                     switch (parts[1].toLocaleLowerCase()) {
                         case "thorp":
                         case "hamlet":
                         case "village":
+                        case "small_town":
+                        case "large_town":
+                        case "small_city":
+                        case "large_city":
+                        case "metropolis":
                             this.createCommunity({ size: parts[1], race: parts[2] })
                             break
                     }
