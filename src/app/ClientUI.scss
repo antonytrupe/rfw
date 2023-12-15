@@ -20,21 +20,19 @@
     width: 100%;
 
     .chatHistoryContainer {
-       
+        margin-left: 1em;
         max-width: 400px;
-        
 
         textarea {
             width: 100%;
             //white-space: pre-line;
             height: 15em;
-            background: rgba(0255,255,255,.8);
+            background: rgba(0255, 255, 255, .8);
             border: thin black solid;
         }
     }
 
     .chatInputContainer {
- 
         input {
             width: 100%;
             border: thin black solid;

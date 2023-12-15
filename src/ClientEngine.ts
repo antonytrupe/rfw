@@ -25,6 +25,7 @@ export default class ClientEngine {
 
     //react/dom things
     private getCanvas: (() => HTMLCanvasElement)
+    updateChat: { (message: string): void }
 
     //drawing things
     private PIXELS_PER_FOOT = 20
@@ -35,8 +36,9 @@ export default class ClientEngine {
     game_events: GameEvent[] = []
     templates: Map<string, WorldObject> = new Map()
 
-    constructor(getCanvas: (() => HTMLCanvasElement)) {
+    constructor(getCanvas: (() => HTMLCanvasElement), updateChat: { (message: string): void }) {
         //console.log('ClientEngine.constructor')
+        this.updateChat = updateChat
         this.getCanvas = getCanvas
         let eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ ticksPerSecond: 30, doGameLogic: false }, eventEmitter)
@@ -934,15 +936,20 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.MOVE_TO, characterId, location)
     }
 
-    clickHandler(e: MouseEvent) {
-
+    clickHandler(e: React.MouseEvent) {
+        e.nativeEvent.stopImmediatePropagation()
+        e.nativeEvent.stopPropagation()
+        e.stopPropagation()
+        e.preventDefault()
     }
 
-    doubleClickHandler(e: MouseEvent) {
-        //e.stopPropagation()
-        //e.preventDefault()
+    doubleClickHandler(e: React.MouseEvent) {
+        e.nativeEvent.stopImmediatePropagation()
+        e.nativeEvent.stopPropagation()
+        e.stopPropagation()
+        e.preventDefault()
         //console.log('doubleclick')
-        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e))
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e.nativeEvent))
 
         //if logged in 
         if (!!this.player) {
@@ -967,15 +974,15 @@ export default class ClientEngine {
         }
     }
 
-    rightClickHandler(e: MouseEvent) {
-        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e))
+    rightClickHandler(e: React.MouseEvent) {
+        const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e.nativeEvent))
 
         //console.log('client engine right click handler')
 
         //console.log('this.player?.controlledCharacter', this.player?.controlledCharacter)
 
         if (!!this.player?.controlledCharacter) {
-            const location = this.getGamePosition(e)
+            const location = this.getGamePosition(e.nativeEvent)
             this.move(this.player.controlledCharacter, location)
         }
     }
@@ -1171,7 +1178,9 @@ export default class ClientEngine {
             this.socket?.on(CONSTANTS.CHAT, (chat: GameEvent) => {
                 console.log(chat)
                 this.game_events = this.game_events.concat(chat)
-
+                if (chat.message) {
+                    this.updateChat(chat?.message)
+                }
             })
 
             this.socket?.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {

@@ -17,20 +17,12 @@ import { Actions, AttackAction } from "./types/Action"
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
-    getCharacters(ids: string[]) {
-        return this.gameWorld.getCharacters(ids)
-    }
-    getObject(id: string): any {
-        return this.gameWorld.getObject(id)
-    }
 
     //EventEmitter function
     //private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     private emit: (eventName: string | symbol, ...args: any[]) => boolean
-    //private eventNames: () => (string | symbol)[]
     //data object
     gameWorld: GameWorld
-    //engine = Engine.create({ gravity: { x: 0, y: 0 } })
 
     activeCharacters: Set<string> = new Set()
 
@@ -61,6 +53,13 @@ export default class GameEngine {
         //this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
         this.doGameLogic = doGameLogic
+    }
+
+    getCharacters(ids: string[]) {
+        return this.gameWorld.getCharacters(ids)
+    }
+    getObject(id: string): any {
+        return this.gameWorld.getObject(id)
     }
 
     private takeDamage(character: Character, damage: number) {

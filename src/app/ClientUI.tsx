@@ -28,6 +28,8 @@ export default function ClientUI() {
 
   }, [canvasRef]);
 
+  const [chatHistory, setChatHistory] = useState<string>('line one\nline two  ')
+
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   //const [connected, setConnected] = useState(false)
   //const [player, setPlayer] = useState<Player>()
@@ -40,21 +42,19 @@ export default function ClientUI() {
    * set up the event emitter and client engine
    */
   useEffect(() => {
-    //let eventEmitter: EventEmitter = new EventEmitter()
-
-
-
-    const ce = new ClientEngine(getCanvas)
+    const ce = new ClientEngine(getCanvas, updateChat)
     setClientEngine(ce)
 
     return () => {
-      //eventEmitter.removeAllListeners()
       ce.disconnect()
-      //setConnected(false)
       //stop the current client engine's draw loop/flag
       ce.stop()
     }
   }, [])
+
+  function updateChat(message: string): void {
+    setChatHistory(chatHistory + '\n' + message)
+  }
 
   /**
    * connect the client engine to the server/socket
@@ -71,7 +71,16 @@ export default function ClientUI() {
     clientEngine?.clickHandler(event)
   }
 
+  const onMouseDown = (event: any) => {
+    event.stopPropagation()
+    event.preventDefault()
+  }
+
   const onDoubleClick = (event: any) => {
+    event.stopPropagation()
+    event.preventDefault()
+    event.nativeEvent.stopImmediatePropagation()
+    event.nativeEvent.stopPropagation()
     clientEngine?.doubleClickHandler(event)
   }
 
@@ -83,7 +92,6 @@ export default function ClientUI() {
   }
 
   function onKeyDown(e: any) {
-
     if (e.code == 'Enter') {
 
       if (chatMode) {
@@ -158,6 +166,7 @@ export default function ClientUI() {
         //tabIndex={1}
         onWheel={onWheel}
         onClick={onClick}
+        onMouseDown={onMouseDown}
         onContextMenu={onRightClick}
         onDoubleClick={onDoubleClick}
 
@@ -165,8 +174,7 @@ export default function ClientUI() {
         data-testid="canvas" />
       <div className='chatContainer'>
         <div tabIndex={0} className='chatHistoryContainer'>
-          <textarea disabled>line one&#013; &#010;
-            line two&#013; &#010;
+          <textarea disabled value={chatHistory}>
           </textarea>
         </div>
 

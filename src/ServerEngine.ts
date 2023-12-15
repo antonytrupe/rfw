@@ -38,17 +38,18 @@ export default class ServerEngine {
         const eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
-        //this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        //this.characterDB = new JsonDB(new Config(CHARACTER_DB_PATH, true, true, '/'))
-        //this.objectDB = new JsonDB(new Config(OBJECT_DB_PATH, true, true, '/'))
-        //this.playerDB = new JsonDB(new Config(PLAYER_DB_PATH, true, true, '/'))
-        //this.templateDB = new JsonDB(new Config(TEMPLATE_DB_PATH, true, true, '/'))
         this.loadWorld()
 
-        //start the gameengines clock thingy
-        this.gameEngine.start()
+        this.setupListeners()
 
+        this.setupSocket()
+
+        //start the gameengine
+        this.start()
+    }
+
+    setupListeners() {
         //updated characters from the gameengine running on the server
         this.on(CONSTANTS.SERVER_CHARACTER_UPDATE, (characters: string[]) => {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
@@ -59,8 +60,11 @@ export default class ServerEngine {
             console.log('serverengine GAME_EVENTS')
             this.sendEvents(events)
         })
+    }
 
-        io.on(CONSTANTS.CONNECTION, async (socket: Socket) => {
+    setupSocket() {
+
+        this.io.on(CONSTANTS.CONNECTION, async (socket: Socket) => {
             //console.log('CONSTANTS.CONNECTION', socket.id) 
             let player: Player | undefined
             getSession({ req: socket.conn.request, }).then(async (session) => {
@@ -157,7 +161,7 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.CREATE_CHARACTER, () => {
                 const character = this.createCharacter({ characterClass: "FIGHTER", level: 6 })
-                this.sendAndSaveCharacterUpdates([character])
+                this.sendAndSaveCharacterUpdates([character.id])
             })
 
             socket.on(CONSTANTS.CREATE_OBJECT, () => {
@@ -216,7 +220,7 @@ export default class ServerEngine {
                 //console.log('targets',targets)
                 const updatedCharacters = this.gameEngine.castSpell(casterId, spellName, targets)
                 //console.log(updatedCharacters)
-                io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
+                this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
             socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: Point }) => {
@@ -293,14 +297,14 @@ export default class ServerEngine {
         // The name/ID for the new entity
         const name = newObject.id
         // The Cloud Datastore key for the new entity
-        const taskKey = this.datastore.key([kind, name]);
+        const taskKey = this.datastore.key([kind, name])
         // Prepares the new entity
         const task = {
             key: taskKey,
             data: newObject,
-        };
+        }
         // Saves the entity
-        this.datastore.save(task);
+        this.datastore.save(task)
     }
 
     move(characterId: string, location: Point) {
@@ -318,7 +322,6 @@ export default class ServerEngine {
     }
 
     async savePlayer(player: Partial<Player>): Promise<Player> {
-
         const kind = CONSTANTS.PLAYER_KIND
         // The name/ID for the new entity
         if (!player.email) {
@@ -330,18 +333,20 @@ export default class ServerEngine {
         }
 
         // The Cloud Datastore key for the new entity
-        const key = this.datastore.key([kind, player.email]);
+        const key = this.datastore.key([kind, player.email])
         // Prepares the new entity
         const d = {
             key: key,
-            data: player,
-        };
+            data: new Player(player),
+        }
         // Saves the entity
-        this.datastore.save(d)
+        await this.datastore.save(d)
+        //console.log(d.data)
         return new Player(d.data)
     }
 
     async getPlayerByEmail(email: string): Promise<Player | undefined> {
+        //TODO make this look up from memory first before going to persistance
         //console.log('getPlayerByEmail')
         let player: Player | undefined = undefined
         const playerQuery = this.datastore.createQuery(CONSTANTS.PLAYER_KIND)
@@ -374,11 +379,14 @@ export default class ServerEngine {
             })
             player.claimedCharacters = l
         }
+        //console.log(player)
 
         if (updatePlayer) {
-            this.savePlayer(player)
+            player = await this.savePlayer(player)
+            //console.log(player)
         }
-        return undefined
+
+        return player
     }
 
     attack(attacker: string, attackee: string) {
@@ -482,11 +490,11 @@ export default class ServerEngine {
 
     async claimCharacter(characterId: string, playerEmail: string): Promise<[Player | undefined, Character | undefined]> {
         if (!playerEmail) {
-            console.log('bailing on claim character: no email')
+            //console.log('bailing on claim character: no email')
             return [undefined, undefined]
         }
         //find or create the player
-        let player = await this.getPlayerByEmail(playerEmail)
+        let player: Player | undefined = await this.getPlayerByEmail(playerEmail)
         //console.log(player)
         if (!player) {
             //console.log('make a new player')
@@ -497,28 +505,34 @@ export default class ServerEngine {
         //we've got a player now
         const character = this.getCharacter(characterId)
         //if we already claimed this character, then bail
+        //console.log(player.claimedCharacters)
         if (player.claimedCharacters.some((c) => c == characterId)) {
-            console.log('bailing on claim character, already claimed this character')
+            //console.log('bailing on claim character, already claimed this character')
             return [player, character]
         }
-
+        //console.log(1)
 
         if (!character) {
-            console.log('bailing on claim character: no character')
+            //console.log('bailing on claim character: no character')
             return [player, character]
         }
+        //console.log(2)
 
         //check if the character is claimed by another player
         if (!!character.playerId) {
-            console.log('character.playerId', character.playerId)
-            console.log('bailing on claim character: claimed by another player')
+            //console.log('character.playerId', character.playerId)
+            //console.log('bailing on claim character: claimed by another player')
             return [player, character]
         }
+        //console.log(3)
 
         this.gameEngine.updateCharacter({ id: characterId, playerId: player.id })
+        character.playerId = player.id
+        //console.log(4)
 
         player.claimedCharacters.push(characterId)
-        player = await this.savePlayer({ email: player.email, claimedCharacters: player.claimedCharacters })
+        player = await this.savePlayer({ ...player, email: player.email, claimedCharacters: player.claimedCharacters })
+        //console.log(player)
 
         this.sendAndSaveCharacterUpdates([characterId])
         return [player, character]
@@ -542,7 +556,15 @@ export default class ServerEngine {
         }
 
         let character = this.getCharacter(characterId)
-        if ((!!characterId && !character)) {
+        if (!character) {
+            return [player, character]
+        }
+
+        if (!!character.playerId && character.playerId != player.id) {
+            //console.log('no stealing')
+            //console.log('character.playerId', character.playerId)
+            //console.log('player.id', player.id)
+
             return [player, character]
         }
 
@@ -554,50 +576,55 @@ export default class ServerEngine {
         player = await this.savePlayer({ ...player, controlledCharacter: characterId })
 
         return [player, character]
-
     }
 
     private async loadWorld() {
         console.log('loading world')
 
         const characterQuery = this.datastore.createQuery(CONSTANTS.CHARACTER_KIND)
-        this.datastore.runQuery(characterQuery)
+        await this.datastore.runQuery(characterQuery)
             .then(([characters]) => {
                 this.gameEngine.updateCharacters(characters)
-                console.log('finished loading characters')
+                //console.log('finished loading characters')
             })
 
         const templateQuery = this.datastore.createQuery(CONSTANTS.TEMPLATE_KIND)
-        this.datastore.runQuery(templateQuery)
+        await this.datastore.runQuery(templateQuery)
             .then(([templates]) => {
                 templates.forEach((t: WorldObject) => {
                     this.templates.set(t.id, t)
                 })
-                console.log('finished loading templates')
+                //console.log('finished loading templates')
             })
 
         const objectQuery = this.datastore.createQuery(CONSTANTS.OBJECT_KIND)
-        this.datastore.runQuery(objectQuery)
+        await this.datastore.runQuery(objectQuery)
             .then(([objects]) => {
                 this.gameEngine.updateObjects(objects)
-                console.log('finished loading objects')
+                //console.log('finished loading objects')
             })
     }
-
+    //only persists, doesn't add to engine
     async saveCharacter(character: Character) {
         //console.log('saveCharacter')
         const kind = CONSTANTS.CHARACTER_KIND
-        // The name/ID for the new entity
-        const id = character.id
         // The Cloud Datastore key for the new entity
-        const key = this.datastore.key([kind, id]);
+        const key = this.datastore.key([kind, character.id])
         // Prepares the new entity
-        const d = {
+
+        // Saves the entity
+        await this.datastore.save({
             key: key,
             data: character,
-        };
-        // Saves the entity
-        await this.datastore.save(d)
+        })
+        return character
+    }
+
+    //loads from persistance
+    async loadCharacter(id: string): Promise<Character> {
+        const key = this.datastore.key([CONSTANTS.CHARACTER_KIND, id])
+        const [character] = await this.datastore.get(key)
+        return character
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[]) {
@@ -832,7 +859,7 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "ARISTOCRAT", location: p, race: race })
             createdCount++
-            characters.push(c)
+            characters.push(c.id)
         }
         if (logging) console.log(characters.length, 'ARISTOCRAT')
 
@@ -843,9 +870,9 @@ export default class ServerEngine {
                 radius += 1
                 p = getRandomPoint({ origin: location, radius })
             }
-            const c: string = this.createCharacter({ characterClass: "ADEPT", location: p, race: race })
+            const c = this.createCharacter({ characterClass: "ADEPT", location: p, race: race })
             createdCount++
-            characters.push(c)
+            characters.push(c.id)
         }
         if (logging) console.log(characters.length, 'ADEPT')
 
@@ -858,7 +885,7 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "EXPERT", location: p, race: race })
             createdCount++
-            characters.push(c)
+            characters.push(c.id)
         }
         if (logging) console.log(characters.length, 'EXPERT')
 
@@ -871,7 +898,7 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "WARRIOR", location: p, race: race })
             createdCount++
-            characters.push(c)
+            characters.push(c.id)
         }
         if (logging) console.log(characters.length, 'WARRIOR')
 
@@ -886,7 +913,7 @@ export default class ServerEngine {
             }
             const c = this.createCharacter({ characterClass: "COMMONER", location: p, race: race })
             createdCount++
-            characters.push(c)
+            characters.push(c.id)
         }
         //console.log('createdCount after commoner fill', createdCount)
         if (logging) console.log(characters.length, 'COMMONER')
@@ -913,15 +940,15 @@ export default class ServerEngine {
 
                 location = getRandomPoint({ origin, radius })
                 while (this.gameEngine.gameWorld.getCharactersNearPoint({ location, distance: buffer }).length > 0) {
-                    radius += 1;
+                    radius += 1
                     location = getRandomPoint({ origin, radius })
                 }
 
                 const level = Math.round(l)
                 const xp = LEVELS[level.toString() as keyof typeof LEVELS]
-                const id = this.createCharacter({ characterClass: className, level: level, xp: xp, location: location, race: race })
+                const c = this.createCharacter({ characterClass: className, level: level, xp: xp, location: location, race: race })
                 //console.log('c', c)
-                createdCharacterIds = [...createdCharacterIds, id]
+                createdCharacterIds = [...createdCharacterIds, c.id]
                 ///updatedZones = new Map([...updatedZones, ...zones])
             }
         }
@@ -929,8 +956,8 @@ export default class ServerEngine {
         return createdCharacterIds
     }
 
-    //we have class and level
-    private createCharacter(character: Partial<Character>): string {
+    //does not persist
+    createCharacter(character: Partial<Character>): Character {
         const classInfo = CLASSES[character.characterClass as keyof typeof CLASSES]
         const hitDie = classInfo.HitDie
         const bab = classInfo.BAB[character.level?.toString() as keyof typeof classInfo.BAB]
@@ -939,7 +966,17 @@ export default class ServerEngine {
         let y = roll({ size: 60, modifier: -30 })
         const id = uuidv4()
         const age = 30
-        this.gameEngine.createCharacter({ id: id, location: { x: x, y: y }, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
-        return id
+        const c = new Character({ id: id, location: { x: x, y: y }, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
+        this.gameEngine.createCharacter(c)
+        return c
+    }
+
+    stop() {
+        //this.stopped = true
+        this.gameEngine.stop()
+    }
+
+    start() {
+        this.gameEngine.start()
     }
 }
