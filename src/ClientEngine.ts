@@ -10,6 +10,7 @@ import Point from "./types/Point"
 import { ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
+import { COMMUNITY_SIZE } from "./types/CommunitySize"
 
 export default class ClientEngine {
 
@@ -77,14 +78,14 @@ export default class ClientEngine {
             switch (parts[0].substring(1)) {
                 case "spawn":
                     switch (parts[1].toLocaleLowerCase()) {
-                        case "thorp":
-                        case "hamlet":
-                        case "village":
-                        case "small_town":
-                        case "large_town":
-                        case "small_city":
-                        case "large_city":
-                        case "metropolis":
+                        case COMMUNITY_SIZE.THORP:
+                        case COMMUNITY_SIZE.HAMLET:
+                        case COMMUNITY_SIZE.VILLAGE:
+                        case COMMUNITY_SIZE.SMALL_TOWN:
+                        case COMMUNITY_SIZE.LARGE_TOWN:
+                        case COMMUNITY_SIZE.SMALL_CITY:
+                        case COMMUNITY_SIZE.LARGE_CITY:
+                        case COMMUNITY_SIZE.METROPOLIS:
                             this.createCommunity({ size: parts[1], race: parts[2] })
                             break
                     }
