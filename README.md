@@ -37,7 +37,7 @@ magical portals that let you fast travel but age you based on normal travel spee
 2. low level monsters
 3. system to propose and approve new items/spells/abilities
 4. generate random encounter
-5. generate buildings with communitties
+5. generate buildings with communities
 6. zoom out visuals
 7. assign roles to characters
 8. "delete character" command

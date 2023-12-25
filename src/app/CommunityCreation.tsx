@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import styles from './CommunityCreation.module.scss'
+import { COMMUNITY_SIZE } from '@/types/CommunitySize';
+import { deprecate } from 'util';
 
-
+//@deprecate
 export default function CommunityCreation({ action }: { action: any }) {
 
     const [size, setSize] = useState('THORP')
@@ -16,12 +18,12 @@ export default function CommunityCreation({ action }: { action: any }) {
                 <select
                     value={size}
                     onChange={e => setSize(e.target.value)} >
-                    <option value="THORP">Thorp(~50)</option>
-                    <option value="HAMLET">Hamlet(~240)</option>
-                    <option value="VILLAGE">Village(~650)</option>
-                    <option value="SMALL_TOWN">Small Town(~1450)</option>
-                    <option value="LARGE_TOWN">Large Town(~3500)</option>
-                    <option value="SMALL_CITY">Small City(~8500)</option>
+                    <option value={COMMUNITY_SIZE.THORP}>Thorp(~50)</option>
+                    <option value={COMMUNITY_SIZE.HAMLET}>Hamlet(~240)</option>
+                    <option value={COMMUNITY_SIZE.VILLAGE}>Village(~650)</option>
+                    <option value={COMMUNITY_SIZE.SMALL_TOWN}>Small Town(~1450)</option>
+                    <option value={COMMUNITY_SIZE.LARGE_TOWN}>Large Town(~3500)</option>
+                    <option value={COMMUNITY_SIZE.SMALL_CITY}>Small City(~8500)</option>
                 </select>
             </label>
             <label> Race :

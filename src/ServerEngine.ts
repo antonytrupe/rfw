@@ -19,6 +19,7 @@ import WorldObject from "./types/WorldObject"
 import { ZONETYPE } from "./types/ZONETYPE"
 import { SHAPE } from "./types/SHAPE"
 import { Datastore, PropertyFilter } from '@google-cloud/datastore'
+import { COMMUNITY_SIZE } from "./types/CommunitySize"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -82,7 +83,7 @@ export default class ServerEngine {
                         const chars = this.gameEngine.getCharacters(player.claimedCharacters)
                         socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, chars)
                     }
-                    if (player.claimedCharacters.length==0) {
+                    if (player.claimedCharacters.length == 0) {
                         socket.emit(CONSTANTS.CHAT, { message: 'You wander over the land. Chose a soul to become.' })
                     }
                 }
@@ -226,7 +227,7 @@ export default class ServerEngine {
                 this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
-            socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: string, race: string, location: Point }) => {
+            socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: COMMUNITY_SIZE, race: string, location: Point }) => {
                 //console.log('options', options)
                 //console.log('location', location)
                 //console.log('targets',targets) 
@@ -658,7 +659,7 @@ export default class ServerEngine {
         })
     }
 
-    createCommunity({ size, race, location }: { size: string, race: string, location: Point }) {
+    createCommunity({ size, race, location }: { size: COMMUNITY_SIZE, race: string, location: Point }) {
         const started = (new Date()).getTime()
         const logging = false
         console.log('createCommunity')
@@ -669,41 +670,41 @@ export default class ServerEngine {
         let radius = 90
 
         switch (size.toUpperCase()) {
-            case "THORP":
+            case COMMUNITY_SIZE.THORP:
                 modifier = -3
                 totalSize = roll({ size: 60, modifier: 20 })
                 break
-            case "HAMLET":
+            case COMMUNITY_SIZE.HAMLET:
                 modifier = -2
                 totalSize = roll({ size: 320, modifier: 80 })
                 radius = 240
                 break
-            case "VILLAGE":
+            case COMMUNITY_SIZE.VILLAGE:
                 modifier = -1
                 totalSize = roll({ size: 500, modifier: 400 })
                 radius = 500
                 break
-            case "SMALL_TOWN":
+            case COMMUNITY_SIZE.SMALL_TOWN:
                 modifier = 0
                 totalSize = roll({ size: 1100, modifier: 900 })
                 radius = 800
                 break
-            case "LARGE_TOWN":
+            case COMMUNITY_SIZE.LARGE_TOWN:
                 modifier = 3
                 totalSize = roll({ size: 3000, modifier: 2000 })
                 radius = 1200
                 break
-            case "SMALL_CITY":
+            case COMMUNITY_SIZE.SMALL_CITY:
                 modifier = 6
                 totalSize = roll({ size: 7000, modifier: 5000 })
                 radius = 1500
                 break
-            case "LARGE_CITY":
+            case COMMUNITY_SIZE.LARGE_CITY:
                 modifier = 9
                 totalSize = roll({ size: 13000, modifier: 12000 })
                 radius = 2000
                 break
-            case "METROPOLIS":
+            case COMMUNITY_SIZE.METROPOLIS:
                 modifier = 12
                 totalSize = roll({ size: 75000, modifier: 25000 })
                 radius = 3200
