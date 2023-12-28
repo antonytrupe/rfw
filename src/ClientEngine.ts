@@ -168,7 +168,8 @@ export default class ClientEngine {
         this.translateY = c.location.y - (rect.bottom - rect.top) / 2
     }
 
-    wheelHandler(e: WheelEvent) {
+    //TODO fix gross typing
+    wheelHandler(e: { stopPropagation: () => void; deltaY: number; nativeEvent: Point }) {
         e.stopPropagation()
         //e.preventDefault()
         let zoom
@@ -180,7 +181,7 @@ export default class ClientEngine {
             zoom = - this.scale / 10
         }
 
-        const mouse = this.getGamePosition(e)
+        const mouse = this.getGamePosition(e.nativeEvent)
 
         let deltaX = (this.translateX - mouse.x) * zoom / this.scale
         let deltaY = (this.translateY - mouse.y) * zoom / this.scale
@@ -1025,10 +1026,10 @@ export default class ClientEngine {
         return { x: middleX, y: middleY }
     }
 
-    getGamePosition(screenPosition: Point) {
+    getGamePosition(p: Point) {
         const rect = this.getCanvas().getBoundingClientRect()
-        const y = (screenPosition.y - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
-        const x = (screenPosition.x - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
+        const y = (p.y - rect.top + (this.translateY * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
+        const x = (p.x - rect.left + (this.translateX * this.PIXELS_PER_FOOT / this.scale)) / this.PIXELS_PER_FOOT * this.scale
 
         //console.log('y', y)
         return { x, y }
@@ -1038,7 +1039,7 @@ export default class ClientEngine {
         const rect = this.getCanvas().getBoundingClientRect()
         const y = p.y * this.PIXELS_PER_FOOT / this.scale - (this.translateY * this.PIXELS_PER_FOOT / this.scale) + rect.top
         const x = p.x * this.PIXELS_PER_FOOT / this.scale - (this.translateX * this.PIXELS_PER_FOOT / this.scale) + rect.left
-        return { x: x, y: y }
+        return { x, y }
     }
 
     getCharacterAt(position: Point) {
