@@ -187,7 +187,10 @@ export default class GameWorld {
     getCharactersWithin({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }): Character[] {
         //TODO make this smarter and use zones
         return Array.from(this.characters.values()).filter((character): boolean => {
-            return top <= character.location.y && bottom >= character.location.y && left <= character.location.x && right >= character.location.x
+            return top <= character.location.y + character.radiusX &&
+                bottom >= character.location.y - character.radiusX &&
+                left <= character.location.x + character.radiusX &&
+                right >= character.location.x - character.radiusX
         })
     }
 
