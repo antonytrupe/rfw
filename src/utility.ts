@@ -15,3 +15,7 @@ export function getRandomPoint({ origin: { x, y }, radius }: { origin: Point, ra
     y = r * Math.sin(direction) + y
     return { x, y }
 }
+
+export function clamp(number: number, min: number, max: number) {
+    return Math.max(min, Math.min(number, max))
+}

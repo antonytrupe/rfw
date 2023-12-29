@@ -5,6 +5,26 @@ import Ray from "./types/Ray"
 import { SHAPE } from "./types/SHAPE"
 import WorldObject from "./types/WorldObject"
 
+export function getNextPointOnLine(startPoint: Point, endPoint: Point, distance: number): Point {
+    // Calculate the direction vector of the line
+    const dx = endPoint.x - startPoint.x;
+    const dy = endPoint.y - startPoint.y;
+
+    // Calculate the length of the line segment
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    // Normalize the direction vector
+    const nx = dx / length;
+    const ny = dy / length;
+
+    // Calculate the new coordinates
+    const xNew = startPoint.x + nx * distance;
+    const yNew = startPoint.y + ny * distance;
+
+    // Return the new coordinates as a Point object
+    return { x: xNew, y: yNew };
+}
+
 function nextSegment(point: Point, vertices: Points): LineSegment {
     const i = vertices.findIndex((p) => { return p.x == point.x && p.y == point.y })
     return { start: vertices[i], end: vertices[i == vertices.length - 1 ? 0 : i + 1] }

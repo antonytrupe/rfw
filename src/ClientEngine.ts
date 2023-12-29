@@ -11,6 +11,9 @@ import { ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
+import { distanceBetweenPoints, getNextPointOnLine } from "./Geometry"
+import { clamp } from "./utility"
+var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
 
@@ -306,7 +309,54 @@ export default class ClientEngine {
         if (!!c) {
             this.drawCharacterPopup(ctx, c)
         }
+
+        //poc
+        this.pencilLine(ctx, { x: -300, y: 10 }, { x: 6000, y: 10 })
+        this.pencilLine(ctx, { x: -300, y: 30 }, { x: 6000, y: 20 })
+        this.pencilLine(ctx, { x: -300, y: 50 }, { x: 6000, y: 50 })
+        this.pencilLine(ctx, { x: -300, y: 80 }, { x: 6000, y: 80 })
+
     }
+
+    pencilLine(ctx: CanvasRenderingContext2D, start: Point, end: Point) {
+        //console.log('pencilLine')
+        const thickness = 10
+        const darkness = .5
+
+        const length = distanceBetweenPoints(start, end)
+
+        ctx.save()
+        ctx.globalAlpha = 0.2
+        ctx.globalCompositeOperation = "source-over";
+        ctx.lineJoin = ctx.lineCap = "round";
+        ctx.strokeStyle = "#009933";
+        ctx.lineWidth = 10;
+        let s = start
+        let e
+        let v = 2
+        let a = 0
+        //console.log('length', length)
+        var rng = seedrandom(start.x+start.y+end.x+end.y);
+
+        for (let i = 0; i < length;) {
+            const newLocal = (rng.quick() * 2 - 1) / 10
+            //console.log('newLocal',newLocal)
+            a += newLocal
+            v += a 
+            v = clamp(v, 1, 4)
+            i += v
+            e = getNextPointOnLine(s, end, 1)
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(e.x, e.y);
+            ctx.stroke();
+            e = getNextPointOnLine(s, end, v)
+
+            s = e
+        }
+        ctx.restore()
+    }
+
     drawCharacterPopup(ctx: CanvasRenderingContext2D, character: Character) {
         ctx.save()
         //move center on character
@@ -349,6 +399,7 @@ export default class ClientEngine {
         let center = 0
         let length = 20
         ctx.save()
+        ctx.beginPath()
         ctx.fillStyle = '#000000'
         ctx.strokeStyle = '#000000'
         ctx.lineWidth = 1 * this.scale
@@ -687,27 +738,7 @@ export default class ClientEngine {
             ctx.restore()
         }
 
-        const drawHealth = () => {
-            ctx.beginPath()
 
-            ctx.strokeStyle = "#e0e0e0"
-
-            ctx.lineWidth = 3
-            if (character.hp > 0) {
-                //ctx.strokeStyle = "#008000"
-                ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 1,
-                    (-character.hp / character.maxHp) * Math.PI - Math.PI / 2,
-                    (character.hp / character.maxHp) * Math.PI - Math.PI / 2)
-            }
-            else {
-                ctx.strokeStyle = "#D22B2B"
-                ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 3,
-                    ((character.hp + 10) / -10) * Math.PI - Math.PI / 2,
-                    ((-character.hp + 10) / -10) * Math.PI - Math.PI / 2)
-            }
-
-            ctx.stroke()
-        }
 
         ctx.save()
         ctx.translate(character.location.x * this.PIXELS_PER_FOOT, character.location.y * this.PIXELS_PER_FOOT)
@@ -785,7 +816,6 @@ export default class ClientEngine {
         ctx.save()
         ctx.beginPath()
         ctx.arc(0, 0, character.radiusX * this.PIXELS_PER_FOOT - 4 / 2, 0, 2 * Math.PI)
-        ctx.filter = "blur(1px)"
         ctx.lineWidth = 4
         ctx.stroke()
         ctx.restore()

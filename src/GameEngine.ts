@@ -2,7 +2,7 @@ import EventEmitter from "events"
 import Character from "./types/Character"
 import * as CONSTANTS from "./types/CONSTANTS"
 import GameWorld from "./GameWorld"
-import { roll } from "./utility"
+import { clamp, roll } from "./utility"
 import GameEvent from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
@@ -63,7 +63,7 @@ export default class GameEngine {
     }
 
     private takeDamage(character: Character, damage: number) {
-        character = this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - damage, -10, character.maxHp) }).getCharacter(character.id)!
+        character = this.updateCharacter({ id: character.id, hp: clamp(character.hp - damage, -10, character.maxHp) }).getCharacter(character.id)!
 
         //todo if its unconcious
         if (character.hp <= 0) {
@@ -144,7 +144,7 @@ export default class GameEngine {
             //TODO stable check
             if (character.hp < 0 && character.hp > -10 && newTurn) {
                 //loose another hp
-                this.updateCharacter({ id: character.id, hp: this.clamp(character.hp - 1, -10, character.hp) })
+                this.updateCharacter({ id: character.id, hp: clamp(character.hp - 1, -10, character.hp) })
                 //updatedCharacters.add(character.id)
             }
 
@@ -484,7 +484,7 @@ export default class GameEngine {
     calculateRotationAcceleration(current: number, target: number) {
         let delta = getRotationDelta(current, target)
         //do something about creeping up on 0
-        let a = this.clamp(delta / (Math.PI / 4), -1, 1)
+        let a = clamp(delta / (Math.PI / 4), -1, 1)
         if (Math.abs(a) > .01 || a == 0)
             return a
         else
@@ -782,10 +782,6 @@ export default class GameEngine {
     private calculateXp(party: Character[], monsters: Character[]) {
         //TODO calculate xp
         return 500
-    }
-
-    private clamp(number: number, min: number, max: number) {
-        return Math.max(min, Math.min(number, max))
     }
 
     private calculateSpeed(character: Character, dt: number) {
