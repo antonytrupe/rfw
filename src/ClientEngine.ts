@@ -11,7 +11,7 @@ import { ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
-import { distanceBetweenPoints, getNextPointOnLine } from "./Geometry"
+import { distanceBetweenPoints, getNextPointOnCircle, getNextPointOnLine } from "./Geometry"
 import { clamp } from "./utility"
 var seedrandom = require('seedrandom')
 
@@ -76,11 +76,15 @@ export default class ClientEngine {
         if (message[0] == '/') {
 
             const parts = message.split(' ')
+            //console.log('parts', parts)
             //if any of the parts are the word "here", then replace it with the center of the viewport
 
-            switch (parts[0].substring(1)) {
+            //console.log(parts[0].substring(1))
+            //console.log(parts[1].toLocaleUpperCase())
+
+            switch (parts[0].substring(1).toLowerCase()) {
                 case "spawn":
-                    switch (parts[1].toLocaleLowerCase()) {
+                    switch (parts[1].toUpperCase()) {
                         case COMMUNITY_SIZE.THORP:
                         case COMMUNITY_SIZE.HAMLET:
                         case COMMUNITY_SIZE.VILLAGE:
@@ -172,7 +176,7 @@ export default class ClientEngine {
     }
 
     //TODO fix gross typing
-    wheelHandler(e: { stopPropagation: () => void; deltaY: number; nativeEvent: Point }) {
+    wheelHandler(e: { stopPropagation: () => void, deltaY: number, nativeEvent: Point }) {
         e.stopPropagation()
         //e.preventDefault()
         let zoom
@@ -311,46 +315,70 @@ export default class ClientEngine {
         }
 
         //poc
-        this.pencilLine(ctx, { x: -300, y: 10 }, { x: 6000, y: 10 })
-        this.pencilLine(ctx, { x: -300, y: 30 }, { x: 6000, y: 20 })
-        this.pencilLine(ctx, { x: -300, y: 50 }, { x: 6000, y: 50 })
-        this.pencilLine(ctx, { x: -300, y: 80 }, { x: 6000, y: 80 })
+        this.pencilLine(ctx, { x: 30, y: 30 }, { x: 330, y: 30 }, 4)
+        this.pencilLine(ctx, { x: 330, y: 30 }, { x: 330, y: 330 }, 4)
+        this.pencilLine(ctx, { x: 330, y: 330 }, { x: 30, y: 330 }, 4)
+        this.pencilLine(ctx, { x: 30, y: 330 }, { x: 30, y: 30 }, 4)
+
+
+        this.pencilCircle(ctx, { x: 200, y: 200 }, 2.5 * this.PIXELS_PER_FOOT, 40)
 
     }
 
-    pencilLine(ctx: CanvasRenderingContext2D, start: Point, end: Point) {
-        //console.log('pencilLine')
-        const thickness = 10
-        const darkness = .5
+    pencilCircle(ctx: CanvasRenderingContext2D, origin: Point, radius: number, thickness: number) {
+        const length = Math.PI * radius * 2
+
+        ctx.save()
+
+        ctx.globalCompositeOperation = "source-over"
+        ctx.lineJoin = ctx.lineCap = "round"
+        ctx.strokeStyle = "#0099ff"
+        ctx.lineWidth = thickness
+        let s = { x: origin.x, y: origin.y - radius }
+        let e: Point
+        var rng = seedrandom(s.x + s.y + radius)
+
+        for (let i = 0; i < length;) {
+            const r = (rng.quick() * thickness / 2)
+            i += r
+            ctx.globalAlpha = 0.6 * rng.quick()
+            e = getNextPointOnCircle(origin, radius, s, r)
+            ctx.beginPath()
+            ctx.moveTo(s.x, s.y)
+            ctx.lineTo(e.x, e.y)
+            ctx.stroke()
+
+
+            e = getNextPointOnCircle(origin, radius, e, 1)
+
+            s = e
+        }
+        ctx.restore()
+    }
+
+    pencilLine(ctx: CanvasRenderingContext2D, start: Point, end: Point, thickness: number) {
 
         const length = distanceBetweenPoints(start, end)
 
         ctx.save()
         ctx.globalAlpha = 0.2
-        ctx.globalCompositeOperation = "source-over";
-        ctx.lineJoin = ctx.lineCap = "round";
-        ctx.strokeStyle = "#009933";
-        ctx.lineWidth = 10;
+        ctx.globalCompositeOperation = "source-over"
+        ctx.lineJoin = ctx.lineCap = "round"
+        ctx.strokeStyle = "#0099ff"
+        ctx.lineWidth = thickness
         let s = start
         let e
-        let v = 2
-        let a = 0
-        //console.log('length', length)
-        var rng = seedrandom(start.x+start.y+end.x+end.y);
+        var rng = seedrandom(start.x + start.y + end.x + end.y)
 
         for (let i = 0; i < length;) {
-            const newLocal = (rng.quick() * 2 - 1) / 10
-            //console.log('newLocal',newLocal)
-            a += newLocal
-            v += a 
-            v = clamp(v, 1, 4)
-            i += v
+            const r = (rng.quick() * thickness / 3)
+            i += r
             e = getNextPointOnLine(s, end, 1)
-            ctx.beginPath();
-            ctx.moveTo(s.x, s.y);
-            ctx.lineTo(e.x, e.y);
-            ctx.stroke();
-            e = getNextPointOnLine(s, end, v)
+            ctx.beginPath()
+            ctx.moveTo(s.x, s.y)
+            ctx.lineTo(e.x, e.y)
+            ctx.stroke()
+            e = getNextPointOnLine(s, end, r)
 
             s = e
         }
@@ -366,31 +394,41 @@ export default class ClientEngine {
         ctx.font = fontSize + "px Futura Extra Bold"
         const info = []
         info.push('Level ' + character.level + ' ' + character.race.toLowerCase() + ' ' + character.characterClass.toLowerCase())
+        info.push(character.hp + ' hitpoints')
+        //info.push('mmmmmmmm.mmmmmmmm')
 
         const padding = 16 * this.scale
         const width = ctx.measureText(info[0]).width + (padding * 2)
-        const height = fontSize + (padding * 2)
+        const height = fontSize * info.length + (padding * 2)
         //console.log('height', height)
         //console.log('width', width)
 
-        //move up
+        //move up and to the lft
         ctx.translate(-width / 2, -character.radiusX * this.PIXELS_PER_FOOT - height)
         ctx.roundRect(0, 0, width, height, 10 * this.scale)
 
         // Create gradient
-        const grd = ctx.createRadialGradient(75, 50, 5, 90, 60, 100);
-        grd.addColorStop(0, "white");
-        grd.addColorStop(1, "#faf0e6");
+        const grd = ctx.createRadialGradient(75, 50, 5, 90, 60, 100)
+        grd.addColorStop(0, "white")
+        grd.addColorStop(1, "#faf0e6")
 
         // Fill with gradient
-        ctx.fillStyle = grd;
+        ctx.fillStyle = grd
+        ctx.textAlign = 'center'
         ctx.fill()
         ctx.stroke()
 
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = 'black'
+        //move to the right
+        ctx.translate(width / 2, 0)
+
         ctx.fillText(info[0],
-            12 * this.scale,
+            0,
             padding * 2)
+
+        ctx.fillText(info[1],
+            0,
+            padding * 2 + fontSize)
 
         ctx.restore()
     }
@@ -648,31 +686,31 @@ export default class ClientEngine {
     }
 
     drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number) {
-        var rot = Math.PI / 2 * 3;
-        var x = cx;
-        var y = cy;
-        var step = Math.PI / spikes;
+        var rot = Math.PI / 2 * 3
+        var x = cx
+        var y = cy
+        var step = Math.PI / spikes
         ctx.save()
-        ctx.beginPath();
+        ctx.beginPath()
         ctx.moveTo(cx, cy - outerRadius)
         for (let i = 0; i < spikes; i++) {
-            x = cx + Math.cos(rot) * outerRadius;
-            y = cy + Math.sin(rot) * outerRadius;
+            x = cx + Math.cos(rot) * outerRadius
+            y = cy + Math.sin(rot) * outerRadius
             ctx.lineTo(x, y)
             rot += step
 
-            x = cx + Math.cos(rot) * innerRadius;
-            y = cy + Math.sin(rot) * innerRadius;
+            x = cx + Math.cos(rot) * innerRadius
+            y = cy + Math.sin(rot) * innerRadius
             ctx.lineTo(x, y)
             rot += step
         }
-        ctx.lineTo(cx, cy - outerRadius);
-        ctx.closePath();
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = 'gold';
-        ctx.stroke();
-        ctx.fillStyle = 'yellow';
-        ctx.fill();
+        ctx.lineTo(cx, cy - outerRadius)
+        ctx.closePath()
+        ctx.lineWidth = 5
+        ctx.strokeStyle = 'gold'
+        ctx.stroke()
+        ctx.fillStyle = 'yellow'
+        ctx.fill()
         ctx.restore()
     }
 
@@ -902,7 +940,7 @@ export default class ClientEngine {
             ctx.rect(0, 0, wo.width * this.PIXELS_PER_FOOT, wo.height * this.PIXELS_PER_FOOT)
             ctx.strokeStyle = "lightgray"
             ctx.lineWidth = 2
-            ctx.setLineDash([5, 5]);
+            ctx.setLineDash([5, 5])
 
             ctx.stroke()
             ctx.restore()
@@ -935,19 +973,19 @@ export default class ClientEngine {
 
     drawPoly(ctx: CanvasRenderingContext2D, wo: WorldObject) {
         ctx.save()
-        ctx.beginPath();
+        ctx.beginPath()
 
         wo.points.forEach((p, i) => {
             //console.log(p)
             if (i == 0) {
-                ctx.moveTo(p.x * this.PIXELS_PER_FOOT, p.y * this.PIXELS_PER_FOOT);
+                ctx.moveTo(p.x * this.PIXELS_PER_FOOT, p.y * this.PIXELS_PER_FOOT)
             }
             else {
-                ctx.lineTo(p.x * this.PIXELS_PER_FOOT, p.y * this.PIXELS_PER_FOOT);
+                ctx.lineTo(p.x * this.PIXELS_PER_FOOT, p.y * this.PIXELS_PER_FOOT)
             }
         })
 
-        ctx.closePath();
+        ctx.closePath()
         ctx.fill()
         ctx.restore()
     }
@@ -1213,7 +1251,7 @@ export default class ClientEngine {
             })
 
             this.socket?.on(CONSTANTS.CHAT, (chat: GameEvent) => {
-                console.log(chat)
+                //console.log(chat)
                 this.game_events = this.game_events.concat(chat)
                 if (chat.message) {
                     this.updateChat(chat?.message)

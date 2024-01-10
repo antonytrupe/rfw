@@ -3,7 +3,6 @@ import GameEngine from "@/GameEngine"
 import ClassPopulation from "./types/ClassPopulation"
 import * as CONSTANTS from "@/types/CONSTANTS"
 import Character from "@/types/Character"
-import { Config, JsonDB } from "node-json-db"
 import { Server, Socket } from "socket.io"
 import { Zones2 } from "./types/Zones"
 import { getSession } from "next-auth/react"
@@ -326,7 +325,6 @@ export default class ServerEngine {
     }
 
     async savePlayer(player: Partial<Player>): Promise<Player> {
-        const kind = CONSTANTS.PLAYER_KIND
         // The name/ID for the new entity
         if (!player.email) {
             throw new Error('no email for player')
@@ -337,14 +335,19 @@ export default class ServerEngine {
         }
 
         // The Cloud Datastore key for the new entity
-        const key = this.datastore.key([kind, player.email])
+        const key = this.datastore.key([CONSTANTS.PLAYER_KIND, player.email])
+        //console.log(1)
         // Prepares the new entity
         const d = {
             key: key,
             data: new Player(player),
         }
+        //console.log(2)
+
         // Saves the entity
         await this.datastore.save(d)
+        //console.log(3)
+
         //console.log(d.data)
         return new Player(d.data)
     }
@@ -589,7 +592,7 @@ export default class ServerEngine {
         await this.datastore.runQuery(characterQuery)
             .then(([characters]) => {
                 this.gameEngine.updateCharacters(characters)
-                //console.log('finished loading characters')
+                console.log('finished loading characters')
             })
 
         const templateQuery = this.datastore.createQuery(CONSTANTS.TEMPLATE_KIND)

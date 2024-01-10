@@ -1,0 +1,19 @@
+.table-cell {
+    padding: 1em;
+    input{
+        padding: 0em 0.5em;
+    }
+}
+
+.table-row:nth-child(even) {
+    background: #CCC
+}
+
+.table-row:nth-child(odd) {
+    background: #999
+}
+
+.sorter{
+    padding: 3px;
+    cursor: pointer;
+}

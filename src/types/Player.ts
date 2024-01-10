@@ -4,11 +4,14 @@ export default class Player {
     claimedCharacters: string[]
     controlledCharacter: string
     maxClaimedCharacters: number
+   /* 
     progression: Map<PROGRESSION, boolean> = new Map([
         [PROGRESSION.ZOOM, false],
         [PROGRESSION.CLAIM_CHARACTER, false],
-        [PROGRESSION.MOVEMENT, false]])
-
+        [PROGRESSION.MOVEMENT, false]]
+        
+        )
+*/
 
     constructor({
         email = "",

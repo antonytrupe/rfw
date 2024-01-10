@@ -6,7 +6,11 @@ const nextConfig = {
   sassOptions: {
     includePaths: [path.join(__dirname, 'styles')],
   },
-  experimental: { instrumentationHook: true }
+  experimental: {
+    instrumentationHook: true,
+    // don't bundle the package
+    serverComponentsExternalPackages: ['@google-cloud/datastore']
+  }
 }
 
 module.exports = nextConfig

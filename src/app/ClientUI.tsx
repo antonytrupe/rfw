@@ -28,18 +28,15 @@ export default function ClientUI() {
 
   }, [canvasRef]);
 
-  const [chatHistory, setChatHistory] = useState<string>('line one\nline two  ')
+  const [chatHistory, setChatHistory] = useState<string>('a')
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
-  //const [connected, setConnected] = useState(false)
-  //const [player, setPlayer] = useState<Player>()
-  //const [hoveredCharacter, setHoveredCharacter] = useState<Character>()
   const [chatMode, setChatMode] = useState<boolean>(false)
   const [chat, setChat] = useState<string>('')
   const { data: session } = useSession()
 
   /**
-   * set up the event emitter and client engine
+   * set up the client engine
    */
   useEffect(() => {
     const ce = new ClientEngine(getCanvas, updateChat)
@@ -53,8 +50,11 @@ export default function ClientUI() {
   }, [])
 
   function updateChat(message: string): void {
+    //console.log('chatHistory', chatHistory)
     setChatHistory(chatHistory + '\n' + message)
   }
+
+  //console.log('chatHistory', chatHistory)
 
   /**
    * connect the client engine to the server/socket

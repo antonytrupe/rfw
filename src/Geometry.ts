@@ -885,3 +885,17 @@ export function getRotationDelta(current: number, target: number) {
 function segmentToLine(segment: LineSegment): Line {
     return { a: segment.start, b: segment.end }
 }
+
+export function getNextPointOnCircle(center: Point, radius: number, currentPoint: Point, distanceToNextPoint: number): Point {
+    // Calculate the angle corresponding to the current point
+    const angleToCurrentPoint = Math.atan2(currentPoint.y - center.y, currentPoint.x - center.x);
+
+    // Calculate the angle corresponding to the next point based on the distance
+    const angleToNextPoint = angleToCurrentPoint + distanceToNextPoint / radius;
+
+    // Calculate the coordinates of the next point
+    const x = center.x + radius * Math.cos(angleToNextPoint);
+    const y = center.y + radius * Math.sin(angleToNextPoint);
+
+    return { x, y };
+}

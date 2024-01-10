@@ -15,6 +15,7 @@ export default function handler(req: NextRequest, res: SocketResponse) {
     })
     res.socket.server.io = io
     //serverEngine =
+    //res.engine=
     new ServerEngine(io)
   }
   res.end()
