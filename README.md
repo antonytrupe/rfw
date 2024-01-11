@@ -60,7 +60,6 @@ magical portals that let you fast travel but age you based on normal travel spee
 25. attack of opportunities
 26. say/yell/whisper
 27. teleport
-28. persistance outside the container, maybe google datastore? https://github.com/googleapis/nodejs-datastore
 29. touch controls
 30. random stats when spawning 
 31. strafing 
