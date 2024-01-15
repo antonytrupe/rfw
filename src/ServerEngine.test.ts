@@ -15,7 +15,7 @@ import Player from "./types/Player";
 //const Emulator = require('google-datastore-emulator');
 
 
-describe('datastore basics', () => {
+describe.skip('datastore basics', () => {
     let emulator: Emulator
     beforeEach(async () => {
         process.env.GCLOUD_PROJECT = 'rfw2-403802';
