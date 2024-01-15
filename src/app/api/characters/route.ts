@@ -10,13 +10,14 @@ export async function GET() {
     const characterQuery = datastore.createQuery(CHARACTER_KIND)
     //console.log(2)
 
-    let characters: Character[] | any[] | undefined
+    let characters: Character[]  =[]
+    /*
     characters = await datastore.runQuery(characterQuery)
         .then(([c]) => {
             characters = c
             console.log('finished loading characters admin')
             return c
         })
-
+*/
      return NextResponse.json(characters) 
 }
