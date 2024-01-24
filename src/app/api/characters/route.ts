@@ -3,6 +3,8 @@ import Character from "@/types/Character"
 import { Datastore } from "@google-cloud/datastore"
 import { NextResponse } from "next/server"
 
+export const dynamic = 'auto'
+
 export async function GET() {
     const datastore = new Datastore({ projectId: 'rfw2-403802' })
     //console.log(1)
@@ -11,6 +13,7 @@ export async function GET() {
     //console.log(2)
 
     let characters: Character[] | any[] | undefined
+    
     characters = await datastore.runQuery(characterQuery)
         .then(([c]) => {
             characters = c
