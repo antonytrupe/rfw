@@ -547,10 +547,10 @@ export default class GameEngine {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }) {
+    getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }): string[] {
         //TODO scale determines what kind of zones to use, not viewport, I think
         const area = (right - left) * (bottom - top)
-        let zones = []
+        let zones: string[] = []
         if (area < 1000000) {
             //tactical zones
             for (let x = left; x < right; x += 30) {

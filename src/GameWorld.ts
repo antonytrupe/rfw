@@ -236,7 +236,7 @@ export default class GameWorld {
         return this.characters.get(characterId)
     }
 
-    getTacticalZoneName({ x, y }: Point) {
+    getTacticalZoneName({ x, y }: Point): string {
         //T tactical/one turn
         //M local/10 turns/1 minute
         //H overland/one hour
@@ -247,7 +247,7 @@ export default class GameWorld {
         return 'T:' + fx + ':' + fy
     }
 
-    getLocalZoneName({ x, y }: Point): any {
+    getLocalZoneName({ x, y }: Point): string {
         const fx = Math.floor(x / 300)
         const fy = Math.floor(y / 300)
         return 'M:' + fx + ':' + fy

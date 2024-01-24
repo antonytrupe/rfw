@@ -74,6 +74,7 @@ export default class ServerEngine {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
                     }
                     console.log(player.email, 'joined')
+                    console.log(player)
                     socket.join(player.id)
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
@@ -82,7 +83,7 @@ export default class ServerEngine {
                         const chars = this.gameEngine.getCharacters(player.claimedCharacters)
                         socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, chars)
                     }
-                    if (player.claimedCharacters.length == 0) {
+                    if (!player.claimedCharacters || player.claimedCharacters.length == 0) {
                         socket.emit(CONSTANTS.CHAT, { message: 'You wander over the land. Chose a soul to become.' })
                     }
                 }
