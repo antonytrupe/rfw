@@ -3,7 +3,8 @@ import Character from "@/types/Character"
 import { Datastore } from "@google-cloud/datastore"
 import { NextResponse } from "next/server"
 
-export const dynamic = 'auto'
+//force-dynamic
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
     const datastore = new Datastore({ projectId: 'rfw2-403802' })
