@@ -11,7 +11,7 @@ describe('ClientEngine', () => {
         eventEmitter = new EventEmitter()
         const canvas = document.createElement('canvas');
         const getCanvas = () => { return canvas; };
-        clientEngine = new ClientEngine(eventEmitter, getCanvas)
+        clientEngine = new ClientEngine( getCanvas,()=>{})
     })
 
     describe('Initial Conditions', () => {
