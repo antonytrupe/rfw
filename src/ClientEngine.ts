@@ -12,7 +12,6 @@ import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { distanceBetweenPoints, getNextPointOnCircle, getNextPointOnLine } from "./Geometry"
-import { clamp } from "./utility"
 var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
