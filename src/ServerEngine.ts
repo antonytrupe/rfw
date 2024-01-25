@@ -109,7 +109,8 @@ export default class ServerEngine {
                             }
                             break
                         case "spawn":
-                            //this.createCommunity({})
+                            //TODO oh boy
+                            this.createCommunity({ size: COMMUNITY_SIZE.THORP, race: 'human', location: { x: 0, y: 0 } })
                             break
                     }
                 }
