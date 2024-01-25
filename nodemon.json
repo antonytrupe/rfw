@@ -13,5 +13,5 @@
     ],
     "ext": "js json ts tsx jsx",
     "exec": "ts-node --project tsconfig.server.json server.ts",
-    "delay": "2000"
+    "delay": "6000"
 }

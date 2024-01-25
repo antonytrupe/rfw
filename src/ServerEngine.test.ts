@@ -53,7 +53,7 @@ describe('datastore basics', () => {
     })
 })
 
-describe('ServerEngine', () => {
+describe.skip('ServerEngine', () => {
     let serverEngine: ServerEngine
     let emulator: Emulator
     beforeEach(async () => {

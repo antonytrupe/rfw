@@ -109,6 +109,7 @@ export default class ServerEngine {
                             }
                             break
                         case "spawn":
+                            //this.createCommunity({})
                             break
                     }
                 }
@@ -974,7 +975,7 @@ export default class ServerEngine {
         let y = roll({ size: 60, modifier: -30 })
         const id = uuidv4()
         const age = 30
-        const c = new Character({ id: id, location: { x: x, y: y }, hp: hp, maxHp: hp, bab: bab, age: age, ...character })
+        const c = new Character({ id: id, location: { x: x, y: y }, rotation: roll({ size: 360 }), hp: hp, maxHp: hp, bab: bab, age: age, ...character })
         this.gameEngine.createCharacter(c)
         return c
     }
