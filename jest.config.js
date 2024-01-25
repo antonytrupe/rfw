@@ -18,7 +18,8 @@ const customJestConfig = {
     '!**/coverage/lcov-report/**',
     '!**/*.config.{js,jsx,ts,tsx}',
   ],
-  testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"]
+  testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+  testPathIgnorePatterns :["<rootDir>/build/", "<rootDir>/node_modules/","<rootDir>/dist/"]
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
