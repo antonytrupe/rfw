@@ -17,11 +17,12 @@
 .chatContainer {
     position: absolute;
     bottom: 0;
-    width: 100%;
+    left: 1em;
+    right: 1em;
 
     .chatHistoryContainer {
-        margin-left: 1em;
-        max-width: 400px;
+       
+        min-width: 400px;
 
         textarea {
             width: 100%;
