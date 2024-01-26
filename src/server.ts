@@ -12,7 +12,7 @@ const handle = app.getRequestHandler()
 app.prepare().then(() => {
   const httpServer = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true)
-    console.log('parsedUrl',parsedUrl)
+    //console.log('parsedUrl',parsedUrl)
     handle(req, res, parsedUrl)
   }).listen(port)
 

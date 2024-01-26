@@ -4,6 +4,7 @@ import { SHAPE } from "./SHAPE"
 
 export default class WorldObject implements WorldObjectInterface {
     id: string = '__test__'
+    name: string = '__test__'
     location: Point = { x: 0, y: 0 }
     rotation: number = 0
     shape: SHAPE = SHAPE.CIRCLE
@@ -17,6 +18,7 @@ export default class WorldObject implements WorldObjectInterface {
     physics: boolean
 
     constructor({ id = '__test__',
+        name = "__test__",
         location = { x: 0, y: 0 },
         rotation = 0,
         shape = SHAPE.CIRCLE,
@@ -45,6 +47,7 @@ export default class WorldObject implements WorldObjectInterface {
 
 interface WorldObjectInterface {
     id?: string
+    name?: string
     location?: Point
     rotation?: number
     shape?: SHAPE

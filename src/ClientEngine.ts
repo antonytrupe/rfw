@@ -1011,7 +1011,7 @@ export default class ClientEngine {
         const origin = this.getViewPortOrigin()
         //console.log(origin)
         //console.log({ ...options, location: origin })
-        this.socket?.emit(CONSTANTS.CREATE_COMMUNITY, { ...options, location: origin })
+        this.socket?.emit(CONSTANTS.SPAWN_COMMUNITY, { ...options, location: origin })
     }
 
     move(characterId: string, location: Point) {

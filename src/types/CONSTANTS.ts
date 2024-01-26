@@ -57,7 +57,7 @@ export const SERVER_CHARACTER_UPDATE = 'world.character.location.server'
 export const CREATE_CHARACTER = 'world.character.create'
 export const CREATE_OBJECT = 'world.object.create'
 
-export const CREATE_COMMUNITY = 'world.create_community'
+export const SPAWN_COMMUNITY = 'world.spawn_community'
 //clientengine notify UI
 //list of claimed characters, last selected character, last viewport
 export const CLIENT_INFO = 'client.selected_characters.update'

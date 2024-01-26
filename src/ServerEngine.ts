@@ -19,6 +19,7 @@ import { ZONETYPE } from "./types/ZONETYPE"
 import { SHAPE } from "./types/SHAPE"
 import { Datastore, PropertyFilter } from '@google-cloud/datastore'
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
+import { adjectives, colors, names, uniqueNamesGenerator } from "unique-names-generator"
 
 export default class ServerEngine {
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -74,7 +75,7 @@ export default class ServerEngine {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
                     }
                     console.log(player.email, 'joined')
-                    console.log(player)
+                    //console.log(player)
                     socket.join(player.id)
 
                     socket.emit(CONSTANTS.CURRENT_PLAYER, player)
@@ -93,32 +94,8 @@ export default class ServerEngine {
             socket.on(CONSTANTS.CHAT, async (event: GameEvent) => {
                 //console.log('CONSTANTS.CHAT', event)
                 console.log('event.message', event.message![0])
-                //console.log('event.message[0]', event?.message[0])
-                if (!!event.message && event.message[0] == '/') {
-                    console.log('command')
-                    const command = event.message.substring(1)
-                    switch (command) {
-                        case "unclaim":
-                            if (player?.controlledCharacter) {
-                                this.unClaimCharacter(player.controlledCharacter, player?.email)
-                            }
-                            break
-                        case "uncontrol":
-                            if (player?.controlledCharacter) {
-                                this.controlCharacter('', player?.email)
-                            }
-                            break
-                        case "spawn":
-                            //TODO oh boy
-                            this.createCommunity({ size: COMMUNITY_SIZE.THORP, race: 'human', location: { x: 0, y: 0 } })
-                            break
-                    }
-                }
-                //just send it back to everyone
-                //TODO only send it to clients in range
-                else {
-                    socket.broadcast.emit(CONSTANTS.CHAT, event)
-                }
+                //console.log('event.message[0]', event?.message[0]) 
+                socket.broadcast.emit(CONSTANTS.CHAT, event)
             })
 
             //tell the client where all the character are
@@ -229,11 +206,11 @@ export default class ServerEngine {
                 this.io.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, updatedCharacters)
             })
 
-            socket.on(CONSTANTS.CREATE_COMMUNITY, async (options: { size: COMMUNITY_SIZE, race: string, location: Point }) => {
+            socket.on(CONSTANTS.SPAWN_COMMUNITY, async (options: { size: COMMUNITY_SIZE, race: string, location: Point }) => {
                 //console.log('options', options)
                 //console.log('location', location)
                 //console.log('targets',targets) 
-                this.createCommunity(options)
+                this.spawnCommunity(options)
             })
 
             socket.on(CONSTANTS.CLAIM_CHARACTER, async (characterId: string) => {
@@ -658,17 +635,15 @@ export default class ServerEngine {
             })
             //send the zone
             this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()).map((character) => {
-                //don't send the server's matterId to the client
-                //const { matterId, ...c } = character
-                return character
+                  return character
             }))
         })
     }
 
-    createCommunity({ size, race, location }: { size: COMMUNITY_SIZE, race: string, location: Point }) {
+    spawnCommunity({ size, race, location }: { size: COMMUNITY_SIZE, race: string, location: Point }) {
         const started = (new Date()).getTime()
         const logging = false
-        console.log('createCommunity')
+        console.log('spawnCommunity')
         console.log(size)
         let modifier = -16
         let totalSize = 0
@@ -719,8 +694,9 @@ export default class ServerEngine {
 
         //create the local zone object
         const id = uuidv4()
+        const name = uniqueNamesGenerator({ dictionaries: [adjectives, colors] })
 
-        this.createObject(new WorldObject({ id: id, location: location, zoneType: [ZONETYPE.LOCAL], shape: SHAPE.CIRCLE, radiusX: radius, physics: false }))
+        this.createObject(new WorldObject({ id: id, name: name, location: location, zoneType: [ZONETYPE.LOCAL], shape: SHAPE.CIRCLE, radiusX: radius, physics: false }))
 
         if (logging) console.log('modifier', modifier)
 
@@ -976,7 +952,9 @@ export default class ServerEngine {
         let y = roll({ size: 60, modifier: -30 })
         const id = uuidv4()
         const age = 30
-        const c = new Character({ id: id, location: { x: x, y: y }, rotation: roll({ size: 360 }), hp: hp, maxHp: hp, bab: bab, age: age, ...character })
+        const name = uniqueNamesGenerator({ dictionaries: [names] })
+
+        const c = new Character({...character, id: id, name: name, location: { x: x, y: y }, rotation: roll({ size: 360 }), hp: hp, maxHp: hp, bab: bab, age: age,  })
         this.gameEngine.createCharacter(c)
         return c
     }
