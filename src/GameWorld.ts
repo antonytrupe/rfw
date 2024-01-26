@@ -11,6 +11,7 @@ import { ZONETYPE } from "./types/ZONETYPE"
 //keeps track of rooms/zones/regions and what's in them
 //doesn't know anything about client/server
 export default class GameWorld {
+
     //
     //the entries are just a list of character ids
     getObject(id: string): any {
@@ -379,5 +380,16 @@ export default class GameWorld {
                 l.push(c)
         })
         return l
+    }
+
+    getWorldObjectsWithin({ top, bottom, left, right }: { left: number; right: number; top: number; bottom: number }, zoneType: ZONETYPE): WorldObject[] {
+        //TODO make this smarter and use zones
+        return Array.from(this.worldObjects.values()).filter((o): boolean => {
+            return o.zoneType.includes(zoneType) &&
+                top <= o.location.y + o.radiusX &&
+                bottom >= o.location.y - o.radiusX &&
+                left <= o.location.x + o.radiusX &&
+                right >= o.location.x - o.radiusX
+        })
     }
 }

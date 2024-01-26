@@ -12,6 +12,7 @@ import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { distanceBetweenPoints, getNextPointOnCircle, getNextPointOnLine } from "./Geometry"
+import { ZONETYPE } from "./types/ZONETYPE"
 var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
@@ -271,13 +272,15 @@ export default class ClientEngine {
 
         this.drawCrossHair(ctx)
 
-        //TODO not all, just the ones in view
-        this.gameEngine.gameWorld.getAllWorldObjects()
-            .forEach((wo: WorldObject) => {
-                this.drawWorldObject(ctx, wo)
-            })
+
 
         if (this.scale < 30) {
+
+            //TODO not all, just the ones in view
+            this.gameEngine.gameWorld.getWorldObjectsWithin(this.getViewPort(), ZONETYPE.TACTICAL)
+                .forEach((wo: WorldObject) => {
+                    this.drawWorldObject(ctx, wo)
+                })
 
             //draw all the characters
             //only get the characters from the right zones, just in case we have more data then we need to draw
@@ -289,6 +292,12 @@ export default class ClientEngine {
                     else {
                         this.drawTombstone(ctx, character)
                     }
+                })
+        }
+        else if (this.scale < 1000) {
+            this.gameEngine.gameWorld.getWorldObjectsWithin(this.getViewPort(), ZONETYPE.LOCAL)
+                .forEach((wo: WorldObject) => {
+                    this.drawWorldObject(ctx, wo)
                 })
         }
 
