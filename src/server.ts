@@ -2,7 +2,7 @@ import { createServer } from "http"
 import { parse } from "url"
 import next from "next"
 import { Server } from "socket.io"
-import ServerEngine from "./src/ServerEngine"
+import ServerEngine from "./ServerEngine"
 
 const port = parseInt(process.env.PORT || "3000", 10)
 const dev = process.env.NODE_ENV !== "production"
@@ -12,6 +12,7 @@ const handle = app.getRequestHandler()
 app.prepare().then(() => {
   const httpServer = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true)
+    console.log('parsedUrl',parsedUrl)
     handle(req, res, parsedUrl)
   }).listen(port)
 
