@@ -58,6 +58,11 @@ export default class GameEngine {
     getCharacters(ids: string[]) {
         return this.gameWorld.getCharacters(ids)
     }
+
+    getAllCharacters() {
+        return this.gameWorld.getAllCharacters()
+    }
+
     getObject(id: string): any {
         return this.gameWorld.getObject(id)
     }

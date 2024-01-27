@@ -386,6 +386,10 @@ export default class ServerEngine {
         return this.gameEngine.getCharacter(id)
     }
 
+    getAllCharacters() {
+        return this.gameEngine.getAllCharacters()
+    }
+
     accelerateDoubleStop(characterId: string, player: Player | undefined) {
         const character = this.gameEngine.accelerateDoubleStop(characterId, player?.id)
         if (!!character) {
