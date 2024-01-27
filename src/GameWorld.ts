@@ -237,6 +237,10 @@ export default class GameWorld {
         return this.characters.get(characterId)
     }
 
+    deleteCharacter(characterId: string) {
+        this.characters.delete(characterId)
+    }
+
     getTacticalZoneName({ x, y }: Point): string {
         //T tactical/one turn
         //M local/10 turns/1 minute

@@ -596,6 +596,7 @@ export default class ServerEngine {
                 //console.log('finished loading objects')
             })
     }
+
     //only persists, doesn't add to engine
     async saveCharacter(character: Character) {
         //console.log('saveCharacter')
@@ -964,11 +965,18 @@ export default class ServerEngine {
         return c
     }
 
-    deleteCharacters(characterIds: string[]) {
-        console.log("Method not implemented.")
-        console.log("deleteCharacters", characterIds)
+    deleteCharacter(characterId: string) {
+        console.log("deleteCharacter", characterId)
 
-        //this.datastore.delete(characterIds.map((id) => this.datastore.key([CONSTANTS.CHARACTER_KIND, id])))
+        this.datastore.delete(this.datastore.key([CONSTANTS.CHARACTER_KIND, characterId]))
+        this.gameEngine.deleteCharacter(characterId)
+        //TODO tell the client this was deleted
+    }
+
+    deleteCharacters(characterIds: string[]) {
+        console.log("deleteCharacters", characterIds)
+        characterIds.forEach((id) => this.deleteCharacter(id))
+        //TODO tell the client these were deleted
     }
 
     stop() {

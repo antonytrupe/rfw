@@ -87,8 +87,13 @@ export default class GameEngine {
         throw new Error("Method not implemented.")
     }
 
-    deleteCharacter(id: string) {
-        throw new Error("Method not implemented.")
+    deleteCharacter(characterId: string) {
+        this.activeCharacters.delete(characterId)
+        this.gameWorld.deleteCharacter(characterId)
+    }
+
+    deleteCharacters(characterIds: string[]) {
+        characterIds.forEach((id) => this.deleteCharacter(id))
     }
 
     //this is the wrapper and callback function that calls step
