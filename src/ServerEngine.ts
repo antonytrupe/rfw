@@ -967,6 +967,8 @@ export default class ServerEngine {
     deleteCharacters(characterIds: string[]) {
         console.log("Method not implemented.")
         console.log("deleteCharacters", characterIds)
+
+        //this.datastore.delete(characterIds.map((id) => this.datastore.key([CONSTANTS.CHARACTER_KIND, id])))
     }
 
     stop() {
