@@ -22,6 +22,7 @@ import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { adjectives, colors, names, uniqueNamesGenerator } from "unique-names-generator"
 
 export default class ServerEngine {
+
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     //private emit: (eventName: string | symbol, ...args: any[]) => boolean
     private gameEngine: GameEngine
@@ -961,6 +962,11 @@ export default class ServerEngine {
         const c = new Character({ id: id, name: name, location: { x: x, y: y }, rotation: roll({ size: 360 }), hp: hp, maxHp: hp, bab: bab, age: age, ...character, })
         this.gameEngine.createCharacter(c)
         return c
+    }
+
+    deleteCharacters(characterIds: string[]) {
+        console.log("Method not implemented.")
+        console.log("deleteCharacters", characterIds)
     }
 
     stop() {

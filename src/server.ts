@@ -17,15 +17,38 @@ app.prepare().then(() => {
     const { method, url } = req
     //console.log(url)
     if (url == '/api/characters') {
-      console.log('do it')
-      //return engine.getAllCharacters()
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json')
-      const characters = engine.getAllCharacters()
-      console.log(Array.from(characters.values()))
-      res.write(JSON.stringify(Array.from(characters.values())))
+      console.log(method)
+      if (method == 'GET') {
+        console.log('do it')
+        //return engine.getAllCharacters()
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json')
+        const characters = engine.getAllCharacters()
+        res.write(JSON.stringify(Array.from(characters.values())))
 
-      res.end()
+        res.end()
+
+      }
+      else if (method == 'DELETE') {
+        let buffer = [];
+        req
+          .on('error', err => {
+            console.error(err);
+          })
+          .on('data', chunk => {
+            buffer.push(chunk);
+          })
+          .on('end', () => {
+            const body = Buffer.concat(buffer).toString();
+            // At this point, we have the headers, method, url and body, and can now
+            // do whatever we need to in order to respond to this request.
+            engine.deleteCharacters(JSON.parse(body))
+          });
+
+
+
+      }
+
       return
     }
 
