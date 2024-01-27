@@ -78,3 +78,5 @@ export const CONTROL_CHARACTER = 'world.character.control'
 export const TARGET_CHARACTER = 'world.character.targeted'
 export const GAME_EVENTS = 'game.events'
 export const MOVE_TO = 'world.character.move_to'
+
+export const REALTIME_API_PATH='/api/realtime/'

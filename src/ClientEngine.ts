@@ -7,7 +7,7 @@ import * as CONSTANTS from "@/types/CONSTANTS"
 import Player from "./types/Player"
 import GameEvent from "./types/GameEvent"
 import Point from "./types/Point"
-import { ViewPort } from "@/types/CONSTANTS"
+import { REALTIME_API_PATH, ViewPort } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
@@ -1242,7 +1242,7 @@ export default class ClientEngine {
 
         try {
             this.socket = io({
-                path: "/api/world/"
+                path: REALTIME_API_PATH
             })
             this.socket.on(CONSTANTS.CONNECT, () => {
                 this.onConnect()

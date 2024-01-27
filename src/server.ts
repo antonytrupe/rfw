@@ -3,6 +3,7 @@ import { parse } from "url"
 import next from "next"
 import { Server } from "socket.io"
 import ServerEngine from "./ServerEngine"
+import { REALTIME_API_PATH } from "./types/CONSTANTS"
 
 const port = parseInt(process.env.PORT || "3000", 10)
 const dev = process.env.NODE_ENV !== "production"
@@ -17,7 +18,7 @@ app.prepare().then(() => {
   }).listen(port)
 
   const io = new Server(httpServer, {
-    path: "/api/world/"
+    path: REALTIME_API_PATH
     // options
   })
 

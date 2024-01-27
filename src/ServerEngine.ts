@@ -635,7 +635,7 @@ export default class ServerEngine {
             })
             //send the zone
             this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()).map((character) => {
-                  return character
+                return character
             }))
         })
     }
@@ -954,7 +954,7 @@ export default class ServerEngine {
         const age = 30
         const name = uniqueNamesGenerator({ dictionaries: [names] })
 
-        const c = new Character({...character, id: id, name: name, location: { x: x, y: y }, rotation: roll({ size: 360 }), hp: hp, maxHp: hp, bab: bab, age: age,  })
+        const c = new Character({ id: id, name: name, location: { x: x, y: y }, rotation: roll({ size: 360 }), hp: hp, maxHp: hp, bab: bab, age: age, ...character, })
         this.gameEngine.createCharacter(c)
         return c
     }
