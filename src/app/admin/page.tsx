@@ -1,5 +1,5 @@
 import Character from "@/types/Character"
- import './admin.scss'
+import './admin.scss'
 import CharacterList from "./CharacterList"
 
 export default async function Page() {
@@ -13,6 +13,6 @@ export default async function Page() {
 
   }
 
-  return (<CharacterList   />
+  return (<CharacterList />
   )
 }

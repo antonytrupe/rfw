@@ -8,13 +8,11 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
     const datastore = new Datastore({ projectId: 'rfw2-403802' })
-    //console.log(1)
 
     const characterQuery = datastore.createQuery(CHARACTER_KIND)
-    //console.log(2)
 
     let characters: Character[] | any[] | undefined
-    
+
     characters = await datastore.runQuery(characterQuery)
         .then(([c]) => {
             characters = c
@@ -22,5 +20,17 @@ export async function GET() {
             return c
         })
 
-     return NextResponse.json(characters) 
+    return NextResponse.json(characters)
+}
+
+
+export async function DELETE(request: Request) {
+    console.log('delete characters')
+    const res = await request.json()
+    console.log(res)
+    const datastore = new Datastore({ projectId: 'rfw2-403802' })
+
+    datastore.delete(res.map((id) => datastore.key([CHARACTER_KIND, id])))
+
+    return NextResponse.json({ message: 'delete stub' })
 }
