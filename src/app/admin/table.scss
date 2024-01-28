@@ -5,6 +5,12 @@
     }
 }
 
+.table-header
+{
+    position: sticky;
+    top: 0;
+}
+
 .table-row:nth-child(even) {
     background: #CCC
 }

@@ -1,47 +1,37 @@
 "use client"
-import Character from "@/types/Character"
+import './table.scss'
 import { Suspense, useEffect, useState } from "react"
 
-export default function CharacterList() {
+export default function CharacterList({ columns, id = "id", endpoint }) {
 
-    function sortCharacters(compare: ((a: Character, b: Character) => number) | undefined) {
-        setCharacters([...characters].sort(compare))
+    function sortData(compare: ((a: any, b: any) => number) | undefined) {
+        setData([...data].sort(compare))
     }
 
-    function rowClick(characterId: string) {
-        if (characterId != editId) {
+    function rowClick(id: string) {
+        if (id != editId) {
             setEditId("")
         }
     }
 
-    const [characters, setCharacters] = useState<Character[]>([])
+    const [data, setData] = useState<any[]>([])
     const [selected, setSelected] = useState([])
     const [allSelected, setAllSelected] = useState(false)
 
     const [editId, setEditId] = useState<string>()
 
-    const columns = [{ label: "Name", name: "name" },
-    { label: "Level", name: "level" },
-    { label: "Class", name: "characterClass" },
-    { label: "Race", name: "race" },
-    { label: "Max HP", name: "maxHp" },
-    { label: "HP", name: "hp" },
-    { label: "Current Speed", name: "speed" },
-    { label: "Walk Speed", name: "maxSpeed" },
-    ]
-
     useEffect(() => {
-        fetch('/api/characters')
+        fetch(endpoint)
             .then((res) => res.json())
             .then((data) => {
-                setCharacters(data)
+                setData(data)
             })
     }, [])
 
     function selectAll(): void {
         setAllSelected(!allSelected)
-        if (selected.length != characters.length) {
-            setSelected(characters.map((c) => c.id))
+        if (selected.length != data.length) {
+            setSelected(data.map((c) => c[id]))
         }
         else {
             setSelected([])
@@ -55,7 +45,7 @@ export default function CharacterList() {
             setSelected(selected.filter((item) => item !== id));
         }
 
-        if (selected.length != characters.length) {
+        if (selected.length != data.length) {
             setAllSelected(false)
         }
         else {
@@ -63,12 +53,11 @@ export default function CharacterList() {
         }
     }
 
-    function deleteCharacters() {
-        console.log('deleteCharacters')
-        console.log(selected)
-        fetch('/api/characters', { method: "DELETE", body: JSON.stringify(selected) })
+    function deleteItems() {
+        fetch(endpoint, { method: "DELETE", body: JSON.stringify(selected) })
             .then((res) => res.json())
             .then((data) => {
+                //TODO
                 //setCharacters(data)
                 console.log(data)
             })
@@ -76,15 +65,15 @@ export default function CharacterList() {
 
     return (
         <div className="table">
-            <div className="table-row">
+            <div className="table-row table-header">
 
-                <span className="table-cell" ><input type="checkbox" onChange={selectAll} checked={allSelected} /><button onClick={deleteCharacters}>delete</button>
+                <span className="table-cell" ><input type="checkbox" onChange={selectAll} checked={allSelected} /><button onClick={deleteItems}>delete</button>
                 </span>
 
                 {columns.map(({ label, name }: { label: string, name: string }) => {
                     return <span className="table-cell" key={name}>{label}
                         <span className="sorter" onClick={() => {
-                            sortCharacters((a, b) => {
+                            sortData((a, b) => {
                                 if (typeof (a as any)[name] == 'number') {
                                     return (a as any)[name] - (b as any)[name]
                                 }
@@ -95,7 +84,7 @@ export default function CharacterList() {
                             })
                         }}>↓</span>
                         <span className="sorter" onClick={() => {
-                            sortCharacters((a, b) => {
+                            sortData((a, b) => {
                                 if (typeof (a as any)[name] == 'number') {
                                     return (b as any)[name] - (a as any)[name]
                                 }
@@ -114,14 +103,14 @@ export default function CharacterList() {
                 })}
             </div>
             <Suspense fallback={<span>loading</span>}>
-                {characters.map((character: Character) => {
+                {data.map((item) => {
                     return (
-                        <div className="table-row" key={character.id}>
-                            <span className="table-cell" ><input type="checkbox" onChange={() => checkRow(character.id)} checked={selected.includes(character.id)} />
+                        <div className="table-row" key={item[id]}>
+                            <span className="table-cell" ><input type="checkbox" onChange={() => checkRow(item[id])} checked={selected.includes(item[id])} />
                             </span>
                             {columns.map(({ label, name }: { label: string, name: string }) => {
-                                return <span key={name} className="table-cell" onClick={() => rowClick(character.id)} onDoubleClick={() => setEditId(character.id)}>
-                                    {character.id == editId ? (<input size={(character as any)[name]?.toString().length} defaultValue={(character as any)[name]} />) : (character as any)[name]}
+                                return <span key={name} className="table-cell" onClick={() => rowClick(item[id])} onDoubleClick={() => setEditId(item[id])}>
+                                    {item[id] == editId ? (<input size={(item as any)[name]?.toString().length} defaultValue={(item as any)[name]} />) : (item as any)[name]}
                                 </span>
                             })}
                         </div>)

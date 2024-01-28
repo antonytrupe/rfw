@@ -24,7 +24,8 @@ enum TIER {
     TUTORIAL,
     ACHIEVEMENT,
     DAILY,
-    NORMAL
+    NORMAL,
+    TASK
 }
 
 enum SCOPE {
