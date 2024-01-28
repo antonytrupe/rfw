@@ -28,7 +28,7 @@ export default function ClientUI() {
 
   }, [canvasRef]);
 
-  const [chatHistory, setChatHistory] = useState<string>('a')
+  const [chatHistory, setChatHistory] = useState<string>('')
 
   const [clientEngine, setClientEngine] = useState<ClientEngine>()
   const [chatMode, setChatMode] = useState<boolean>(false)
@@ -51,7 +51,7 @@ export default function ClientUI() {
 
   function updateChat(message: string): void {
     //console.log('chatHistory', chatHistory)
-    setChatHistory(chatHistory + '\n' + message)
+    setChatHistory((chatHistory + '\n' + message).trim())
   }
 
   //console.log('chatHistory', chatHistory)

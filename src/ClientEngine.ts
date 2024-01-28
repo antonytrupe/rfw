@@ -1031,15 +1031,15 @@ export default class ClientEngine {
         e.nativeEvent.stopPropagation()
         e.stopPropagation()
         e.preventDefault()
-        //console.log('doubleclick')
+        console.log('doubleclick', this.player)
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e.nativeEvent))
 
         //if logged in 
         if (!!this.player) {
             //if no controlled character, and still under maxclaimedcharacter limit or already claimed this character
             if (characters.length > 0 &&
-                (!this.player?.controlledCharacter && (this.player?.claimedCharacters.length < this.player.maxClaimedCharacters) ||
-                    (this.player?.claimedCharacters.some((id) => id == characters[0].id))
+                (!this.player?.controlledCharacter && (!this.player?.claimedCharacters || this.player?.claimedCharacters?.length < this.player.maxClaimedCharacters) ||
+                    (this.player?.claimedCharacters?.some((id) => id == characters[0].id))
                 )) {
                 //then control(server should handle claiming first if needed)
                 this.control(characters[0].id)

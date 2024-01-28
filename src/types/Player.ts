@@ -1,7 +1,7 @@
 export default class Player {
     email: string
     id: string
-    claimedCharacters: string[]
+    claimedCharacters?: string[]
     controlledCharacter: string
     maxClaimedCharacters: number
    /* 
