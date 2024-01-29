@@ -24,16 +24,12 @@ import { adjectives, colors, names, uniqueNamesGenerator } from "unique-names-ge
 export default class ServerEngine {
 
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
-    //private emit: (eventName: string | symbol, ...args: any[]) => boolean
     private gameEngine: GameEngine
     private io: Server
-    //private characterDB: JsonDB
-    //private objectDB: JsonDB
-    //private playerDB: JsonDB
-    //private templateDB: JsonDB
     private templates: Map<string, WorldObject> = new Map()
-    // Creates a client
-    datastore = new Datastore({ projectId: 'rfw2-403802' })
+    private datastore = new Datastore({ projectId: 'rfw2-403802' })
+    private playersByEmail: Map<string, Player> = new Map()
+    private playersById: Map<string, Player> = new Map()
 
     constructor(io: Server) {
         this.io = io
@@ -74,6 +70,8 @@ export default class ServerEngine {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     if (!player) {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
+                        this.playersByEmail.set(player.email, player)
+                        this.playersById.set(player.id, player)
                     }
                     console.log(player.email, 'joined')
                     //console.log(player)
@@ -333,16 +331,44 @@ export default class ServerEngine {
         return new Player(d.data)
     }
 
-    async getPlayerByEmail(email: string): Promise<Player | undefined> {
-        //TODO make this look up from memory first before going to persistance
-        //console.log('getPlayerByEmail')
-        let player: Player | undefined = undefined
-        const playerQuery = this.datastore.createQuery(CONSTANTS.PLAYER_KIND)
-        playerQuery.filter(new PropertyFilter('email', '=', email))
-        const [players]: [Player[], any] = await this.datastore.runQuery(playerQuery)
+    deletePlayers(playerIds: string[]) {
+        playerIds.forEach((id) => {
+            this.deletePlayer(id)
+        })
+    }
 
-        player = players[0]
+    deletePlayer(playerId: string) {
+        const p = this.playersById.get(playerId)
+        if (!!p) {
+            this.playersByEmail.delete(p.email)
+            this.playersById.delete(p.id)
+            this.datastore.delete(this.datastore.key([CONSTANTS.PLAYER_KIND, p.id]))
+        }
+    }
+
+    getAllPlayers(): Player[] {
+        return Array.from(this.playersById.values())
+    }
+
+    async getPlayerByEmail(email: string): Promise<Player | undefined> {
+        //console.log('getPlayerByEmail')
+
+        //TODO make this look up from memory first before going to persistance
+        let player: Player | undefined = this.playersByEmail.get(email)
+        if (!!player) {
+            return player
+        }
+
         if (!player) {
+            const playerQuery = this.datastore.createQuery(CONSTANTS.PLAYER_KIND)
+            playerQuery.filter(new PropertyFilter('email', '=', email))
+            const [players]: [Player[], any] = await this.datastore.runQuery(playerQuery)
+
+            player = players[0]
+            this.playersByEmail.set(player.email, player)
+            this.playersById.set(player.id, player)
+        }
+        if (!!player) {
             return player
         }
 
@@ -371,6 +397,8 @@ export default class ServerEngine {
 
         if (updatePlayer) {
             player = await this.savePlayer(player)
+            this.playersByEmail.set(player.email, player)
+            this.playersById.set(player.id, player)
             //console.log(player)
         }
 
@@ -471,6 +499,8 @@ export default class ServerEngine {
             //if we're unclaimed the controlled character, uncontrol it, otherwise leave the current controlled character
             controlledCharacter: player.controlledCharacter == characterId ? "" : player.controlledCharacter
         })
+        this.playersByEmail.set(player.email, player)
+        this.playersById.set(player.id, player)
 
         //tell the client it worked
         this.io.to(player.id).emit(CONSTANTS.CURRENT_PLAYER, player)
@@ -492,7 +522,8 @@ export default class ServerEngine {
             //console.log('make a new player')
             const id = uuidv4()
             player = await this.savePlayer({ email: playerEmail, id: id })
-            //console.log(player)
+            this.playersByEmail.set(player.email, player)
+            this.playersById.set(player.id, player)
         }
         //we've got a player now
         const character = this.getCharacter(characterId)
@@ -524,6 +555,8 @@ export default class ServerEngine {
 
         player.claimedCharacters.push(characterId)
         player = await this.savePlayer({ ...player, email: player.email, claimedCharacters: player.claimedCharacters })
+        this.playersByEmail.set(player.email, player)
+        this.playersById.set(player.id, player)
         //console.log(player)
 
         this.sendAndSaveCharacterUpdates([characterId])
@@ -544,7 +577,8 @@ export default class ServerEngine {
             //console.log('make a new player')
             const id = uuidv4()
             player = await this.savePlayer({ email: playerEmail, id: id })
-            //console.log(player)
+            this.playersByEmail.set(player.email, player)
+            this.playersById.set(player.id, player)
         }
 
         let character = this.getCharacter(characterId)
@@ -566,6 +600,8 @@ export default class ServerEngine {
         }
 
         player = await this.savePlayer({ ...player, controlledCharacter: characterId })
+        this.playersByEmail.set(player.email, player)
+        this.playersById.set(player.id, player)
 
         return [player, character]
     }

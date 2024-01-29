@@ -54,12 +54,13 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
     }
 
     function deleteItems() {
-        fetch(endpoint, { method: "DELETE", body: JSON.stringify(selected) })
+        fetch(endpoint, {
+            method: "DELETE",
+            body: JSON.stringify(selected)
+        })
             .then((res) => res.json())
             .then((data) => {
-                //TODO
-                //setCharacters(data)
-                console.log(data)
+                setData(data)
             })
     }
 

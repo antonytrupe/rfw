@@ -12,6 +12,7 @@ const nextHandler: NextApiHandler = nextApp.getRequestHandler()
 
 nextApp.prepare().then(async () => {
   const app = express()
+  app.use(express.json());
   const server = createServer(app)
   const io = new Server(server, {
     path: REALTIME_API_PATH
@@ -26,7 +27,20 @@ nextApp.prepare().then(async () => {
       res.json(Array.from(characters.values()))
     })
     .delete((req, res) => {
-      engine.deleteCharacters(JSON.parse(JSON.parse(req.body)))
+      engine.deleteCharacters(req.body)
+      const characters = engine.getAllCharacters()
+      res.json(Array.from(characters.values()))
+    })
+
+  app.route('/api/players')
+    .get((req, res) => {
+      const players = engine.getAllPlayers()
+      res.json(Array.from(players.values()))
+    })
+    .delete((req, res) => {
+      engine.deletePlayers(req.body)
+      const players = engine.getAllPlayers()
+      res.json(Array.from(players.values()))
     })
 
   //everthing else goes to the nextjs handler
