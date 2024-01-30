@@ -62,6 +62,7 @@ export const SPAWN_COMMUNITY = 'world.spawn_community'
 //list of claimed characters, last selected character, last viewport
 export const CLIENT_INFO = 'client.selected_characters.update'
 
+export const QUESTS = 'quests'
 //ASDW key inputs
 export const TURN_LEFT = 'world.character.turn.left'
 export const TURN_RIGHT = 'world.character.turn.right'
@@ -79,4 +80,4 @@ export const TARGET_CHARACTER = 'world.character.targeted'
 export const GAME_EVENTS = 'game.events'
 export const MOVE_TO = 'world.character.move_to'
 
-export const REALTIME_API_PATH='/api/realtime/'
+export const REALTIME_API_PATH = '/api/realtime/'

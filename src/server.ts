@@ -12,14 +12,14 @@ const nextHandler: NextApiHandler = nextApp.getRequestHandler()
 
 nextApp.prepare().then(async () => {
   const app = express()
-  app.use(express.json());
+  //app.use(express.json());
   const server = createServer(app)
   const io = new Server(server, {
     path: REALTIME_API_PATH
   })
   const engine: ServerEngine = new ServerEngine(io)
 
-  io.attach(server)
+  //io.attach(server)
 
   app.route('/api/characters')
     .get((req, res) => {
@@ -27,9 +27,14 @@ nextApp.prepare().then(async () => {
       res.json(Array.from(characters.values()))
     })
     .delete((req, res) => {
+      console.log(req.body)
+
       engine.deleteCharacters(req.body)
       const characters = engine.getAllCharacters()
       res.json(Array.from(characters.values()))
+    })
+    .post((req, res) => {
+      //TODO updates
     })
 
   app.route('/api/players')
@@ -38,6 +43,7 @@ nextApp.prepare().then(async () => {
       res.json(Array.from(players.values()))
     })
     .delete((req, res) => {
+      console.log(req.body)
       engine.deletePlayers(req.body)
       const players = engine.getAllPlayers()
       res.json(Array.from(players.values()))

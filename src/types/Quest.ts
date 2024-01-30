@@ -33,7 +33,7 @@ enum SCOPE {
     PLAYER
 }
 
-const quests = [
+export const quests = [
     new Quest({
         id: 0, name: "Zoom", description: "Use the scroll wheel or pinch or page up/down to zoom.",
         unlocks: [1], repeatable: false, tier: TIER.TUTORIAL, scope: SCOPE.PLAYER

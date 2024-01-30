@@ -20,6 +20,7 @@ import { SHAPE } from "./types/SHAPE"
 import { Datastore, PropertyFilter } from '@google-cloud/datastore'
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { adjectives, colors, names, uniqueNamesGenerator } from "unique-names-generator"
+import { quests } from "./types/Quest"
 
 export default class ServerEngine {
 
@@ -66,6 +67,7 @@ export default class ServerEngine {
             //console.log('CONSTANTS.CONNECTION', socket.id) 
             let player: Player | undefined
             getSession({ req: socket.conn.request, }).then(async (session) => {
+                //console.log(session)
                 if (!!session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     if (!player) {
@@ -83,9 +85,8 @@ export default class ServerEngine {
                         const chars = this.gameEngine.getCharacters(player.claimedCharacters)
                         socket.emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, chars)
                     }
-                    if (!player.claimedCharacters || player.claimedCharacters.length == 0) {
-                        socket.emit(CONSTANTS.CHAT, { message: 'You wander over the land. Chose a soul to become.' })
-                    }
+                    //send the quest list
+                    socket.emit(CONSTANTS.QUESTS, quests)
                 }
             })
 
@@ -236,10 +237,6 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.DISCONNECT, (reason: string) => {
                 console.log('CONSTANTS.DISCONNECT', reason)
-                //remove the character from the database
-                //db.delete('/pc/' + socket.id)
-                //broadcast the removal
-                //socket.broadcast.emit(PC_DISCONNECT, socket.id)
             })
         })
     }
@@ -342,7 +339,7 @@ export default class ServerEngine {
         if (!!p) {
             this.playersByEmail.delete(p.email)
             this.playersById.delete(p.id)
-            this.datastore.delete(this.datastore.key([CONSTANTS.PLAYER_KIND, p.id]))
+            this.datastore.delete(this.datastore.key([CONSTANTS.PLAYER_KIND, p.email]))
         }
     }
 
@@ -353,23 +350,23 @@ export default class ServerEngine {
     async getPlayerByEmail(email: string): Promise<Player | undefined> {
         //console.log('getPlayerByEmail')
 
-        //TODO make this look up from memory first before going to persistance
+        // look up from memory first before going to persistance
         let player: Player | undefined = this.playersByEmail.get(email)
-        if (!!player) {
-            return player
-        }
 
+        //didn' find it it memory
         if (!player) {
+            //look for it in datastore
             const playerQuery = this.datastore.createQuery(CONSTANTS.PLAYER_KIND)
             playerQuery.filter(new PropertyFilter('email', '=', email))
             const [players]: [Player[], any] = await this.datastore.runQuery(playerQuery)
 
             player = players[0]
-            this.playersByEmail.set(player.email, player)
-            this.playersById.set(player.id, player)
-        }
-        if (!!player) {
-            return player
+            //if we found it in the datastore
+            if (!!player) {
+                //put it in memory
+                this.playersByEmail.set(player.email, player)
+                this.playersById.set(player.id, player)
+            }
         }
 
         let updatePlayer = false

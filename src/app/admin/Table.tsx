@@ -54,8 +54,12 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
     }
 
     function deleteItems() {
+        //console.log(JSON.stringify(selected))
         fetch(endpoint, {
             method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(selected)
         })
             .then((res) => res.json())

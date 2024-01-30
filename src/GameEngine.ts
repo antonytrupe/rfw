@@ -11,7 +11,7 @@ import { SHAPE } from "./types/SHAPE"
 import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
 import { LEFT, RIGHT } from "./types/CONSTANTS"
 import { Actions, AttackAction } from "./types/Action"
-//import { Engine, Body, Bodies, Constraint, Composite, World } from 'matter-js';
+import { quests } from "./types/Quest"
 
 //processes game logic
 //interacts with the gameworld object and updates it
@@ -24,7 +24,7 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
-    activeCharacters: Set<string> = new Set()
+    private activeCharacters: Set<string> = new Set()
 
     private ticksPerSecond: number
 
@@ -37,14 +37,13 @@ export default class GameEngine {
     //5ft/s*1000ms/s
     //30ft/6seconds
     private speedMultiplier: number = 6000
-    timeoutID: NodeJS.Timeout | undefined
-    doGameLogic: boolean
+    private timeoutID: NodeJS.Timeout | undefined
+    private doGameLogic: boolean
+    private quests=quests
 
     /**
      * 60 frames per second is one frame every ~17 milliseconds
      * 30 frames per second is one frame every ~33 milliseconds
-     * @param param0 
-     * @param eventEmitter 
      */
     constructor({ ticksPerSecond, doGameLogic = true }: { ticksPerSecond: number, doGameLogic?: boolean }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
@@ -53,6 +52,10 @@ export default class GameEngine {
         //this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.ticksPerSecond = ticksPerSecond
         this.doGameLogic = doGameLogic
+    }
+
+    getCharactersIntoZones(zones: Set<string>): Character[] {
+        return this.gameWorld.getCharactersInZones(zones)
     }
 
     getCharacters(ids: string[]) {
