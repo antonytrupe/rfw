@@ -7,6 +7,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev_ds":"gcloud beta emulators datastore start --no-store-on-disk",
     "dev": "nodemon",
     "build": "next build && tsc --project tsconfig.server.json",
     "start": "cross-env NODE_ENV=production node dist/src/server.js",

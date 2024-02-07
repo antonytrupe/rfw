@@ -612,6 +612,9 @@ export default class ServerEngine {
                 this.gameEngine.updateCharacters(characters)
                 console.log('finished loading characters')
             })
+            .catch((error) => {
+                console.log('failed to load characters', error)
+            })
 
         const templateQuery = this.datastore.createQuery(CONSTANTS.TEMPLATE_KIND)
         await this.datastore.runQuery(templateQuery)
@@ -621,12 +624,18 @@ export default class ServerEngine {
                 })
                 //console.log('finished loading templates')
             })
+            .catch((error) => {
+                console.log('failed to load templates', error)
+            })
 
         const objectQuery = this.datastore.createQuery(CONSTANTS.OBJECT_KIND)
         await this.datastore.runQuery(objectQuery)
             .then(([objects]) => {
                 this.gameEngine.updateObjects(objects)
                 //console.log('finished loading objects')
+            })
+            .catch((error) => {
+                console.log('failed to load world objects', error)
             })
     }
 

@@ -323,14 +323,14 @@ export default class ClientEngine {
         }
 
         //poc
-        this.pencilLine(ctx, { x: 30, y: 30 }, { x: 330, y: 30 }, 4)
-        this.pencilLine(ctx, { x: 330, y: 30 }, { x: 330, y: 330 }, 4)
-        this.pencilLine(ctx, { x: 330, y: 330 }, { x: 30, y: 330 }, 4)
-        this.pencilLine(ctx, { x: 30, y: 330 }, { x: 30, y: 30 }, 4)
+        //this.pencilLine(ctx, { x: 30, y: 30 }, { x: 330, y: 30 }, 4)
+        //this.pencilLine(ctx, { x: 330, y: 30 }, { x: 330, y: 330 }, 4)
+        //this.pencilLine(ctx, { x: 330, y: 330 }, { x: 30, y: 330 }, 4)
+        //this.pencilLine(ctx, { x: 30, y: 330 }, { x: 30, y: 30 }, 4)
 
 
-        this.pencilCircle(ctx, { x: 200, y: 200 }, 2.5 * this.PIXELS_PER_FOOT, 40)
-
+        //this.pencilCircle(ctx, { x: 200, y: 200 }, 2.5 * this.PIXELS_PER_FOOT, 40)
+        this.drawChatHistory(ctx)
     }
 
     pencilCircle(ctx: CanvasRenderingContext2D, origin: Point, radius: number, thickness: number) {
@@ -423,6 +423,7 @@ export default class ClientEngine {
         // Fill with gradient
         ctx.fillStyle = grd
         ctx.textAlign = 'center'
+        ctx.closePath()
         ctx.fill()
         ctx.stroke()
 
@@ -437,7 +438,7 @@ export default class ClientEngine {
         ctx.fillText(info[1],
             0,
             padding * 2 + fontSize)
-
+        //ctx.fill()
         ctx.restore()
     }
 
@@ -512,7 +513,7 @@ export default class ClientEngine {
         ctx.translate(xOffset, yOffset)
         ctx.scale(1 / this.scale, 1 / this.scale)
         this.scaleStyle(ctx)
-        ctx.beginPath()
+        //ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
         ctx.lineTo(ticks * 30 * this.PIXELS_PER_FOOT, 0);
@@ -526,6 +527,15 @@ export default class ClientEngine {
         })
 
         ctx.stroke()
+        ctx.restore()
+    }
+
+    drawChatHistory(ctx: CanvasRenderingContext2D) {
+        ctx.save()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.scale(1 / this.scale, 1 / this.scale)
+        ctx.fillStyle="black"
+        ctx.fillText("sdsdsd", 40, 40)
         ctx.restore()
     }
 
