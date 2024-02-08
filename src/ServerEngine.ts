@@ -606,15 +606,7 @@ export default class ServerEngine {
     private async loadWorld() {
         console.log('loading world')
 
-        const characterQuery = this.datastore.createQuery(CONSTANTS.CHARACTER_KIND)
-        await this.datastore.runQuery(characterQuery)
-            .then(([characters]) => {
-                this.gameEngine.updateCharacters(characters)
-                console.log('finished loading characters')
-            })
-            .catch((error) => {
-                console.log('failed to load characters', error)
-            })
+        this.loadAllCharacters()
 
         const templateQuery = this.datastore.createQuery(CONSTANTS.TEMPLATE_KIND)
         await this.datastore.runQuery(templateQuery)
@@ -636,6 +628,18 @@ export default class ServerEngine {
             })
             .catch((error) => {
                 console.log('failed to load world objects', error)
+            })
+    }
+
+    async loadAllCharacters() {
+        const characterQuery = this.datastore.createQuery(CONSTANTS.CHARACTER_KIND)
+        await this.datastore.runQuery(characterQuery)
+            .then(([characters]) => {
+                this.gameEngine.updateCharacters(characters)
+                console.log('finished loading characters')
+            })
+            .catch((error) => {
+                console.log('failed to load characters', error)
             })
     }
 

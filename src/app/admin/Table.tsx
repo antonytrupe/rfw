@@ -4,6 +4,9 @@ import { Suspense, useEffect, useState } from "react"
 
 export default function CharacterList({ columns, id = "id", endpoint }) {
 
+
+    //TODO remember the sort order
+
     function sortData(compare: ((a: any, b: any) => number) | undefined) {
         setData([...data].sort(compare))
     }
@@ -54,7 +57,7 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
     }
 
     function deleteItems() {
-        //console.log(JSON.stringify(selected))
+        console.log(JSON.stringify(selected))
         fetch(endpoint, {
             method: "DELETE",
             headers: {
@@ -68,7 +71,25 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
             })
     }
 
-    return (
+    function reloadDatastore(): void {
+        fetch(endpoint+'?reload=datastore')
+            .then((res) => res.json())
+            .then((data) => {
+                setData(data)
+            })
+      }
+    
+      function reloadMemory(): void {
+        fetch(endpoint)
+        .then((res) => res.json())
+        .then((data) => {
+            setData(data)
+        })
+      }
+
+    return (<>
+        <button onClick={reloadDatastore}>reload from datastore</button>
+        <button onClick={reloadMemory}>reload from memory</button>
         <div className="table">
             <div className="table-row table-header">
 
@@ -121,6 +142,6 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
                         </div>)
                 })}
             </Suspense>
-        </div>
+        </div></>
     )
 }
