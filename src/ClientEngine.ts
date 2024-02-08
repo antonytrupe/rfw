@@ -13,6 +13,7 @@ import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { distanceBetweenPoints, getNextPointOnCircle, getNextPointOnLine } from "./Geometry"
 import { ZONETYPE } from "./types/ZONETYPE"
+import { WheelEvent } from "react"
 var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
@@ -171,11 +172,10 @@ export default class ClientEngine {
         //console.log('center', center)
         const rect = this.getViewPort()
         //console.log('rect', rect)
-        this.setOffset({ x: c.location.x - (rect.right - rect.left) / 2, y: c.location.y - (rect.bottom - rect.top) / 2})
+        this.setOffset({ x: c.location.x - (rect.right - rect.left) / 2, y: c.location.y - (rect.bottom - rect.top) / 2 })
     }
 
-    //TODO fix gross typing
-    wheelHandler(e: { stopPropagation: () => void, deltaY: number, nativeEvent: Point }) {
+    wheelHandler(e: WheelEvent) {
         e.stopPropagation()
         //e.preventDefault()
         let zoom
@@ -284,7 +284,7 @@ export default class ClientEngine {
 
         if (this.scale < 30) {
 
-            //TODO not all, just the ones in view
+            //not all, just the ones in view
             this.gameEngine.gameWorld.getWorldObjectsWithin(this.getViewPort(), ZONETYPE.TACTICAL)
                 .forEach((wo: WorldObject) => {
                     this.drawWorldObject(ctx, wo)
@@ -323,7 +323,7 @@ export default class ClientEngine {
             this.drawHourScale(ctx)
         }
 
-        //TODO draw stuff based on where the mouse is
+        //draw stuff based on where the mouse is
         const c = this.getCharacterAt(this.mousePosition)
         //console.log(this.mousePosition)
         if (!!c) {
@@ -423,12 +423,12 @@ export default class ClientEngine {
         ctx.translate(-width / 2, -character.radiusX * this.PIXELS_PER_FOOT - height)
         ctx.roundRect(0, 0, width, height, 10 * this.scale)
 
-        // Create gradient
+        //Create gradient
         const grd = ctx.createRadialGradient(75, 50, 5, 90, 60, 100)
         grd.addColorStop(0, "white")
         grd.addColorStop(1, "#faf0e6")
 
-        // Fill with gradient
+        //Fill with gradient
         ctx.fillStyle = grd
         ctx.textAlign = 'center'
         ctx.closePath()
@@ -644,7 +644,6 @@ export default class ClientEngine {
                 }
             }
             else if (event.type == 'say') {
-                //TODO get this time in sync with the draw timer
                 if (now - event.time < 6 * 1000) {
                     this.drawSay(ctx, event)
                 }
@@ -660,7 +659,6 @@ export default class ClientEngine {
         //console.log('drawSay')
         const character = this.getCharacter(event.target)
         if (character && !!event.message) {
-            //TODO get this time in sync with the expiration time
             const duration = 6
             const distance = 120
 

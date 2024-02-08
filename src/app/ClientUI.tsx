@@ -2,7 +2,7 @@
 import './ClientUI.scss'
 
 import styles from './UI.module.scss'
-import { MutableRefObject, useEffect, useRef, useState, } from 'react'
+import { MutableRefObject, useEffect, useRef, useState, WheelEvent } from 'react'
 import ClientEngine from '@/ClientEngine'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -134,7 +134,7 @@ export default function ClientUI() {
     }
   }
 
-  const onWheel = (e: any) => {
+  const onWheel = (e: WheelEvent) => {
     clientEngine?.wheelHandler(e)
   }
 
