@@ -171,8 +171,7 @@ export default class ClientEngine {
         //console.log('center', center)
         const rect = this.getViewPort()
         //console.log('rect', rect)
-        this.translateX = c.location.x - (rect.right - rect.left) / 2
-        this.translateY = c.location.y - (rect.bottom - rect.top) / 2
+        this.setOffset({ x: c.location.x - (rect.right - rect.left) / 2, y: c.location.y - (rect.bottom - rect.top) / 2})
     }
 
     //TODO fix gross typing
@@ -199,6 +198,15 @@ export default class ClientEngine {
             const newX = this.translateX + deltaX
             const newY = this.translateY + deltaY
             this.setOffset({ x: newX, y: newY, scale: newScale })
+        }
+    }
+
+    onMouseMove(position: Point, movement: Point, buttons: number) {
+        this.mousePosition = position
+        if (!!buttons) {
+            const newX = this.translateX - (movement.x / this.PIXELS_PER_FOOT * this.scale)
+            const newY = this.translateY - (movement.y / this.PIXELS_PER_FOOT * this.scale)
+            this.setOffset({ x: newX, y: newY })
         }
     }
 
@@ -534,7 +542,7 @@ export default class ClientEngine {
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.scale(1 / this.scale, 1 / this.scale)
-        ctx.fillStyle="black"
+        ctx.fillStyle = "black"
         ctx.fillText("sdsdsd", 40, 40)
         ctx.restore()
     }
@@ -1234,13 +1242,7 @@ export default class ClientEngine {
         }
     }
 
-    onMouseMove(position: Point, movement: Point, buttons: number) {
-        this.mousePosition = position
-        if (!!buttons) {
-            this.translateX -= (movement.x / this.PIXELS_PER_FOOT * this.scale)
-            this.translateY -= (movement.y / this.PIXELS_PER_FOOT * this.scale)
-        }
-    }
+
 
     disconnect() {
         this.socket?.disconnect()
