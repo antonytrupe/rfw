@@ -30,13 +30,6 @@ export const DISCONNECT = 'disconnect'
 export const MESSAGE_CLIENT_SEND = "message.client.sendd"
 export const MESSAGE_SERVER_BROADCAST = "message.server.broadcast"
 
-export interface ViewPort {
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
-}
-
 export const CLIENT_VIEWPORT = 'client.viewport'
 
 export const CURRENT_PLAYER = 'current_player'

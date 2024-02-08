@@ -7,13 +7,14 @@ import * as CONSTANTS from "@/types/CONSTANTS"
 import Player from "./types/Player"
 import GameEvent from "./types/GameEvent"
 import Point from "./types/Point"
-import { REALTIME_API_PATH, ViewPort } from "@/types/CONSTANTS"
+import { REALTIME_API_PATH } from "@/types/CONSTANTS"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { distanceBetweenPoints, getNextPointOnCircle, getNextPointOnLine } from "./Geometry"
 import { ZONETYPE } from "./types/ZONETYPE"
 import { WheelEvent } from "react"
+import { ViewPort } from "./types/Viewport"
 var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
@@ -1325,17 +1326,15 @@ export default class ClientEngine {
     private onConnect() {
         console.log('successfully connected to the server')
         this.connected = true
-        //tell the ui we connected
-        //this.emit(CONSTANTS.CONNECT)
 
         //restart/reset the gameengine and gameworld
         this.gameEngine.restart()
 
         //ask the server for characters
-        this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort() as ViewPort)
+        this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
     }
 
-    private getViewPort() {
+    private getViewPort(): ViewPort {
         const clientRect = this.getCanvas().getBoundingClientRect()
         const left = (clientRect.left - clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
         const right = (clientRect.right - clientRect.left) / this.PIXELS_PER_FOOT * this.scale + this.translateX
@@ -1344,6 +1343,6 @@ export default class ClientEngine {
 
         const rect = { left: left, right: right, top: top, bottom: bottom }
         //console.log(rect)
-        return rect
+        return { ...rect, scale:this.scale }
     }
 }

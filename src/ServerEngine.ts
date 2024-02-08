@@ -13,14 +13,14 @@ import GameEvent from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
-import { ViewPort } from "@/types/CONSTANTS"
-import WorldObject from "./types/WorldObject"
+ import WorldObject from "./types/WorldObject"
 import { ZONETYPE } from "./types/ZONETYPE"
 import { SHAPE } from "./types/SHAPE"
 import { Datastore, PropertyFilter } from '@google-cloud/datastore'
 import { COMMUNITY_SIZE } from "./types/CommunitySize"
 import { adjectives, colors, names, uniqueNamesGenerator } from "unique-names-generator"
 import { quests } from "./types/Quest"
+import { ViewPort } from "./types/Viewport"
 
 export default class ServerEngine {
 
@@ -241,7 +241,7 @@ export default class ServerEngine {
         })
     }
 
-    updateZones(socket: Socket, viewPort: CONSTANTS.ViewPort, player: Player | undefined) {
+    updateZones(socket: Socket, viewPort: ViewPort, player: Player | undefined) {
         //join the right zones/rooms
         let oldZones = socket.rooms
         //TODO switch to bigger zones if we're zoomed out a bunch

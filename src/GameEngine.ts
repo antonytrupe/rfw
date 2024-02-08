@@ -39,7 +39,7 @@ export default class GameEngine {
     private speedMultiplier: number = 6000
     private timeoutID: NodeJS.Timeout | undefined
     private doGameLogic: boolean
-    private quests=quests
+    private quests = quests
 
     /**
      * 60 frames per second is one frame every ~17 milliseconds
@@ -303,9 +303,12 @@ export default class GameEngine {
 
             //TODO if they went over their walk speed or they went over their walk distance, then consume an action
             //TODO if they don't have an action to use for running, don't let them run
-            let newSpeed = this.calculateSpeed(character, dt)
+            let newSpeed = this.calculateSpeed(character, dt / 2)
 
-            let newPosition = this.calculatePosition(character, dt)
+            let newPosition = this.calculatePosition({ ...character, speed: newSpeed }, dt)
+
+            newSpeed = this.calculateSpeed({ ...character, speed: newSpeed }, dt / 2)
+
             //check for collisions
             newPosition = this.slide(character, newPosition)
 
@@ -506,7 +509,7 @@ export default class GameEngine {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    getZonesIn({ top, bottom, left, right }: { top: number, bottom: number, left: number, right: number }): string[] {
+    getZonesIn({ top, bottom, left, right, scale }: { top: number, bottom: number, left: number, right: number, scale: number }): string[] {
         //TODO scale determines what kind of zones to use, not viewport, I think
         const area = (right - left) * (bottom - top)
         let zones: string[] = []
