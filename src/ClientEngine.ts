@@ -1030,8 +1030,8 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.SPAWN_COMMUNITY, { ...options, location: origin })
     }
 
-    move(characterId: string, location: Point) {
-        this.gameEngine.moveCharacter(characterId, location)
+    addMoveAction(characterId: string, location: Point) {
+        this.gameEngine.addMoveAction(characterId, location)
         this.socket?.emit(CONSTANTS.MOVE_TO, characterId, location)
     }
 
@@ -1063,12 +1063,12 @@ export default class ClientEngine {
             //controlled character, so target is a target
             else if (!!this.player?.controlledCharacter && characters.length > 0) {
                 //attack it
-                this.attack(this.player?.controlledCharacter, characters[0].id)
+                this.addAttackAction(this.player?.controlledCharacter, characters[0].id)
             }
             //controlled character, but no target, so clear target
             else if (!!this.player?.controlledCharacter && !!this.getCharacter(this.player?.controlledCharacter)?.target && characters.length == 0) {
                 //console.log('clearing attackee')
-                this.attackStop(this.player?.controlledCharacter)
+                this.removeAttackAction(this.player?.controlledCharacter)
             }
         }
     }
@@ -1082,18 +1082,18 @@ export default class ClientEngine {
 
         if (!!this.player?.controlledCharacter) {
             const location = this.getGamePosition(e.nativeEvent)
-            this.move(this.player.controlledCharacter, location)
+            this.addMoveAction(this.player.controlledCharacter, location)
         }
     }
 
-    attackStop(attackerId: string) {
-        this.gameEngine.attackStop(attackerId)
+    removeAttackAction(attackerId: string) {
+        this.gameEngine.removeAttackAction(attackerId)
         //tell the server
         this.socket?.emit(CONSTANTS.ATTACK, attackerId, undefined)
     }
 
-    attack(attackerId: string, attackeeId: string) {
-        this.gameEngine.attack(attackerId, attackeeId, true, true)
+    addAttackAction(attackerId: string, attackeeId: string) {
+        this.gameEngine.addAttackAction(attackerId, attackeeId, true, true)
         //tell the server
         this.socket?.emit(CONSTANTS.ATTACK, attackerId, attackeeId)
     }

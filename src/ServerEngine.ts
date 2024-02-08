@@ -154,10 +154,10 @@ export default class ServerEngine {
 
             socket.on(CONSTANTS.ATTACK, async (attacker: string, attackee: string) => {
                 if (attackee) {
-                    this.attack(attacker, attackee)
+                    this.addAttackAction(attacker, attackee)
                 }
                 else {
-                    this.attackStop(attacker)
+                    this.removeAttackAction(attacker)
                 }
             })
 
@@ -194,7 +194,7 @@ export default class ServerEngine {
             })
 
             socket.on(CONSTANTS.MOVE_TO, async (characterId: string, location: Point) => {
-                this.move(characterId, location)
+                this.addMoveAction(characterId, location)
             })
 
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
@@ -286,13 +286,13 @@ export default class ServerEngine {
         this.datastore.save(task)
     }
 
-    move(characterId: string, location: Point) {
-        this.gameEngine.moveCharacter(characterId, location)
+    addMoveAction(characterId: string, location: Point) {
+        this.gameEngine.addMoveAction(characterId, location)
         this.sendAndSaveCharacterUpdates([characterId])
     }
 
-    attackStop(attackerId: string) {
-        this.gameEngine.attackStop(attackerId)
+    removeAttackAction(attackerId: string) {
+        this.gameEngine.removeAttackAction(attackerId)
     }
 
     sendEvents(events: GameEvent[]) {
@@ -402,9 +402,9 @@ export default class ServerEngine {
         return player
     }
 
-    attack(attacker: string, attackee: string) {
+    addAttackAction(attacker: string, attackee: string) {
         //console.log('serverengine.attack')
-        this.gameEngine.attack(attacker, attackee, true, true)
+        this.gameEngine.addAttackAction(attacker, attackee, true, true)
         this.sendAndSaveCharacterUpdates([attacker, attackee])
     }
 

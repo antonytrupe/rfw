@@ -154,7 +154,7 @@ export default class GameEngine {
             }
 
             //if below 0 hps and not dead 
-            //TODO stable check
+            //stable check
             if (character.hp < 0 && character.hp > -10 && newTurn) {
                 //loose another hp
                 this.updateCharacter({ id: character.id, hp: clamp(character.hp - 1, -10, character.hp) })
@@ -173,7 +173,7 @@ export default class GameEngine {
                         //if the target is dead already, stop attacking it
                         //TODO this might not belong here
                         if (target.hp <= -10) {
-                            this.attackStop(character.id)
+                            this.removeAttackAction(character.id)
                             updatedCharacters.add(character.id)
                         }
 
@@ -212,11 +212,11 @@ export default class GameEngine {
                                         }
                                         //its(the target) (almost)dead, Jim
                                         //both characters stop attacking
-                                        this.attackStop(character.id)
+                                        this.removeAttackAction(character.id)
                                         updatedCharacters.add(character.id)
 
                                         //TODO this can probably go in a more general place when its the target's turn
-                                        this.attackStop(target.id)
+                                        this.removeAttackAction(target.id)
                                         updatedCharacters.add(target.id)
                                     }
                                     gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
@@ -238,7 +238,7 @@ export default class GameEngine {
                                 //fight back
                                 const triggerSocialAgro = false
                                 const triggerSocialAssist = true
-                                this.attack(target.id, character.id, triggerSocialAgro, triggerSocialAssist)
+                                this.addAttackAction(target.id, character.id, triggerSocialAgro, triggerSocialAssist)
                                 updatedCharacters.add(target.id)
                             }
                         }
@@ -385,60 +385,6 @@ export default class GameEngine {
         return newPosition
     }
 
-    private calculatePerpendicularPoint(rectangle: WorldObject, pointOnEdge: Point, distance: number): Point | null {
-        const { location, width, height, rotation } = rectangle
-
-        //Translate the point on the edge to the local coordinate system of the rotated rectangle
-        const translatedPoint = {
-            x: (pointOnEdge.x - location.x) * Math.cos(-rotation) - (pointOnEdge.y - location.y) * Math.sin(-rotation),
-            y: (pointOnEdge.x - location.x) * Math.sin(-rotation) + (pointOnEdge.y - location.y) * Math.cos(-rotation),
-        }
-
-        //Check if the translated point is on the left or right edge of the rectangle
-        const onLeftEdge = translatedPoint.x < -width / 2
-        const onRightEdge = translatedPoint.x > width / 2
-
-        //Check if the translated point is on the top or bottom edge of the rectangle
-        const onTopEdge = translatedPoint.y < -height / 2
-        const onBottomEdge = translatedPoint.y > height / 2
-
-        //Calculate the direction vector along the edge
-        let direction: Point
-
-        if (onLeftEdge) {
-            direction = { x: -1, y: 0 }
-        } else if (onRightEdge) {
-            direction = { x: 1, y: 0 }
-        } else if (onTopEdge) {
-            direction = { x: 0, y: -1 }
-        } else if (onBottomEdge) {
-            direction = { x: 0, y: 1 }
-        } else {
-            console.log('The point is not on any edge')
-            return null //The point is not on any edge
-        }
-
-        //Normalize the direction vector
-        const normalizedDirection = {
-            x: direction.x / Math.sqrt(direction.x ** 2 + direction.y ** 2),
-            y: direction.y / Math.sqrt(direction.x ** 2 + direction.y ** 2),
-        }
-
-        //Calculate the perpendicular point at the specified distance
-        const perpendicularPoint = {
-            x: location.x + translatedPoint.x + normalizedDirection.y * distance,
-            y: location.y + translatedPoint.y - normalizedDirection.x * distance,
-        }
-
-        //Transform the perpendicular point back to the global coordinate system
-        const globalPerpendicularPoint = {
-            x: perpendicularPoint.x * Math.cos(rotation) - perpendicularPoint.y * Math.sin(rotation) + location.x,
-            y: perpendicularPoint.x * Math.sin(rotation) + perpendicularPoint.y * Math.cos(rotation) + location.y,
-        }
-
-        return globalPerpendicularPoint
-    }
-
     private recruitHelp(character: Character, triggerSocialAgro: boolean) {
         console.log('recruitHelp')
         //TODO figure out who the aggressor was 
@@ -466,8 +412,8 @@ export default class GameEngine {
             //console.log('aggressor', aggressor)
             console.log('found someone to help')
             //move first, then attack. order matters    
-            this.moveCharacter(nearby[0].id, aggressor.location)
-            this.attack(nearby[0].id, aggressor.id, triggerSocialAgro, false)
+            this.addMoveAction(nearby[0].id, aggressor.location)
+            this.addAttackAction(nearby[0].id, aggressor.id, triggerSocialAgro, false)
         }
         return helper
     }
@@ -504,7 +450,7 @@ export default class GameEngine {
             return Math.abs(a) / a * .01
     }
 
-    moveCharacter(characterId: string, location: Point) {
+    addMoveAction(characterId: string, location: Point) {
         //unconscious check
         const character = this.getCharacter(characterId)
         if (!character || character?.hp! <= 0) {
@@ -517,7 +463,7 @@ export default class GameEngine {
         this.updateCharacter({ id: characterId, actions: actions })
     }
 
-    attackStop(attackerId: string): GameEngine {
+    removeAttackAction(attackerId: string): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
         const attackeeId = attacker?.target
@@ -536,7 +482,7 @@ export default class GameEngine {
         return this
     }
 
-    attack(attackerId: string, attackeeId: string, triggerSocialAgro: boolean, triggerSocialAssist: boolean): GameEngine {
+    addAttackAction(attackerId: string, attackeeId: string, triggerSocialAgro: boolean, triggerSocialAssist: boolean): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
         const newAttackAction: AttackAction = { action: 'attack', targetId: attackeeId, triggerSocialAgro: triggerSocialAgro, triggerSocialAssist: triggerSocialAssist }

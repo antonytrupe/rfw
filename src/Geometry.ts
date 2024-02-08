@@ -5,6 +5,60 @@ import Ray from "./types/Ray"
 import { SHAPE } from "./types/SHAPE"
 import WorldObject from "./types/WorldObject"
 
+
+function calculatePerpendicularPoint(rectangle: WorldObject, pointOnEdge: Point, distance: number): Point | null {
+    const { location, width, height, rotation } = rectangle
+
+    //Translate the point on the edge to the local coordinate system of the rotated rectangle
+    const translatedPoint = {
+        x: (pointOnEdge.x - location.x) * Math.cos(-rotation) - (pointOnEdge.y - location.y) * Math.sin(-rotation),
+        y: (pointOnEdge.x - location.x) * Math.sin(-rotation) + (pointOnEdge.y - location.y) * Math.cos(-rotation),
+    }
+
+    //Check if the translated point is on the left or right edge of the rectangle
+    const onLeftEdge = translatedPoint.x < -width / 2
+    const onRightEdge = translatedPoint.x > width / 2
+
+    //Check if the translated point is on the top or bottom edge of the rectangle
+    const onTopEdge = translatedPoint.y < -height / 2
+    const onBottomEdge = translatedPoint.y > height / 2
+
+    //Calculate the direction vector along the edge
+    let direction: Point
+
+    if (onLeftEdge) {
+        direction = { x: -1, y: 0 }
+    } else if (onRightEdge) {
+        direction = { x: 1, y: 0 }
+    } else if (onTopEdge) {
+        direction = { x: 0, y: -1 }
+    } else if (onBottomEdge) {
+        direction = { x: 0, y: 1 }
+    } else {
+        console.log('The point is not on any edge')
+        return null //The point is not on any edge
+    }
+
+    //Normalize the direction vector
+    const normalizedDirection = {
+        x: direction.x / Math.sqrt(direction.x ** 2 + direction.y ** 2),
+        y: direction.y / Math.sqrt(direction.x ** 2 + direction.y ** 2),
+    }
+
+    //Calculate the perpendicular point at the specified distance
+    const perpendicularPoint = {
+        x: location.x + translatedPoint.x + normalizedDirection.y * distance,
+        y: location.y + translatedPoint.y - normalizedDirection.x * distance,
+    }
+
+    //Transform the perpendicular point back to the global coordinate system
+    const globalPerpendicularPoint = {
+        x: perpendicularPoint.x * Math.cos(rotation) - perpendicularPoint.y * Math.sin(rotation) + location.x,
+        y: perpendicularPoint.x * Math.sin(rotation) + perpendicularPoint.y * Math.cos(rotation) + location.y,
+    }
+
+    return globalPerpendicularPoint
+}
 export function getNextPointOnLine(startPoint: Point, endPoint: Point, distance: number): Point {
     // Calculate the direction vector of the line
     const dx = endPoint.x - startPoint.x;
