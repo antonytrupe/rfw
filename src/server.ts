@@ -19,6 +19,14 @@ nextApp.prepare().then(async () => {
   })
   const engine: ServerEngine = new ServerEngine(io)
 
+
+  app.route('/api/reconnect')
+    .get(async (req, res) => {
+      engine.connect()
+      console.log('reconnected to datastore')
+      res.end()
+    })
+
   app.route('/api/characters')
     .get(async (req, res) => {
       if (req.query.reload == 'datastore') {
@@ -28,7 +36,7 @@ nextApp.prepare().then(async () => {
       res.json(Array.from(characters.values()))
     })
     .delete((req, res) => {
-      console.log('req.body',req.body)
+      console.log('req.body', req.body)
       //console.log('req.body',req.json)
 
       engine.deleteCharacters(req.body)
@@ -37,7 +45,7 @@ nextApp.prepare().then(async () => {
     })
     .post((req, res) => {
       //TODO updates
-      console.log('req.body',req.body)
+      console.log('req.body', req.body)
     })
 
 

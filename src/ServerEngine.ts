@@ -13,7 +13,7 @@ import GameEvent from "./types/GameEvent"
 import * as CLASSES from "./types/CLASSES.json"
 import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
- import WorldObject from "./types/WorldObject"
+import WorldObject from "./types/WorldObject"
 import { ZONETYPE } from "./types/ZONETYPE"
 import { SHAPE } from "./types/SHAPE"
 import { Datastore, PropertyFilter } from '@google-cloud/datastore'
@@ -28,16 +28,17 @@ export default class ServerEngine {
     private gameEngine: GameEngine
     private io: Server
     private templates: Map<string, WorldObject> = new Map()
-    private datastore = new Datastore({ projectId: 'rfw2-403802' })
+    private datastore: Datastore
     private playersByEmail: Map<string, Player> = new Map()
     private playersById: Map<string, Player> = new Map()
 
     constructor(io: Server) {
         this.io = io
         const eventEmitter: EventEmitter = new EventEmitter()
-        this.gameEngine = new GameEngine({ ticksPerSecond: 30 }, eventEmitter)
+        this.gameEngine = new GameEngine({ fps: 32 }, eventEmitter)
         this.on = eventEmitter.on.bind(eventEmitter)
 
+        this.connect()
         this.loadWorld()
 
         this.setUpListeners()
@@ -46,6 +47,10 @@ export default class ServerEngine {
 
         //start the gameengine
         this.start()
+    }
+
+    connect() {
+        this.datastore = new Datastore({ projectId: 'rfw2-403802' })
     }
 
     setUpListeners() {
@@ -692,7 +697,7 @@ export default class ServerEngine {
         })
     }
 
-    spawnCommunity({ size, race, location }: { size: COMMUNITY_SIZE, race: string, location: Point }) {
+    async spawnCommunity({ size, race, location }: { size: COMMUNITY_SIZE, race: string, location: Point }) {
         const started = (new Date()).getTime()
         const logging = false
         console.log('spawnCommunity')
@@ -959,7 +964,7 @@ export default class ServerEngine {
 
         const finished = (new Date()).getTime()
         if (finished - started > 5) {
-            console.log('step duration', finished - started)
+            console.log('spawnCommunity duration', finished - started)
         }
     }
 

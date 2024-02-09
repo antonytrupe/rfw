@@ -26,7 +26,7 @@ export default class GameEngine {
 
     private activeCharacters: Set<string> = new Set()
 
-    private ticksPerSecond: number
+    private fps: number
 
     private lastTimestamp: DOMHighResTimeStamp | undefined
     //lower number means faster, higher means slower
@@ -45,12 +45,12 @@ export default class GameEngine {
      * 60 frames per second is one frame every ~17 milliseconds
      * 30 frames per second is one frame every ~33 milliseconds
      */
-    constructor({ ticksPerSecond, doGameLogic = true }: { ticksPerSecond: number, doGameLogic?: boolean }, eventEmitter: EventEmitter) {
+    constructor({ fps, doGameLogic = true }: { fps: number, doGameLogic?: boolean }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
         //this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
         //this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
-        this.ticksPerSecond = ticksPerSecond
+        this.fps = fps
         this.doGameLogic = doGameLogic
     }
 
@@ -106,12 +106,37 @@ export default class GameEngine {
         const dt = now - this.lastTimestamp
         this.lastTimestamp = now
         this.step(dt, now)
+        //console.log('this.ticksPerSecond', this.ticksPerSecond)
+        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.fps)
 
-        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.ticksPerSecond)
+        this.addFrame(dt)
+        //console.log('average FPS', this.getAverageFPS().toFixed(1))
+        //console.log('FPS', 1000/dt)
+        if (dt > (1000 / this.fps) * 1.6) {
+            //console.log('long tick dt', dt)
+        }
+    }
+
+    private frameTimes: number[] = []
+
+    getAverageFPS(): number {
+        if (this.frameTimes.length === 0) {
+            return 0;
+        }
+        const total = this.frameTimes.reduce((acc, fps) => acc + fps, 0);
+        return 1000 / (total / this.frameTimes.length);
+    }
+
+    addFrame(dt: number) {
+        this.frameTimes.push(dt)
+        if (this.frameTimes.length > 1000) {
+            this.frameTimes.splice(0, 1)
+        }
     }
 
     //leave it public for testing
     step(dt: number, now: number): Set<string> {
+
         //console.log('GameEngine.step')
         const started = (new Date()).getTime()
         //Engine.update(this.engine, dt)

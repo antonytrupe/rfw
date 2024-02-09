@@ -47,7 +47,7 @@ export default class ClientEngine {
         this.updateChat = updateChat
         this.getCanvas = getCanvas
         let eventEmitter: EventEmitter = new EventEmitter()
-        this.gameEngine = new GameEngine({ ticksPerSecond: 30, doGameLogic: false }, eventEmitter)
+        this.gameEngine = new GameEngine({ fps: 30, doGameLogic: false }, eventEmitter)
         //this.emit = eventEmitter.emit.bind(eventEmitter)
 
         const observer = new ResizeObserver(() => {

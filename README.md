@@ -31,7 +31,7 @@ able to give characters goals(move to a new location, focus on a career)
 magical portals that let you fast travel but age you based on normal travel speed
 
 ## commands
-/create thorp|hamlet|village|small_town|large_town|small_city|large_city|metropolis human|etc
+/spawn thorp|hamlet|village|small_town|large_town|small_city|large_city|metropolis human|etc
 
 ## TODO LIST
 1. quest system
