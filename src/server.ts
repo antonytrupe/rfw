@@ -19,7 +19,6 @@ nextApp.prepare().then(async () => {
   })
   const engine: ServerEngine = new ServerEngine(io)
 
-
   app.route('/api/reconnect')
     .get(async (req, res) => {
       engine.connect()

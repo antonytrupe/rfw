@@ -39,7 +39,6 @@ export default class ClientEngine {
     private translateX = -20 * this.scale
     private translateY = -20 * this.scale
     private mousePosition: Point = { x: 0, y: 0 }
-    game_events: GameEvent[] = []
     templates: Map<string, WorldObject> = new Map()
 
     constructor(getCanvas: (() => HTMLCanvasElement), updateChat: { (message: string): void }) {
@@ -99,19 +98,12 @@ export default class ClientEngine {
                             break
                     }
                     break
-                default:
-                    this.socket?.emit(CONSTANTS.CHAT, {
-                        target: this.player?.controlledCharacter,
-                        message: message,
-                        type: 'command',
-                        time: new Date().getTime()
-                    })
-                    break
             }
         }
         else {
             if (!!this.player?.controlledCharacter) {
-                this.game_events.push({
+                const c = this.gameEngine.getCharacter(this.player.controlledCharacter)
+                c.events.push({
                     target: this.player?.controlledCharacter,
                     message: message,
                     type: 'say',
@@ -301,6 +293,7 @@ export default class ClientEngine {
                     else {
                         this.drawTombstone(ctx, character)
                     }
+                    this.drawCharacterEvents(ctx, character)
                 })
         }
         else if (this.scale < 1000) {
@@ -309,9 +302,6 @@ export default class ClientEngine {
                     this.drawWorldObject(ctx, wo)
                 })
         }
-
-        //draw events
-        this.drawEvents(ctx)
 
         //draw the scale
         if (this.scale <= 3) {
@@ -620,38 +610,21 @@ export default class ClientEngine {
         ctx.restore()
     }
 
-    private drawEvents(ctx: CanvasRenderingContext2D) {
-        //TODO somewhere handle multiple events for the same target not overlapping
+    drawCharacterEvents(ctx: CanvasRenderingContext2D, character: Character) {
         const now = (new Date()).getTime()
-        this.game_events.forEach((event, i) => {
-
-            //if its a recent event
-            if (event.type == 'attack' && !!event.amount) {
-                if (now - event.time < 2 * 1000) {
+        character.events.forEach((event, i) => {
+            //if its a recent event 
+            if (now - event.time < 2 * 1000) {
+                if (event.type == 'attack' || event.type == 'miss') {
                     this.drawDamage(ctx, event)
                 }
-                else {
-                    //drop off old events
-                    this.game_events.splice(i, 1)
-                }
-            }
-            if (event.type == 'miss') {
-                if (now - event.time < 2 * 1000) {
-                    this.drawDamage(ctx, event)
-                }
-                else {
-                    //drop off old events
-                    this.game_events.splice(i, 1)
-                }
-            }
-            else if (event.type == 'say') {
-                if (now - event.time < 6 * 1000) {
+                else if (event.type == 'say') {
                     this.drawSay(ctx, event)
                 }
-                else {
-                    //drop off old events
-                    this.game_events.splice(i, 1)
-                }
+            }
+            else {
+                //drop off old events
+                character.events.splice(i, 1)
             }
         })
     }
@@ -1271,14 +1244,11 @@ export default class ClientEngine {
 
             this.socket?.on(CONSTANTS.CHAT, (chat: GameEvent) => {
                 //console.log(chat)
-                this.game_events = this.game_events.concat(chat)
+                const target = this.gameEngine.getCharacter(chat.target)
+                target.events.push(chat)
                 if (chat.message) {
                     this.updateChat(chat?.message)
                 }
-            })
-
-            this.socket?.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
-                this.game_events = this.game_events.concat(events)
             })
 
             //character location data
@@ -1343,6 +1313,6 @@ export default class ClientEngine {
 
         const rect = { left: left, right: right, top: top, bottom: bottom }
         //console.log(rect)
-        return { ...rect, scale:this.scale }
+        return { ...rect, scale: this.scale }
     }
 }

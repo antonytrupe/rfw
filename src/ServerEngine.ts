@@ -59,11 +59,6 @@ export default class ServerEngine {
             //console.log('serverengine SERVER_CHARACTER_UPDATE')
             this.sendAndSaveCharacterUpdates(characters)
         })
-
-        this.on(CONSTANTS.GAME_EVENTS, (events: GameEvent[]) => {
-            console.log('serverengine GAME_EVENTS')
-            this.sendEvents(events)
-        })
     }
 
     setUpSocket() {
@@ -99,6 +94,8 @@ export default class ServerEngine {
             socket.on(CONSTANTS.CHAT, async (event: GameEvent) => {
                 //console.log('CONSTANTS.CHAT', event)
                 console.log('event.message', event.message![0])
+                const target = this.gameEngine.getCharacter(event.target)
+                target.events.push(event)
                 //console.log('event.message[0]', event?.message[0]) 
                 socket.broadcast.emit(CONSTANTS.CHAT, event)
             })
@@ -298,11 +295,6 @@ export default class ServerEngine {
 
     removeAttackAction(attackerId: string) {
         this.gameEngine.removeAttackAction(attackerId)
-    }
-
-    sendEvents(events: GameEvent[]) {
-        //console.log('sendEvents')
-        this.io.emit(CONSTANTS.GAME_EVENTS, events)
     }
 
     async savePlayer(player: Partial<Player>): Promise<Player> {

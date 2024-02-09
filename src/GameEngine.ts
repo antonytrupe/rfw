@@ -3,7 +3,6 @@ import Character from "./types/Character"
 import * as CONSTANTS from "./types/CONSTANTS"
 import GameWorld from "./GameWorld"
 import { clamp, roll } from "./utility"
-import GameEvent from "./types/GameEvent"
 import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
@@ -150,7 +149,6 @@ export default class GameEngine {
         }
         //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Set<string> = new Set()
-        const gameEvents: GameEvent[] = []
 
         //TODO get them in initiative order
         //TODO put different initiatives at different ticks in the turn
@@ -244,12 +242,11 @@ export default class GameEngine {
                                         this.removeAttackAction(target.id)
                                         updatedCharacters.add(target.id)
                                     }
-                                    gameEvents.push({ target: target.id, type: 'attack', amount: damage, time: now })
-
+                                    target.events.push({ target: target.id, type: 'attack', amount: damage, time: now })
                                 }
                                 else {
                                     //console.log('miss', attack)
-                                    gameEvents.push({ target: target!.id, type: 'miss', amount: 0, time: now })
+                                    target.events.push({ target: target!.id, type: 'miss', amount: 0, time: now })
                                 }
                             })
                             //done doing attacks
@@ -346,11 +343,6 @@ export default class GameEngine {
         if (updatedCharacters.size > 0) {
             //tell the server engine about the updated characters
             this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
-        }
-
-        if (gameEvents.length > 0) {
-            //tell the serverengine about the events
-            this.emit(CONSTANTS.GAME_EVENTS, gameEvents)
         }
 
         const finished = (new Date()).getTime()

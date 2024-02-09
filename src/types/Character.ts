@@ -3,6 +3,7 @@ import Point from "./Point"
 import { ZONETYPE } from "./ZONETYPE"
 import { SHAPE } from "./SHAPE"
 import WorldObject from "./WorldObject"
+import { GameEvents } from "./GameEvent"
 
 export default class Character extends WorldObject implements CharacterInterface {
     //matterId: number
@@ -23,6 +24,7 @@ export default class Character extends WorldObject implements CharacterInterface
     targeters: string[]
     actions: Actions
     actionsRemaining: number
+    events: GameEvents = []
     birthdate: Date
     age: number
     race: string

@@ -5,3 +5,5 @@ export default interface GameEvent {
     time: number
     message?: string
 }
+
+export type GameEvents = GameEvent[]
