@@ -621,6 +621,9 @@ export default class ClientEngine {
                 else if (event.type == 'say') {
                     this.drawSay(ctx, event)
                 }
+                else if (event.type == 'roll') {
+                    this.drawSay(ctx, event)
+                }
             }
             else {
                 //drop off old events

@@ -8,6 +8,17 @@ export function roll({ size = 20, count = 1, modifier = 0 }: { size?: number, co
     return sum
 }
 
+export function roll1({ size = 20, count = 1, modifier = 0 }: { size?: number, count?: number, modifier?: number }): { total: number, rolls: number[] } {
+    let sum = modifier
+    const rolls = []
+    for (let i = 0; i < count; i++) {
+        const r = Math.floor(Math.random() * size + 1)
+        rolls.push(r)
+        sum += r
+    }
+    return { total: sum, rolls }
+}
+
 export function getRandomPoint({ origin: { x, y }, radius }: { origin: Point, radius: number }) {
     const direction = Math.random() * Math.PI * 2
     const r = Math.random() * radius

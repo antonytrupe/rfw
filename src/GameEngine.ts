@@ -180,8 +180,9 @@ export default class GameEngine {
             //stable check
             if (character.hp < 0 && character.hp > -10 && newTurn) {
                 //loose another hp
+                //add an event
+                character.events.push({ target: character!.id, type: 'attack', amount: 1, time: now })
                 this.updateCharacter({ id: character.id, hp: clamp(character.hp - 1, -10, character.hp) })
-                //updatedCharacters.add(character.id)
             }
 
             if (character.actions.length > 0 && character.actionsRemaining > 0) {
@@ -213,10 +214,13 @@ export default class GameEngine {
                             character.bab.forEach((bab) => {
                                 //roll for attack
                                 const attack = roll({ size: 20, modifier: bab })
+                                character.events.push({ target: character!.id, type: 'roll', amount:attack, time: now })
+
                                 if (attack > 10) {
                                     //console.log('hit', attack)
                                     //roll for damage
                                     const damage = roll({ size: 6 })
+                                    character.events.push({ target: character!.id, type: 'roll', amount:damage, time: now })
 
                                     //update the target's hp, clamped to -10 and maxHp
                                     this.takeDamage(target, damage)
@@ -224,6 +228,7 @@ export default class GameEngine {
                                     //if the target was alive but now its dieing
                                     if (target.hp > 0 && target.hp <= damage) {
                                         //give xp
+                                        //TODO add an event
                                         character = this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
                                             .getCharacter(character.id)!
                                         updatedCharacters.add(character.id)
@@ -231,6 +236,7 @@ export default class GameEngine {
                                         if (character.xp >= LEVELS[(character.level + 1).toString() as keyof typeof LEVELS]) {
                                             character = this.updateCharacter({ id: character.id, level: character.level + 1 })
                                                 .getCharacter(character.id)!
+                                            //TODO add an event
                                             updatedCharacters.add(character.id)
                                         }
                                         //its(the target) (almost)dead, Jim
