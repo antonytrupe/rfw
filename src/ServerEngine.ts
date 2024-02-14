@@ -322,7 +322,11 @@ export default class ServerEngine {
         //console.log(3)
 
         //console.log(d.data)
-        return new Player(d.data)
+
+        this.playersByEmail.set(d.data.email, d.data)
+        this.playersById.set(d.data.id, d.data)
+
+        return d.data
     }
 
     deletePlayers(playerIds: string[]) {
@@ -638,6 +642,12 @@ export default class ServerEngine {
             .catch((error) => {
                 console.log('failed to load characters', error)
             })
+    }
+
+    updateCharacter(character: Character) {
+        //console.log(character)
+        return this.gameEngine.updateCharacter(character)
+            .getCharacter(character.id)
     }
 
     //only persists, doesn't add to engine

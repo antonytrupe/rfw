@@ -2,7 +2,7 @@
 import './table.scss'
 import { Suspense, useEffect, useState } from "react"
 
-export default function CharacterList({ columns, id = "id", endpoint }) {
+export default function DataTable({ columns, id = "id", endpoint }) {
 
 
     //TODO remember the sort order
@@ -43,9 +43,9 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
 
     function checkRow(id: string): void {
         if (!selected.includes(id)) {
-            setSelected([...selected, id]);
+            setSelected([...selected, id])
         } else {
-            setSelected(selected.filter((item) => item !== id));
+            setSelected(selected.filter((item) => item !== id))
         }
 
         if (selected.length != data.length) {
@@ -54,6 +54,23 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
         else {
             setAllSelected(true)
         }
+    }
+
+    function updateRow(id: string, formData: FormData) {
+
+        fetch(endpoint, {
+            method: "PATCH",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({...Object.fromEntries(formData),id})
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setData(data)
+            })
+
+        setEditId('')
     }
 
     function deleteItems() {
@@ -72,20 +89,20 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
     }
 
     function reloadDatastore(): void {
-        fetch(endpoint+'?reload=datastore')
+        fetch(endpoint + '?reload=datastore')
             .then((res) => res.json())
             .then((data) => {
                 setData(data)
             })
-      }
-    
-      function reloadMemory(): void {
+    }
+
+    function reloadMemory(): void {
         fetch(endpoint)
-        .then((res) => res.json())
-        .then((data) => {
-            setData(data)
-        })
-      }
+            .then((res) => res.json())
+            .then((data) => {
+                setData(data)
+            })
+    }
 
     return (<>
         <button onClick={reloadDatastore}>reload from datastore</button>
@@ -130,18 +147,40 @@ export default function CharacterList({ columns, id = "id", endpoint }) {
             </div>
             <Suspense fallback={<span>loading</span>}>
                 {data.map((item) => {
-                    return (
-                        <div className="table-row" key={item[id]}>
-                            <span className="table-cell" ><input type="checkbox" onChange={() => checkRow(item[id])} checked={selected.includes(item[id])} />
-                            </span>
-                            {columns.map(({ label, name }: { label: string, name: string }) => {
-                                return <span key={name} className="table-cell" onClick={() => rowClick(item[id])} onDoubleClick={() => setEditId(item[id])}>
-                                    {item[id] == editId ? (<input size={(item as any)[name]?.toString().length} defaultValue={(item as any)[name]} />) : (item as any)[name]}
-                                </span>
-                            })}
-                        </div>)
+                    return item[id] == editId ?
+                        <DataTableRowForm key={item[id]} columns={columns} item={item} id={id} checkRow={checkRow} selected={selected.includes(item[id])} updateRow={updateRow} /> :
+                        <DataTableRow key={item[id]} columns={columns} item={item} id={id} rowClick={rowClick} setEditId={setEditId}
+                            checkRow={checkRow} selected={selected.includes(item[id])} />
                 })}
             </Suspense>
         </div></>
     )
+}
+
+export function DataTableRowForm({ columns, item, id = "id", checkRow, selected, updateRow }) {
+
+    return (<form action={updateRow.bind(null, item[id])} className="table-row" >
+        <span className="table-cell" >
+            <input type="checkbox" onChange={() => checkRow(item[id])} checked={selected} />
+            <button>save</button>
+        </span>
+
+        {columns.map(({ label, name }: { label: string, name: string }) => {
+            return <span key={name} className="table-cell"  >
+                <input size={(item as any)[name]?.toString().length} name={name} defaultValue={(item as any)[name]} />
+            </span>
+        })}</form>)
+}
+
+export function DataTableRow({ columns, item, id = "id", rowClick, setEditId, checkRow, selected }) {
+    return (<div className="table-row"  >
+        <span className="table-cell" >
+            <input type="checkbox" onChange={() => checkRow(item[id])} checked={selected} />
+        </span>
+
+        {columns.map(({ label, name }: { label: string, name: string }) => {
+            return <span key={name} className="table-cell" onClick={() => rowClick(item[id])} onDoubleClick={() => setEditId(item[id])}>
+                {(item as any)[name]}
+            </span>
+        })}</div>)
 }

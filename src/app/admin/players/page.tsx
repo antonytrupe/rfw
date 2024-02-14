@@ -1,4 +1,4 @@
-import Table from '../Table'
+import Table from '../DataTable'
 
 export default async function Page() {
 
