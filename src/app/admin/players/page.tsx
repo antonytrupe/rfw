@@ -4,7 +4,7 @@ export default async function Page() {
 
   const columns = [{ label: "Email", name: "email" },
   { label: "Claimed Characters", name: "claimedCharacters" },
-  { label: "Controlled Characters", name: "controlledCharacter" },
+  { label: "Controlled Character", name: "controlledCharacter" },
   { label: "Max Claimed Characters", name: "maxClaimedCharacters" },
   { label: "Quests", name: "quests" },
   ]
