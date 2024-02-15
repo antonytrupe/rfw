@@ -58,8 +58,6 @@ nextApp.prepare().then(async () => {
       res.json(Array.from(players.values()))
     })
     .patch(async (req, res) => {
-      //TODO updates
-      console.log('player patch req.body', req.body)
       await engine.savePlayer(new Player(req.body))
       const players = engine.getAllPlayers()
       res.json(Array.from(players.values()))

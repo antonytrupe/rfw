@@ -58,12 +58,18 @@ export default function DataTable({ columns, id = "id", endpoint }) {
 
     function updateRow(id: string, formData: FormData) {
 
+        let body = Object.fromEntries(Object.entries(Object.fromEntries(formData)).map(([k, v]: [k: any, v: any]) => {
+            return [k, JSON.parse(v)]
+        }))
+
+        body = { ...body, id }
+
         fetch(endpoint, {
             method: "PATCH",
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({...Object.fromEntries(formData),id})
+            body: JSON.stringify(body)
         })
             .then((res) => res.json())
             .then((data) => {
@@ -167,7 +173,7 @@ export function DataTableRowForm({ columns, item, id = "id", checkRow, selected,
 
         {columns.map(({ label, name }: { label: string, name: string }) => {
             return <span key={name} className="table-cell"  >
-                <input size={(item as any)[name]?.toString().length} name={name} defaultValue={(item as any)[name]} />
+                <input size={(item as any)[name]?.toString().length} name={name} defaultValue={JSON.stringify((item as any)[name])} />
             </span>
         })}</form>)
 }
@@ -180,7 +186,7 @@ export function DataTableRow({ columns, item, id = "id", rowClick, setEditId, ch
 
         {columns.map(({ label, name }: { label: string, name: string }) => {
             return <span key={name} className="table-cell" onClick={() => rowClick(item[id])} onDoubleClick={() => setEditId(item[id])}>
-                {(item as any)[name]}
+                {JSON.stringify((item as any)[name])}
             </span>
         })}</div>)
 }

@@ -1,4 +1,4 @@
-import Table from '../DataTable'
+import DataTable from '../DataTable'
 
 export default async function Page() {
 
@@ -9,5 +9,5 @@ export default async function Page() {
   { label: "Quests", name: "quests" },
   ]
 
-  return <Table columns={columns} endpoint='/api/players' />
+  return <DataTable columns={columns} endpoint='/api/players' />
 }
