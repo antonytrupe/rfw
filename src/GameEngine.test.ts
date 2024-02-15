@@ -10,9 +10,9 @@ describe('GameEngine', () => {
 
 
     beforeEach(() => {
-        const ticksPerSecond = 1
+        const fps = 1
         eventEmitter = new EventEmitter()
-        gameEngine = new GameEngine({ ticksPerSecond }, eventEmitter)
+        gameEngine = new GameEngine({ fps }, eventEmitter)
     })
 
     test('should add 3 new chararacters', () => {
@@ -326,8 +326,8 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(1000, 0)
             //check the characters position
-            const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(5)
+            const nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBe(0)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
             expect(nc.speedAcceleration).toBe(0)
@@ -365,8 +365,8 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(600, 0)
             //check the characters position
-            const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(0)
+            const nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBe(1.5)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(30)
         })
@@ -377,22 +377,22 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(400, 0)
             //check the characters position
-            let nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(0)
+            let nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBeCloseTo(1.33)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(40)
 
             gameEngine.step(200, 400)
-            nc = gameEngine.getCharacter(c.id)!
+            nc = gameEngine.getCharacter(c.id)
 
-            expect(nc.location.x).toBeCloseTo(1.333)
+            expect(nc.location.x).toBeCloseTo(3)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(60)
 
             gameEngine.step(100, 600)
-            nc = gameEngine.getCharacter(c.id)!
+            nc = gameEngine.getCharacter(c.id)
 
-            expect(nc.location.x).toBeCloseTo(2.333)
+            expect(nc.location.x).toBeCloseTo(4)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(60)
 
@@ -404,8 +404,8 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(1, 0)
             //check the characters position
-            const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(.01)
+            const nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBeCloseTo(.01)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).not.toBe(30)
         })
@@ -416,8 +416,8 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(600, 0)
             //check the characters position
-            const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(3)
+            const nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBe(0)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
         })
@@ -428,8 +428,8 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(600, 0)
             //check the characters position
-            const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(6)
+            const nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBe(3)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
         })
@@ -440,8 +440,8 @@ describe('GameEngine', () => {
             //move the character
             gameEngine.step(600, 0)
             //check the characters position
-            const nc = gameEngine.getCharacter(c.id)!
-            expect(nc.location.x).toBe(6)
+            const nc = gameEngine.getCharacter(c.id)
+            expect(nc.location.x).toBe(3)
             expect(nc.location.y).toBe(0)
             expect(nc.speed).toBe(0)
         })
