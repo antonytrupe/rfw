@@ -400,15 +400,18 @@ export default class ClientEngine {
         const fontSize = 16 * this.scale
         ctx.font = fontSize + "px Futura Extra Bold"
         const info = []
+        info.push(character.name)
         info.push('Level ' + character.level + ' ' + character.race.toLowerCase() + ' ' + character.characterClass.toLowerCase())
         info.push(character.hp + ' hitpoints')
-        //info.push('mmmmmmmm.mmmmmmmm')
 
-        const padding = 16 * this.scale
-        const width = ctx.measureText(info[0]).width + (padding * 2)
-        const height = fontSize * info.length + (padding * 2)
-        //console.log('height', height)
-        //console.log('width', width)
+        const padding = 12 * this.scale
+
+        const width = info.reduce((width, line) => {
+            return Math.max(ctx.measureText(line).width + (padding * 2), width)
+        },0)
+
+        // const width = ctx.measureText(info[1]).width + (padding * 2)
+        const height = (fontSize+padding) * info.length + (padding * 1)
 
         //move up and to the lft
         ctx.translate(-width / 2, -character.radiusX * this.PIXELS_PER_FOOT - height)
@@ -430,13 +433,19 @@ export default class ClientEngine {
         //move to the right
         ctx.translate(width / 2, 0)
 
-        ctx.fillText(info[0],
-            0,
-            padding * 2)
+        info.forEach((line, i) => {
+            ctx.fillText(line,
+                0,
+                padding * (i+2) + fontSize * i)
+        })
 
-        ctx.fillText(info[1],
-            0,
-            padding * 2 + fontSize)
+        // ctx.fillText(info[0],
+        //     0,
+        //     padding * 2)
+
+        // ctx.fillText(info[1],
+        //     0,
+        //     padding * 2 + fontSize)
         //ctx.fill()
         ctx.restore()
     }
@@ -776,8 +785,6 @@ export default class ClientEngine {
             ctx.stroke()
             ctx.restore()
         }
-
-
 
         ctx.save()
         ctx.translate(character.location.x * this.PIXELS_PER_FOOT, character.location.y * this.PIXELS_PER_FOOT)

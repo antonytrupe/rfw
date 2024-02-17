@@ -70,6 +70,7 @@ export default class ServerEngine {
                 //console.log(session)
                 if (!!session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
+                    //console.log(player)
                     if (!player) {
                         player = await this.savePlayer({ email: session.user.email, id: uuidv4() })
                         this.playersByEmail.set(player.email, player)
