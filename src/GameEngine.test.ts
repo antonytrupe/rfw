@@ -172,7 +172,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should keep going straight', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 0, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 0, y: 40 } }] })
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotation).toBe(N)
                     expect(u?.rotationAcceleration).toBe(0)
@@ -182,7 +182,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn NW', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: -40, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBeCloseTo(LEFT)
@@ -199,7 +199,7 @@ describe('GameEngine', () => {
             describe("when starting facing east/right", () => {
 
                 test('should keep going straight', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 40, y: 0 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 40, y: 0 } }] })
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotation).toBe(E)
                     expect(u?.rotationAcceleration).toBe(0)
@@ -209,7 +209,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn NE/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 40, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -222,7 +222,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn N/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 0, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 0, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -235,7 +235,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn NW/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: -40, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -248,7 +248,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn W/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: -40, y: 0 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: 0 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -261,7 +261,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn SW/right', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: -40, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: 40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(RIGHT)
@@ -274,7 +274,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn S/right', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 0, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 0, y: 40 } }] })
                     //console.log('step 1')
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
@@ -290,7 +290,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn SE/right', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ action: 'move', location: { x: 40, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 40, y: 40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(RIGHT)

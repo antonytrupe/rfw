@@ -10,8 +10,8 @@ type BaseAction = {
     //character: Character
     repeat?: boolean
     cycle?: boolean
-    delay: number
-    turn: number
+    delay?: number
+    turn?: number
     //do: () => {}
 }
 
