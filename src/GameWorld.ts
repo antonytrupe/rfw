@@ -260,19 +260,19 @@ export default class GameWorld {
 
     /**
      * ONLY send updated values, don't update the whole character and send it
-     * @param character the values that we want to change 
+     * @param updates the values that we want to change 
      * @returns 
      */
-    updateCharacter(character: Partial<Character>): GameWorld {
+    updateCharacter(updates: Partial<Character>): GameWorld {
         //if we don't have a character id, give up
         //console.log('character', character)
-        if (!character?.id) {
+        if (!updates?.id) {
             return this
         }
 
-        const old: Character | undefined = this.characters.get(character.id)
+        const old: Character | undefined = this.characters.get(updates.id)
         //console.log('old',old)
-        const merged: Character = { ...new Character({}), ...old, ...character, }
+        const merged: Character = new Character({ ...old, ...updates })
         //console.log('merged', merged)
 
         if ((!merged.location.x && merged.location.x != 0) || (!merged.location.y && merged.location.y != 0)) {
@@ -294,13 +294,13 @@ export default class GameWorld {
         //if the new zone doesn't exist
         if (!newZone) {
             //create it and add them to it
-            newZone = new Set([character.id])
+            newZone = new Set([updates.id])
             this.zones.set(newZoneName, newZone)
         }
 
         //the new zone exists but they're not in it
-        if (!Array.from(newZone.values()).includes(character.id)) {
-            newZone.add(character.id)
+        if (!Array.from(newZone.values()).includes(updates.id)) {
+            newZone.add(updates.id)
             updatedZones.set(newZoneName, newZone)
         }
 
@@ -314,7 +314,7 @@ export default class GameWorld {
                 let oldZone = this.zones.get(newZoneName)
                 if (oldZone) {
                     //let i = oldZone.indexOf(character.id)
-                    oldZone.delete(character.id)
+                    oldZone.delete(updates.id)
                     updatedZones.set(oldZoneName, oldZone)
                 }
             }

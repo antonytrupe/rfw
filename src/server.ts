@@ -74,5 +74,3 @@ nextApp.prepare().then(async () => {
 }).catch(()=>{
   console.log('oops')
 })
-
-console.log('did we get here')

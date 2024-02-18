@@ -18,7 +18,6 @@ export default class WorldObject implements WorldObjectInterface {
     physics: boolean
 
     constructor({ id = '__test__',
-        name = "__test__",
         location = { x: 0, y: 0 },
         rotation = 0,
         shape = SHAPE.CIRCLE,

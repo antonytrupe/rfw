@@ -28,6 +28,11 @@ export default class Character extends WorldObject implements CharacterInterface
     age: number
     race: string
     xp: number
+    doActions(): void {
+        this.actions.forEach((action) => {
+            !!action.do ? action.do() : ''
+        })
+    }
 
     constructor({
         id = "__test__",
@@ -81,11 +86,7 @@ export default class Character extends WorldObject implements CharacterInterface
         this.age = age
         this.race = race
     }
-    doActions?() {
-        this.actions.forEach((action) => {
-            !!action.do ? action.do() : ''
-        })
-    }
+
 }
 
 export interface CharacterInterface {
