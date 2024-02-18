@@ -23,7 +23,7 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
-    private activeCharacters: Set<string> = new Set()
+    private activeCharacters: Map<number, Set<string>> = new Map()
 
     private fps: number
 
@@ -39,6 +39,7 @@ export default class GameEngine {
     private timeoutID: NodeJS.Timeout | undefined
     private doGameLogic: boolean
     private quests = quests
+    private currentTurn: number
 
     /**
      * 60 frames per second is one frame every ~17 milliseconds
@@ -90,7 +91,8 @@ export default class GameEngine {
     }
 
     deleteCharacter(characterId: string) {
-        this.activeCharacters.delete(characterId)
+        //TODO find all the turns this character has actions queued for
+        this.activeCharacters.get(0).delete(characterId)
         this.gameWorld.deleteCharacter(characterId)
     }
 
@@ -142,10 +144,11 @@ export default class GameEngine {
 
         //figure out if this is the first step of a new turn
         const lastTurn = Math.floor((now - dt) / 1000 / 6)
-        const currentTurn = Math.floor(now / 1000 / 6)
+        this.currentTurn = Math.floor(now / 1000 / 6)
         let newTurn = false
-        if (lastTurn != currentTurn) {
+        if (lastTurn != this.currentTurn) {
             newTurn = true
+            console.log('turn number', this.currentTurn)
         }
         //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Set<string> = new Set()
@@ -153,7 +156,8 @@ export default class GameEngine {
         //TODO get them in initiative order
         //TODO put different initiatives at different ticks in the turn
         //console.log('active characters:', this.activeCharacters.size)
-        this.activeCharacters.forEach((id) => {
+
+        new Set([...this.activeCharacters.get(this.currentTurn),...this.activeCharacters.get(0)]).forEach((id) => {
             let character: Character = this.getCharacter(id)!
 
             if (newTurn) {
@@ -190,7 +194,7 @@ export default class GameEngine {
                 const action = character.actions[0]
                 //combat
                 //actions that are only done on the server(attack/damage)
-                if (action.action == 'attack' && this.doGameLogic && !!action.targetId) {
+                if (action.type == 'attack' && this.doGameLogic && !!action.targetId) {
                     //get the target
                     const target = this.getCharacter(action.targetId)
                     if (target && !!target.id) {
@@ -214,13 +218,13 @@ export default class GameEngine {
                             character.bab.forEach((bab) => {
                                 //roll for attack
                                 const attack = roll({ size: 20, modifier: bab })
-                                character.events.push({ target: character!.id, type: 'roll', amount:attack, time: now })
+                                character.events.push({ target: character!.id, type: 'roll', amount: attack, time: now })
 
                                 if (attack > 10) {
                                     //console.log('hit', attack)
                                     //roll for damage
                                     const damage = roll({ size: 6 })
-                                    character.events.push({ target: character!.id, type: 'roll', amount:damage, time: now })
+                                    character.events.push({ target: character!.id, type: 'roll', amount: damage, time: now })
 
                                     //update the target's hp, clamped to -10 and maxHp
                                     this.takeDamage(target, damage)
@@ -277,7 +281,7 @@ export default class GameEngine {
                         }
                     }
                 }
-                else if (action.action == 'move' && !!action.location) {
+                else if (action.type == 'move' && !!action.location) {
                     const dist = distanceBetweenPoints(action.location, character.location)
                     let targetRotation
                     let turnRotation = 0
@@ -312,7 +316,7 @@ export default class GameEngine {
 
                     if (turnRotation == 0 && speedAcceleration == 0) {
                         //we got there, so clear all move actions
-                        actions = actions.filter((action) => { return action.action != 'move' })
+                        actions = actions.filter((action) => { return action.type != 'move' })
                     }
 
                     character = this.updateCharacter({
@@ -484,7 +488,7 @@ export default class GameEngine {
         }
         //clear other move actions and add new move action
         //add the new action to the end or beginning?
-        const actions: Actions = [{ action: 'move', location: location }, ...character.actions.filter((action) => { return action.action != 'move' })]
+        const actions: Actions = [{ type: 'move', location: location, delay: 0, turn: this.currentTurn }, ...character.actions.filter((action) => { return action.type != 'move' })]
 
         this.updateCharacter({ id: characterId, actions: actions })
     }
@@ -494,7 +498,7 @@ export default class GameEngine {
         const attacker = this.getCharacter(attackerId)!
         const attackeeId = attacker?.target
 
-        const actions = attacker.actions.filter((action) => { return action.action != 'attack' })
+        const actions = attacker.actions.filter((action) => { return action.type != 'attack' })
         this.updateCharacter({ id: attackerId, target: "", actions: actions })
 
         if (!!attackeeId) {
@@ -511,8 +515,15 @@ export default class GameEngine {
     addAttackAction(attackerId: string, attackeeId: string, triggerSocialAgro: boolean, triggerSocialAssist: boolean): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
-        const newAttackAction: AttackAction = { action: 'attack', targetId: attackeeId, triggerSocialAgro: triggerSocialAgro, triggerSocialAssist: triggerSocialAssist }
-        const actions = [...attacker.actions.filter((action) => { return action.action != 'attack' }), newAttackAction]
+        const newAttackAction: AttackAction = {
+            type: 'attack',
+            targetId: attackeeId,
+            triggerSocialAgro: triggerSocialAgro,
+            triggerSocialAssist: triggerSocialAssist,
+            delay: 0,
+            turn: this.currentTurn
+        }
+        const actions = [...attacker.actions.filter((action) => { return action.type != 'attack' }), newAttackAction]
 
         this.updateCharacter({ id: attackerId, target: attackeeId, actions: actions })
         if (attackeeId) {
@@ -599,7 +610,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'move' })
         this.updateCharacter({ id: character.id, mode: 2, actions: actions })
         return true
     }
@@ -613,7 +624,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'move' })
         this.updateCharacter({ id: character.id, rotationAcceleration: 0, actions: actions })
         return true
     }
@@ -630,7 +641,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'move' })
         this.updateCharacter({ id: character.id, speedAcceleration: -1, actions: actions })
         return true
     }
@@ -647,7 +658,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'move' })
         this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
         return true
     }
@@ -664,7 +675,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'move' })
         this.updateCharacter({ id: character.id, rotationAcceleration: LEFT, actions: actions })
         return true
     }
@@ -681,7 +692,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.action != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'move' })
         this.updateCharacter({ id: character.id, rotationAcceleration: RIGHT, actions: actions })
         return true
     }
@@ -718,11 +729,13 @@ export default class GameEngine {
             (character.hp <= 0 && character.hp > -10))
         ) {
             //console.log('activating', character.id)
-            this.activeCharacters.add(character.id)
+            //TODO change this to an action in the right turn
+            this.activeCharacters.get(0).add(character.id)
         }
         else if (!!character) {
             //console.log('deactivating', character.id)
-            this.activeCharacters.delete(character.id)
+            //TODO remove the character from all the turns it has actions for
+            this.activeCharacters.get(0).delete(character.id)
         }
         return this
     }

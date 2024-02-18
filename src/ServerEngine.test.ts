@@ -12,11 +12,19 @@ import Character from "./types/Character"
 import { Datastore } from '@google-cloud/datastore'
 import Emulator from 'google-datastore-emulator';
 import Player from "./types/Player";
+import { exec } from "child_process";
 //const Emulator = require('google-datastore-emulator');
 
 
 describe.skip('datastore basics', () => {
     let emulator: Emulator
+
+    beforeAll(() => {
+        const { stdout, stderr } = exec('ls');
+        console.log('stdout:', stdout);
+        console.log('stderr:', stderr);
+
+    })
     beforeEach(async () => {
         process.env.GCLOUD_PROJECT = 'rfw2-403802';
         const options = {
@@ -26,6 +34,9 @@ describe.skip('datastore basics', () => {
         await emulator.start()
 
         const io = new Server()
+    })
+    test('example datastore save', async () => {
+        expect(true)
     })
     test('example datastore save', async () => {
         const datastore = new Datastore({ projectId: 'rfw2-403802' })
