@@ -11,23 +11,26 @@ const port: number = parseInt(process.env.PORT || '3000', 10)
 const dev: boolean = process.env.NODE_ENV !== 'production'
 const nextApp = next({ dev })
 const nextHandler: NextApiHandler = nextApp.getRequestHandler()
+console.log('starting server')
 
 nextApp.prepare().then(async () => {
+  console.log(1)
   const app = express()
   app.use(express.json())
   const server = createServer(app)
   const io = new Server(server, {
     path: REALTIME_API_PATH
   })
+  console.log(2)
   const engine: ServerEngine = new ServerEngine(io)
-
+  console.log(3)
   app.route('/admin/reconnect')
     .get(async (req, res) => {
       engine.connect()
       //console.log('reconnected to datastore')
       res.json({ reconnected: true })
     })
-
+  console.log(4)
   app.route('/api/characters')
     .get(async (req, res) => {
       if (req.query.reload == 'datastore') {
@@ -74,3 +77,5 @@ nextApp.prepare().then(async () => {
     )
   })
 })
+
+console.log('did we get here')

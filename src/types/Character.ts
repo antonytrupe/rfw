@@ -52,7 +52,8 @@ export default class Character extends WorldObject implements CharacterInterface
         actions = [],
         actionsRemaining = 1,
         age = 30,
-        race = "HUMAN"
+        race = "HUMAN",
+
     }: CharacterInterface) {
         super({ id: id, location: location, rotation: rotation, shape: SHAPE.CIRCLE, radiusX: 2.5, zoneType: [ZONETYPE.TACTICAL] })
         this.id = id
@@ -80,9 +81,14 @@ export default class Character extends WorldObject implements CharacterInterface
         this.age = age
         this.race = race
     }
+    doActions?() {
+        this.actions.forEach((action) => {
+            !!action.do ? action.do() : ''
+        })
+    }
 }
 
-interface CharacterInterface {
+export interface CharacterInterface {
     id?: string
     name?: string
     playerId?: string

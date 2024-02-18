@@ -10,7 +10,7 @@
         "src/GameWorld.ts",
         "src/Geometry.ts",
         "src/server.ts"
-    ],
+     ],
     "ext": "js json ts tsx jsx",
     "exec": "ts-node --project tsconfig.server.json src/server.ts",
     "delay": "6000"

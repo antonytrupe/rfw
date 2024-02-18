@@ -1,5 +1,5 @@
 import EventEmitter from "events"
-import Character from "./types/Character"
+import Character, { CharacterInterface } from "./types/Character"
 import * as CONSTANTS from "./types/CONSTANTS"
 import GameWorld from "./GameWorld"
 import { clamp, roll } from "./utility"
@@ -149,7 +149,11 @@ export default class GameEngine {
         if (lastTurn != this.currentTurn) {
             newTurn = true
             console.log('turn number', this.currentTurn)
+            if (lastTurn + 1 != this.currentTurn) {
+                console.log(`missed turns between ${lastTurn} and ${this.currentTurn}`)
+            }
         }
+
         //clients only need acceleration changes, they can keep calculating new locations themselves accurately
         const updatedCharacters: Set<string> = new Set()
 
@@ -188,6 +192,8 @@ export default class GameEngine {
                 character.events.push({ target: character!.id, type: 'attack', amount: 1, time: now })
                 this.updateCharacter({ id: character.id, hp: clamp(character.hp - 1, -10, character.hp) })
             }
+
+            character.doActions()
 
             if (character.actions.length > 0 && character.actionsRemaining > 0) {
                 //console.log('doing an action')
@@ -782,7 +788,7 @@ export default class GameEngine {
         return 500
     }
 
-    private calculateSpeed(character: Character, dt: number) {
+    private calculateSpeed(character: CharacterInterface, dt: number) {
         let newSpeed = 0
         //soft caps might be the same as hard caps
         //if mode or acceleration are 0 then the soft caps get pushed to 0
@@ -903,7 +909,7 @@ export default class GameEngine {
         return newAngle
     }
 
-    private calculatePosition(character: Character, dt: number) {
+    private calculatePosition(character: CharacterInterface, dt: number) {
 
         //r = v ^ 2 / g * sin(2θ)
         //const distanceTraveled = character.speed * dt / this.speedMultiplier
