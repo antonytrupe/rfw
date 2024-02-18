@@ -6,7 +6,6 @@ import WorldObject from "./WorldObject"
 import { GameEvents } from "./GameEvent"
 
 export default class Character extends WorldObject implements CharacterInterface {
-    //matterId: number
     playerId: string
     maxSpeed: number
     speed: number

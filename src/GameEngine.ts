@@ -23,7 +23,7 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
-    private activeCharacters: Map<number, Set<string>> = new Map()
+    private activeCharacters: Map<number, Set<string>> = new Map().set(0, new Set())
 
     private fps: number
 
@@ -157,7 +157,7 @@ export default class GameEngine {
         //TODO put different initiatives at different ticks in the turn
         //console.log('active characters:', this.activeCharacters.size)
 
-        new Set([...this.activeCharacters.get(this.currentTurn),...this.activeCharacters.get(0)]).forEach((id) => {
+        new Set([...this.activeCharacters.get(this.currentTurn) || [], ...this.activeCharacters.get(0) || []]).forEach((id) => {
             let character: Character = this.getCharacter(id)!
 
             if (newTurn) {
@@ -735,7 +735,7 @@ export default class GameEngine {
         else if (!!character) {
             //console.log('deactivating', character.id)
             //TODO remove the character from all the turns it has actions for
-            this.activeCharacters.get(0).delete(character.id)
+            this.activeCharacters.get(0)?.delete(character.id)
         }
         return this
     }
