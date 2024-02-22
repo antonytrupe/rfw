@@ -19,6 +19,8 @@ export const SE = 7 / 4 * Math.PI
 export const LEFT = 1
 export const RIGHT = -1
 
+export const FORAGE='forage'
+
 export const CHAT = 'chat'
 //client connect
 export const CONNECT = 'connect'

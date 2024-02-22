@@ -9,7 +9,7 @@ import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
 import { LEFT, RIGHT } from "./types/CONSTANTS"
-import { Actions, AttackAction } from "./types/Action"
+import { Actions, AttackAction, ForageAction, MoveAction } from "./types/Action"
 import { quests } from "./types/Quest"
 
 //processes game logic
@@ -161,7 +161,8 @@ export default class GameEngine {
         //TODO put different initiatives at different ticks in the turn
         //console.log('active characters:', this.activeCharacters.size)
 
-        new Set([...this.activeCharacters.get(this.currentTurn) || [], ...this.activeCharacters.get(0) || []]).forEach((id) => {
+        //, ...this.activeCharacters.get(0) || []
+        this.activeCharacters.get(this.currentTurn)?.forEach((id) => {
             let character: Character = this.getCharacter(id)!
 
             if (newTurn) {
@@ -193,7 +194,7 @@ export default class GameEngine {
                 this.updateCharacter({ id: character.id, hp: clamp(character.hp - 1, -10, character.hp) })
             }
 
-            character.doActions()
+            //character.doActions()
 
             if (character.actions.length > 0 && character.actionsRemaining > 0) {
                 //console.log('doing an action')
@@ -351,9 +352,9 @@ export default class GameEngine {
             newPosition = this.slide(character, newPosition)
 
             this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, rotation: newRotation })
-            //if (newPosition?.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
-            //updatedCharacters.add(character.id)
-            //}
+            if (newPosition?.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
+                updatedCharacters.add(character.id)
+            }
         })
 
         if (updatedCharacters.size > 0) {
@@ -486,19 +487,6 @@ export default class GameEngine {
             return Math.abs(a) / a * .01
     }
 
-    addMoveAction(characterId: string, location: Point) {
-        //unconscious check
-        const character = this.getCharacter(characterId)
-        if (!character || character?.hp! <= 0) {
-            return
-        }
-        //clear other move actions and add new move action
-        //add the new action to the end or beginning?
-        const actions: Actions = [{ type: 'move', location: location, delay: 0, turn: this.currentTurn }, ...character.actions.filter((action) => { return action.type != 'move' })]
-
-        this.updateCharacter({ id: characterId, actions: actions })
-    }
-
     removeAttackAction(attackerId: string): GameEngine {
         //TODO attacker owner check
         const attacker = this.getCharacter(attackerId)!
@@ -520,18 +508,18 @@ export default class GameEngine {
 
     addAttackAction(attackerId: string, attackeeId: string, triggerSocialAgro: boolean, triggerSocialAssist: boolean): GameEngine {
         //TODO attacker owner check
-        const attacker = this.getCharacter(attackerId)!
-        const newAttackAction: AttackAction = {
-            type: 'attack',
+        const character = this.getCharacter(attackerId)
+
+        const newAttackAction = new AttackAction({
             targetId: attackeeId,
             triggerSocialAgro: triggerSocialAgro,
             triggerSocialAssist: triggerSocialAssist,
             delay: 0,
-            turn: this.currentTurn
-        }
-        const actions = [...attacker.actions.filter((action) => { return action.type != 'attack' }), newAttackAction]
+            turn: this.currentTurn + 1
+        })
+        character.addAction(this, newAttackAction)
 
-        this.updateCharacter({ id: attackerId, target: attackeeId, actions: actions })
+        //TODO move this into the attackaction object
         if (attackeeId) {
             let attackee = this.getCharacter(attackeeId)
             if (!!attackee) {
@@ -539,10 +527,36 @@ export default class GameEngine {
                 this.updateCharacter({ id: attackeeId, targeters: Array.from(t.values()) })
             }
         }
-        else {
-
-        }
         return this
+    }
+
+    addForageAction(id: string) {
+        const character = this.getCharacter(id)
+        character.addAction(this, new ForageAction({ delay: 0, turn: this.currentTurn + 1 }))
+    }
+
+    addMoveAction(characterId: string, location: Point) {
+        //unconscious check
+        const character = this.getCharacter(characterId)
+        if (!character || character?.hp! <= 0) {
+            return
+        }
+        //clear other move actions and add new move action
+        //add the new action to the end or beginning?
+        const action = new MoveAction({ location: location, delay: 0, turn: this.currentTurn + 1 })
+        console.log(action)
+        const actions: Actions = [action, ...character.actions.filter((action) => { return action.type != 'move' })]
+
+        this.updateCharacter({ id: characterId, actions: actions })
+    }
+
+    addActiveCharacter(turn: number, id: string) {
+        let t = this.activeCharacters.get(turn)
+        if (!t) {
+            t = new Set()
+            this.activeCharacters.set(turn, t)
+        }
+        t.add(id)
     }
 
     getCharacter(characterId: string) {
@@ -714,6 +728,11 @@ export default class GameEngine {
         this.gameWorld.updateWorldObjects(objects)
     }
 
+    /**
+     * pushes updates to the gameworld and updates the turns the character will be active in
+     * @param updates 
+     * @returns 
+     */
     updateCharacter(updates: Partial<Character>): GameEngine {
 
         const character = this.gameWorld.updateCharacter(updates)
@@ -734,9 +753,11 @@ export default class GameEngine {
             //dieing
             (character.hp <= 0 && character.hp > -10))
         ) {
-            //console.log('activating', character.id)
+            //console.log('activating', character.name)
+            //console.log(character)
             //TODO change this to an action in the right turn
-            this.activeCharacters.get(0).add(character.id)
+            this.addActiveCharacter(this.currentTurn + 1, character.id)
+            //this.activeCharacters.get(0).add(character.id)
         }
         else if (!!character) {
             //console.log('deactivating', character.id)

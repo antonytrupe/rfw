@@ -39,8 +39,9 @@ nextApp.prepare().then(async () => {
       const characters = engine.getAllCharacters()
       res.json(Array.from(characters.values()))
     })
-    .patch((req, res) => {
-      engine.updateCharacter(new Character(req.body))
+    .patch(async (req, res) => {
+      const update = engine.updateCharacter(new Character(req.body))
+      await engine.saveCharacter(update)
       const characters = engine.getAllCharacters()
       res.json(Array.from(characters.values()))
     })
@@ -71,6 +72,6 @@ nextApp.prepare().then(async () => {
       `> Server listening at http://localhost:${port} as ${dev ? "development" : process.env.NODE_ENV}`
     )
   })
-}).catch(()=>{
+}).catch(() => {
   console.log('oops')
 })

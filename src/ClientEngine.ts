@@ -77,11 +77,6 @@ export default class ClientEngine {
         if (message[0] == '/') {
 
             const parts = message.split(' ')
-            //console.log('parts', parts)
-            //if any of the parts are the word "here", then replace it with the center of the viewport
-
-            //console.log(parts[0].substring(1))
-            //console.log(parts[1].toLocaleUpperCase())
 
             switch (parts[0].substring(1).toLowerCase()) {
                 case "spawn":
@@ -98,6 +93,17 @@ export default class ClientEngine {
                             break
                     }
                     break
+                case "forage":
+                    if (!this.player.controlledCharacter) {
+                        //TODO tell the player they don't have an active character
+                        console.log('no controlled character')
+                    }
+                    else {
+                        console.log('forage')
+                        this.addForageAction()
+                    }
+                    break
+
             }
         }
         else {
@@ -118,6 +124,11 @@ export default class ClientEngine {
                 })
             }
         }
+    }
+
+    addForageAction() {
+        this.gameEngine.addForageAction(this.player?.controlledCharacter)
+        this.socket.emit(CONSTANTS.FORAGE)
     }
 
     stop() {
@@ -408,10 +419,10 @@ export default class ClientEngine {
 
         const width = info.reduce((width, line) => {
             return Math.max(ctx.measureText(line).width + (padding * 2), width)
-        },0)
+        }, 0)
 
         // const width = ctx.measureText(info[1]).width + (padding * 2)
-        const height = (fontSize+padding) * info.length + (padding * 1)
+        const height = (fontSize + padding) * info.length + (padding * 1)
 
         //move up and to the lft
         ctx.translate(-width / 2, -character.radiusX * this.PIXELS_PER_FOOT - height)
@@ -436,7 +447,7 @@ export default class ClientEngine {
         info.forEach((line, i) => {
             ctx.fillText(line,
                 0,
-                padding * (i+2) + fontSize * i)
+                padding * (i + 2) + fontSize * i)
         })
 
         // ctx.fillText(info[0],
@@ -1031,7 +1042,6 @@ export default class ClientEngine {
         e.nativeEvent.stopPropagation()
         e.stopPropagation()
         e.preventDefault()
-        console.log('doubleclick', this.player)
         const characters = this.gameEngine.gameWorld.getCharactersAt(this.getGamePosition(e.nativeEvent))
 
         //if logged in 

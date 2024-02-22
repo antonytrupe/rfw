@@ -4,6 +4,7 @@ import { ZONETYPE } from "./ZONETYPE"
 import { SHAPE } from "./SHAPE"
 import WorldObject from "./WorldObject"
 import { GameEvents } from "./GameEvent"
+import GameEngine from "@/GameEngine"
 
 export default class Character extends WorldObject implements CharacterInterface {
     playerId: string
@@ -28,10 +29,19 @@ export default class Character extends WorldObject implements CharacterInterface
     age: number
     race: string
     xp: number
-    doActions(): void {
+    
+    doActions(engine: GameEngine): void {
+        //console.log('character doActions', this.name)
         this.actions.forEach((action) => {
-            !!action.do ? action.do() : ''
+            !action.complete && !!action.do ? action.do(this, engine) : ''
         })
+    }
+    addAction(engine: GameEngine, action: Action) {
+        console.log('character addAction', this.name)
+        
+        
+        action.init(engine,this)
+        engine.updateCharacter(this)
     }
 
     constructor({

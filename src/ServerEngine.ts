@@ -290,6 +290,7 @@ export default class ServerEngine {
     }
 
     addMoveAction(characterId: string, location: Point) {
+        console.log('addMoveAction')
         this.gameEngine.addMoveAction(characterId, location)
         this.sendAndSaveCharacterUpdates([characterId])
     }
@@ -637,6 +638,7 @@ export default class ServerEngine {
         const characterQuery = this.datastore.createQuery(CONSTANTS.CHARACTER_KIND)
         await this.datastore.runQuery(characterQuery)
             .then(([characters]) => {
+                //console.log(characters)
                 this.gameEngine.updateCharacters(characters)
                 console.log('finished loading characters')
             })
@@ -662,7 +664,7 @@ export default class ServerEngine {
         // Saves the entity
         await this.datastore.save({
             key: key,
-            data: character,
+            data: character
         })
         return character
     }
@@ -694,9 +696,7 @@ export default class ServerEngine {
                 }
             })
             //send the zone
-            this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()).map((character) => {
-                return character
-            }))
+            this.io.to(zoneName).emit(CONSTANTS.CLIENT_CHARACTER_UPDATE, Array.from(characters.values()))
         })
     }
 
