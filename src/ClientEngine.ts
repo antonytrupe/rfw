@@ -327,6 +327,7 @@ export default class ClientEngine {
         }
         else if (this.scale <= 1000) {
             this.drawHourScale(ctx)
+            this.drawMileScale(ctx)
         }
 
         //draw stuff based on where the mouse is
@@ -502,7 +503,9 @@ export default class ClientEngine {
     private drawTurnScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
-        const ticks = 6
+        //seconds
+        const ticks = [0, 1, 2, 3, 4, 5, 6]
+        //5 feet per second
         const tickSize = 5
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -512,10 +515,9 @@ export default class ClientEngine {
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
-        ctx.lineTo(0 + ticks * tickSize * this.PIXELS_PER_FOOT, 0);
+        ctx.lineTo(0 + Math.max(...ticks) * tickSize * this.PIXELS_PER_FOOT, 0)
 
-        //tick marks
-        [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
+        ticks.forEach((i) => {
             ctx.moveTo(i * tickSize * this.PIXELS_PER_FOOT, 0)
             ctx.lineTo(i * tickSize * this.PIXELS_PER_FOOT, 10 * this.scale)
             ctx.fillText(i * tickSize + 'ft', i * tickSize * this.PIXELS_PER_FOOT, 25 * this.scale)
@@ -529,44 +531,38 @@ export default class ClientEngine {
     private drawMinuteScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
-        const ticks = 10
-        const tickSize = 1
+        //turns(6 seconds)
+        const ticks = [0, 1, 3, 5, 10]
+        //30 feet per turn(6 seconds)
+        const tickSize = 30
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.translate(xOffset, yOffset)
         ctx.scale(1 / this.scale, 1 / this.scale)
         this.scaleStyle(ctx)
-        //ctx.beginPath()
+        ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
-        ctx.lineTo(ticks * 30 * this.PIXELS_PER_FOOT, 0);
-
+        ctx.lineTo(0 + Math.max(...ticks) * tickSize * this.PIXELS_PER_FOOT, 0)
         //tick marks
-        [0, 1, 3, 5, 10].forEach((i) => {
-            ctx.moveTo(i * (ticks / tickSize) * 3 * this.PIXELS_PER_FOOT, 0)
-            ctx.lineTo(i * (ticks / tickSize) * 3 * this.PIXELS_PER_FOOT, 10 * this.scale)
-            ctx.fillText(i * (ticks / tickSize) * 3 + 'ft', i * (ticks / tickSize) * 3 * this.PIXELS_PER_FOOT, 25 * this.scale)
-            ctx.fillText(i * (ticks / tickSize) * 3 / 5 + 's', i * (ticks / tickSize) * 3 * this.PIXELS_PER_FOOT, 45 * this.scale)
+        ticks.forEach((i) => {
+            ctx.moveTo(i * (tickSize) * this.PIXELS_PER_FOOT, 0)
+            ctx.lineTo(i * (tickSize) * this.PIXELS_PER_FOOT, 10 * this.scale)
+            ctx.fillText(i * (tickSize) + 'ft', i * (tickSize) * this.PIXELS_PER_FOOT, 25 * this.scale)
+            ctx.fillText(i * (tickSize) / 5 + 's', i * (tickSize) * this.PIXELS_PER_FOOT, 45 * this.scale)
         })
 
         ctx.stroke()
         ctx.restore()
     }
 
-    drawChatHistory(ctx: CanvasRenderingContext2D) {
-        ctx.save()
-        ctx.setTransform(1, 0, 0, 1, 0, 0)
-        ctx.scale(1 / this.scale, 1 / this.scale)
-        ctx.fillStyle = "black"
-        ctx.fillText("sdsdsd", 40, 40)
-        ctx.restore()
-    }
-
     private drawHourScale(ctx: CanvasRenderingContext2D) {
         const xOffset = 10
         const yOffset = 10
-        const ticks = 60
-        const tickSize = 1
+        //minutes
+        const ticks = [0, 1, 5, 15, 30, 60]
+        //300 feet per minute
+        const tickSize = 300
         ctx.save()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.translate(xOffset, yOffset)
@@ -576,16 +572,57 @@ export default class ClientEngine {
         ctx.beginPath()
         //horizontal line
         ctx.moveTo(0, 0)
-        ctx.lineTo((ticks / tickSize) * 300 * this.PIXELS_PER_FOOT, 0);
+        ctx.lineTo(0 + Math.max(...ticks) * tickSize * this.PIXELS_PER_FOOT, 0)
 
         //tick marks
-        [0, 1, 5, 15, 30, 60].forEach((i) => {
-            ctx.moveTo(i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 0)
-            ctx.lineTo(i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 10 * this.scale)
-            ctx.fillText(i * 5 * (ticks / tickSize) + 'ft', i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 25 * this.scale)
-            ctx.fillText(i * tickSize + 'm', i * (ticks / tickSize) * 5 * this.PIXELS_PER_FOOT, 45 * this.scale)
+        ticks.forEach((i) => {
+            ctx.moveTo(i * (tickSize) * this.PIXELS_PER_FOOT, 0)
+            ctx.lineTo(i * (tickSize) * this.PIXELS_PER_FOOT, 10 * this.scale)
+            ctx.fillText(i * (tickSize) + 'ft', i * (tickSize) * this.PIXELS_PER_FOOT, 25 * this.scale)
+            ctx.fillText(i + 'm', i * (tickSize) * this.PIXELS_PER_FOOT, 45 * this.scale)
         })
         ctx.stroke()
+        ctx.restore()
+    }
+
+    //TODO mile scale
+    private drawMileScale(ctx: CanvasRenderingContext2D) {
+        const xOffset = 10
+        const yOffset = 60
+
+        //minutes
+        const ticks = [0, .25, .5, 1, 2, 3]
+        //300 feet per minute
+        const tickSize = 5280
+
+        ctx.save()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.translate(xOffset, yOffset)
+        ctx.scale(1 / this.scale, 1 / this.scale)
+        this.scaleStyle(ctx)
+
+        ctx.beginPath()
+        //horizontal line
+        ctx.moveTo(0, 0)
+        ctx.lineTo(0 + Math.max(...ticks) * tickSize * this.PIXELS_PER_FOOT, 0)
+
+        //tick marks
+        ticks.forEach((i) => {
+            ctx.moveTo(i * (tickSize) * this.PIXELS_PER_FOOT, 0)
+            ctx.lineTo(i * (tickSize) * this.PIXELS_PER_FOOT, 10 * this.scale)
+            ctx.fillText(i + ' miles', i * (tickSize) * this.PIXELS_PER_FOOT, 25 * this.scale)
+            ctx.fillText(i + ' hours', i * (tickSize) * this.PIXELS_PER_FOOT, 45 * this.scale)
+        })
+        ctx.stroke()
+        ctx.restore()
+    }
+
+    drawChatHistory(ctx: CanvasRenderingContext2D) {
+        ctx.save()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.scale(1 / this.scale, 1 / this.scale)
+        ctx.fillStyle = "black"
+        //ctx.fillText("sdsdsd", 40, 40)
         ctx.restore()
     }
 
