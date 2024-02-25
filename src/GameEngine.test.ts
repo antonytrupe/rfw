@@ -1,7 +1,7 @@
 import EventEmitter from "events"
 import GameEngine from "./GameEngine"
 import Character from "./types/Character"
-import { getRotationDelta, } from "./Geometry"
+import { calculateRotationAcceleration, getRotationDelta, } from "./Geometry"
 import { E, NE, N, NW, W, SW, S, SE, LEFT, RIGHT } from "./types/CONSTANTS"
 
 describe('GameEngine', () => {
@@ -110,51 +110,51 @@ describe('GameEngine', () => {
     describe("calculateAutoRotation", () => {
 
         test('E to NE', () => {
-            expect(gameEngine.calculateRotationAcceleration(E, NE)).toBe(LEFT)
+            expect(calculateRotationAcceleration(E, NE)).toBe(LEFT)
         })
 
         test('E to NW', () => {
-            expect(gameEngine.calculateRotationAcceleration(E, NW)).toBe(LEFT)
+            expect(calculateRotationAcceleration(E, NW)).toBe(LEFT)
         })
 
         test('E to E', () => {
-            expect(gameEngine.calculateRotationAcceleration(E, E)).toBe(0)
+            expect(calculateRotationAcceleration(E, E)).toBe(0)
         })
 
         test('E to W', () => {
-            expect(gameEngine.calculateRotationAcceleration(E, W)).toBe(LEFT)
+            expect(calculateRotationAcceleration(E, W)).toBe(LEFT)
         })
 
         test('N to N', () => {
-            expect(gameEngine.calculateRotationAcceleration(N, N)).toBe(0)
+            expect(calculateRotationAcceleration(N, N)).toBe(0)
         })
 
         test('E to SE', () => {
-            expect(gameEngine.calculateRotationAcceleration(E, SE)).toBe(RIGHT)
+            expect(calculateRotationAcceleration(E, SE)).toBe(RIGHT)
         })
 
         test('E to S', () => {
-            expect(gameEngine.calculateRotationAcceleration(E, S)).toBe(RIGHT)
+            expect(calculateRotationAcceleration(E, S)).toBe(RIGHT)
         })
 
         test('N to SE', () => {
-            expect(gameEngine.calculateRotationAcceleration(N, SE)).toBe(RIGHT)
+            expect(calculateRotationAcceleration(N, SE)).toBe(RIGHT)
         })
 
         test('N to SW', () => {
-            expect(gameEngine.calculateRotationAcceleration(N, SW)).toBe(LEFT)
+            expect(calculateRotationAcceleration(N, SW)).toBe(LEFT)
         })
 
         test('W to NE', () => {
-            expect(gameEngine.calculateRotationAcceleration(W, NE)).toBe(RIGHT)
+            expect(calculateRotationAcceleration(W, NE)).toBe(RIGHT)
         })
 
         test('W to SE', () => {
-            expect(gameEngine.calculateRotationAcceleration(W, SE)).toBe(LEFT)
+            expect(calculateRotationAcceleration(W, SE)).toBe(LEFT)
         })
 
         test('S to S', () => {
-            expect(gameEngine.calculateRotationAcceleration(S, S)).toBe(0)
+            expect(calculateRotationAcceleration(S, S)).toBe(0)
         })
 
     })
@@ -172,7 +172,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should keep going straight', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 0, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: 0, y: 40 } }] })
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotation).toBe(N)
                     expect(u?.rotationAcceleration).toBe(0)
@@ -182,7 +182,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn NW', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: -40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBeCloseTo(LEFT)
@@ -199,7 +199,7 @@ describe('GameEngine', () => {
             describe("when starting facing east/right", () => {
 
                 test('should keep going straight', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 40, y: 0 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: 40, y: 0 } }] })
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotation).toBe(E)
                     expect(u?.rotationAcceleration).toBe(0)
@@ -209,7 +209,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn NE/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 40, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: 40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -222,7 +222,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn N/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 0, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: 0, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -235,7 +235,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn NW/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: -40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: -40, y: -40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -248,7 +248,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn W/left', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: 0 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: -40, y: 0 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(LEFT)
@@ -261,7 +261,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn SW/right', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: -40, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: -40, y: 40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(RIGHT)
@@ -274,7 +274,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn S/right', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 0, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: 0, y: 40 } }] })
                     //console.log('step 1')
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
@@ -290,7 +290,7 @@ describe('GameEngine', () => {
                 })
 
                 test.skip('should turn SE/right', () => {
-                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'move', location: { x: 40, y: 40 } }] })
+                    gameEngine.updateCharacter({ id: '1', actions: [{ type: 'moveTo', location: { x: 40, y: 40 } }] })
                     gameEngine.step(0, 0)
                     let u = gameEngine.getCharacter('1')
                     expect(u?.rotationAcceleration).toBe(RIGHT)

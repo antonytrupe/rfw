@@ -19,9 +19,7 @@ var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
 
-    //event things
     private socket: Socket | undefined
-    //private emit: (eventName: string | symbol, ...args: any[]) => boolean
 
     //state things
     private stopped: boolean = false //control the draw loop
@@ -74,8 +72,8 @@ export default class ClientEngine {
     }
 
     chat(message: string) {
+        //commands
         if (message[0] == '/') {
-
             const parts = message.split(' ')
 
             switch (parts[0].substring(1).toLowerCase()) {
@@ -103,9 +101,15 @@ export default class ClientEngine {
                         this.addForageAction()
                     }
                     break
-
+                case "add":
+                    switch (parts[1].substring(1).toLowerCase()) {
+                        case "deathaction":
+                            break
+                    }
+                    break
             }
         }
+        //not commands
         else {
             if (!!this.player?.controlledCharacter) {
                 const c = this.gameEngine.getCharacter(this.player.controlledCharacter)
@@ -1026,6 +1030,7 @@ export default class ClientEngine {
     }
 
     addMoveAction(characterId: string, location: Point) {
+        //console.log('addMoveAction')
         this.gameEngine.addMoveAction(characterId, location)
         this.socket?.emit(CONSTANTS.MOVE_TO, characterId, location)
     }

@@ -7,15 +7,20 @@ import * as LEVELS from "./types/LEVELS.json"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
-import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta } from "./Geometry"
+import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, calculateRotationAcceleration } from "./Geometry"
 import { LEFT, RIGHT } from "./types/CONSTANTS"
-import { Actions, AttackAction, ForageAction, MoveAction } from "./types/Action"
+import { Actions, ForageAction } from "./types/actions/Action"
 import { quests } from "./types/Quest"
+import AttackAction from "./types/actions/AttackAction"
+import MoveToAction from "./types/actions/MoveAction"
 
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+    getActiveCharacters() {
+        return this.activeCharacters
+    }
 
     //EventEmitter function
     //private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -39,7 +44,7 @@ export default class GameEngine {
     private timeoutID: NodeJS.Timeout | undefined
     private doGameLogic: boolean
     private quests = quests
-    private currentTurn: number
+    currentTurn: number
 
     /**
      * 60 frames per second is one frame every ~17 milliseconds
@@ -70,22 +75,6 @@ export default class GameEngine {
         return this.gameWorld.getObject(id)
     }
 
-    private takeDamage(character: Character, damage: number) {
-        character = this.updateCharacter({ id: character.id, hp: clamp(character.hp - damage, -10, character.maxHp) }).getCharacter(character.id)!
-
-        //todo if its unconcious
-        if (character.hp <= 0) {
-            //clear accelerations and all actions
-            character = this.updateCharacter({ id: character.id, actions: [], rotationAcceleration: 0, speedAcceleration: 0 }).getCharacter(character.id)!
-        }
-        //if its deaddead
-        if (character.hp <= -10) {
-            //turn it into a tombstone
-            //this.deleteCharacter(character.id)
-            //this.updateTombstone(character)
-        }
-    }
-
     updateTombstone(character: Character) {
         throw new Error("Method not implemented.")
     }
@@ -102,7 +91,7 @@ export default class GameEngine {
 
     //this is the wrapper and callback function that calls step
     private tick() {
-        const now = (new Date()).getTime()
+        const now = new Date().getTime()
         this.lastTimestamp = this.lastTimestamp || now
         const dt = now - this.lastTimestamp
         this.lastTimestamp = now
@@ -158,21 +147,22 @@ export default class GameEngine {
         const updatedCharacters: Set<string> = new Set()
 
         //TODO get them in initiative order
-        //TODO put different initiatives at different ticks in the turn
+        //TODO put different initiatives at different ticks in the turn?
         //console.log('active characters:', this.activeCharacters.size)
 
         //, ...this.activeCharacters.get(0) || []
         this.activeCharacters.get(this.currentTurn)?.forEach((id) => {
-            let character: Character = this.getCharacter(id)!
+            let character: Character = this.getCharacter(id)
 
             if (newTurn) {
-                character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)!
+                character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)
                 if (character.actionsRemaining != 1) {
                     //client can do this reliably
                     //updatedCharacters.add(character.id)
                 }
             }
 
+            //TODO make this an action
             if (character.hp <= 0) {
                 //we're dieing, stop trying to do things
                 character = this.updateCharacter({
@@ -181,161 +171,13 @@ export default class GameEngine {
                     rotationAcceleration: 0,
                     actions: [],
                     target: ''
-                }).getCharacter(character.id)!
+                }).getCharacter(character.id)
                 //updatedCharacters.add(character.id)
             }
 
-            //if below 0 hps and not dead 
-            //stable check
-            if (character.hp < 0 && character.hp > -10 && newTurn) {
-                //loose another hp
-                //add an event
-                character.events.push({ target: character!.id, type: 'attack', amount: 1, time: now })
-                this.updateCharacter({ id: character.id, hp: clamp(character.hp - 1, -10, character.hp) })
-            }
+            //console.log('step for', character.name)
 
-            //character.doActions()
-
-            if (character.actions.length > 0 && character.actionsRemaining > 0) {
-                //console.log('doing an action')
-                const action = character.actions[0]
-                //combat
-                //actions that are only done on the server(attack/damage)
-                if (action.type == 'attack' && this.doGameLogic && !!action.targetId) {
-                    //get the target
-                    const target = this.getCharacter(action.targetId)
-                    if (target && !!target.id) {
-                        //if the target is dead already, stop attacking it
-                        //TODO this might not belong here
-                        if (target.hp <= -10) {
-                            this.removeAttackAction(character.id)
-                            updatedCharacters.add(character.id)
-                        }
-
-                        //check range
-                        const distance = distanceBetweenPoints(target.location, character.location)
-                        if (distance <= (target.radiusX + character.radiusX) * 1.1) {
-                            //console.log('distance', distance)
-                            //always spend an action
-                            character = this.updateCharacter({ id: character.id, actionsRemaining: character.actionsRemaining - 1 })
-                                .getCharacter(character.id)!
-                            //updatedCharacters.add(character.id)
-
-                            //handle multiple attacks
-                            character.bab.forEach((bab) => {
-                                //roll for attack
-                                const attack = roll({ size: 20, modifier: bab })
-                                character.events.push({ target: character!.id, type: 'roll', amount: attack, time: now })
-
-                                if (attack > 10) {
-                                    //console.log('hit', attack)
-                                    //roll for damage
-                                    const damage = roll({ size: 6 })
-                                    character.events.push({ target: character!.id, type: 'roll', amount: damage, time: now })
-
-                                    //update the target's hp, clamped to -10 and maxHp
-                                    this.takeDamage(target, damage)
-                                    updatedCharacters.add(target.id)
-                                    //if the target was alive but now its dieing
-                                    if (target.hp > 0 && target.hp <= damage) {
-                                        //give xp
-                                        //TODO add an event
-                                        character = this.updateCharacter({ id: character.id, xp: character.xp + this.calculateXp([], []) })
-                                            .getCharacter(character.id)!
-                                        updatedCharacters.add(character.id)
-                                        //levelup check
-                                        if (character.xp >= LEVELS[(character.level + 1).toString() as keyof typeof LEVELS]) {
-                                            character = this.updateCharacter({ id: character.id, level: character.level + 1 })
-                                                .getCharacter(character.id)!
-                                            //TODO add an event
-                                            updatedCharacters.add(character.id)
-                                        }
-                                        //its(the target) (almost)dead, Jim
-                                        //both characters stop attacking
-                                        this.removeAttackAction(character.id)
-                                        updatedCharacters.add(character.id)
-
-                                        //TODO this can probably go in a more general place when its the target's turn
-                                        this.removeAttackAction(target.id)
-                                        updatedCharacters.add(target.id)
-                                    }
-                                    target.events.push({ target: target.id, type: 'attack', amount: damage, time: now })
-                                }
-                                else {
-                                    //console.log('miss', attack)
-                                    target.events.push({ target: target!.id, type: 'miss', amount: 0, time: now })
-                                }
-                            })
-                            //done doing attacks
-                            console.log('call for help')
-                            //call for help 
-                            if (action.triggerSocialAgro) {
-                                const helper = this.recruitHelp(target, false)
-                                updatedCharacters.add(helper.id)
-                            }
-                            if (!target.target) {
-                                //fight back
-                                const triggerSocialAgro = false
-                                const triggerSocialAssist = true
-                                this.addAttackAction(target.id, character.id, triggerSocialAgro, triggerSocialAssist)
-                                updatedCharacters.add(target.id)
-                            }
-                        }
-                        else {
-                            //TODO too far away, but not every tick, like once a second or something maybe
-                            //console.log('too far away', distance)
-                            //gameEvents.push({ target: target.id, type: 'to_far_away', amount: 0, time: now })
-                        }
-                    }
-                }
-                else if (action.type == 'move' && !!action.location) {
-                    const dist = distanceBetweenPoints(action.location, character.location)
-                    let targetRotation
-                    let turnRotation = 0
-                    let speedAcceleration = 0
-                    let actions = character.actions
-                    if (dist > character.radiusX) {
-                        //console.log('turn/accelerate/stop')
-                        targetRotation = getRotation(character.location, action.location)
-
-                        //turn right or left
-                        turnRotation = this.calculateRotationAcceleration(character.rotation, targetRotation)
-
-                        //accelerate or stop accelerating
-                        speedAcceleration = this.calculateAcceleration(character, action.location)
-                    }
-
-                    //if the target is inside another character and we've collided, then stop trying to move any more
-                    //check for collisions
-                    let charactersAtTarget = this.gameWorld.getCharactersNearPoint({ location: action.location, distance: 5 })
-                        //throw out the current character
-                        //throw out dead characters
-                        .filter((it) => { return it.id != character.id && it.hp > -10 })
-                    if (charactersAtTarget.length > 0) {
-                        //console.log('characters at target')
-                        const dist = distanceBetweenPoints(character.location, charactersAtTarget[0].location)
-                        if (dist < (character.radiusX + charactersAtTarget[0].radiusX)) {
-                            //console.log('colliding with characters at target')
-                            turnRotation = 0
-                            speedAcceleration = 0
-                        }
-                    }
-
-                    if (turnRotation == 0 && speedAcceleration == 0) {
-                        //we got there, so clear all move actions
-                        actions = actions.filter((action) => { return action.type != 'move' })
-                    }
-
-                    character = this.updateCharacter({
-                        id: character.id,
-                        rotationAcceleration: turnRotation,
-                        speedAcceleration: speedAcceleration,
-                        actions: actions
-                    }).getCharacter(character.id)!
-
-                    //updatedCharacters.add(character.id)
-                }
-            }
+            character.doActions({ engine: this, dt, now })
 
             //calculate the new angle
             let newRotation = this.calculateRotation(character, dt)
@@ -422,7 +264,7 @@ export default class GameEngine {
         return newPosition
     }
 
-    private recruitHelp(character: Character, triggerSocialAgro: boolean) {
+    recruitHelp(character: Character, triggerSocialAgro: boolean) {
         console.log('recruitHelp')
         //TODO figure out who the aggressor was 
         //call for help 
@@ -477,15 +319,7 @@ export default class GameEngine {
         return acceleration
     }
 
-    calculateRotationAcceleration(current: number, target: number) {
-        let delta = getRotationDelta(current, target)
-        //do something about creeping up on 0
-        let a = clamp(delta / (Math.PI / 4), -1, 1)
-        if (Math.abs(a) > .01 || a == 0)
-            return a
-        else
-            return Math.abs(a) / a * .01
-    }
+
 
     removeAttackAction(attackerId: string): GameEngine {
         //TODO attacker owner check
@@ -511,11 +345,11 @@ export default class GameEngine {
         const character = this.getCharacter(attackerId)
 
         const newAttackAction = new AttackAction({
+            engine: this,
+            character: character,
             targetId: attackeeId,
             triggerSocialAgro: triggerSocialAgro,
-            triggerSocialAssist: triggerSocialAssist,
-            delay: 0,
-            turn: this.currentTurn + 1
+            triggerSocialAssist: triggerSocialAssist
         })
         character.addAction(this, newAttackAction)
 
@@ -532,22 +366,30 @@ export default class GameEngine {
 
     addForageAction(id: string) {
         const character = this.getCharacter(id)
-        character.addAction(this, new ForageAction({ delay: 0, turn: this.currentTurn + 1 }))
+        character.addAction(this, new ForageAction({
+            engine: this,
+            character: character
+        }))
     }
 
     addMoveAction(characterId: string, location: Point) {
         //unconscious check
         const character = this.getCharacter(characterId)
         if (!character || character?.hp! <= 0) {
+            console.log('oops')
             return
         }
         //clear other move actions and add new move action
         //add the new action to the end or beginning?
-        const action = new MoveAction({ location: location, delay: 0, turn: this.currentTurn + 1 })
-        console.log(action)
-        const actions: Actions = [action, ...character.actions.filter((action) => { return action.type != 'move' })]
+        const action = new MoveToAction({
+            engine: this,
+            character: character, location: location
+        })
+        //console.log(action)
+        character.addAction(this, action)
+        // const actions: Actions = [action, ...character.actions.filter((action) => { return action.type != 'move' })]
 
-        this.updateCharacter({ id: characterId, actions: actions })
+        //this.updateCharacter({ id: characterId, actions: actions })
     }
 
     addActiveCharacter(turn: number, id: string) {
@@ -555,8 +397,10 @@ export default class GameEngine {
         if (!t) {
             t = new Set()
             this.activeCharacters.set(turn, t)
+            //console.log('made a new set for turn',turn)
         }
         t.add(id)
+        //console.log(this.activeCharacters)
     }
 
     getCharacter(characterId: string) {
@@ -630,7 +474,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
         this.updateCharacter({ id: character.id, mode: 2, actions: actions })
         return true
     }
@@ -644,7 +488,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
         this.updateCharacter({ id: character.id, rotationAcceleration: 0, actions: actions })
         return true
     }
@@ -661,7 +505,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
         this.updateCharacter({ id: character.id, speedAcceleration: -1, actions: actions })
         return true
     }
@@ -678,7 +522,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
         this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
         return true
     }
@@ -695,7 +539,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
         this.updateCharacter({ id: character.id, rotationAcceleration: LEFT, actions: actions })
         return true
     }
@@ -712,7 +556,7 @@ export default class GameEngine {
             return false
         }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'move' })
+        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
         this.updateCharacter({ id: character.id, rotationAcceleration: RIGHT, actions: actions })
         return true
     }
@@ -762,7 +606,7 @@ export default class GameEngine {
         else if (!!character) {
             //console.log('deactivating', character.id)
             //TODO remove the character from all the turns it has actions for
-            this.activeCharacters.get(0)?.delete(character.id)
+            //this.activeCharacters.get(0)?.delete(character.id)
         }
         return this
     }
@@ -804,7 +648,7 @@ export default class GameEngine {
         }
     }
 
-    private calculateXp(party: Character[], monsters: Character[]) {
+    calculateXp(party: Character[], monsters: Character[]) {
         //TODO calculate xp
         return 500
     }
@@ -931,13 +775,6 @@ export default class GameEngine {
     }
 
     private calculatePosition(character: CharacterInterface, dt: number) {
-
-        //r = v ^ 2 / g * sin(2θ)
-        //const distanceTraveled = character.speed * dt / this.speedMultiplier
-        //const angleInRadians = getRotationDelta(character.rotation, this.calculateRotation(character, dt))
-        //const radius = distanceTraveled / angleInRadians;
-        //console.log('radius', radius)
-
 
         const w = character.rotationAcceleration / this.rotationMultiplier
         let x: number = character.location.x

@@ -4,7 +4,17 @@ import Point, { Points } from "./types/Point"
 import Ray from "./types/Ray"
 import { SHAPE } from "./types/SHAPE"
 import WorldObject from "./types/WorldObject"
+import { clamp } from "./utility"
 
+export function calculateRotationAcceleration(current: number, target: number) {
+    let delta = getRotationDelta(current, target)
+    //do something about creeping up on 0
+    let a = clamp(delta / (Math.PI / 4), -1, 1)
+    if (Math.abs(a) > .01 || a == 0)
+        return a
+    else
+        return Math.abs(a) / a * .01
+}
 
 function calculatePerpendicularPoint(rectangle: WorldObject, pointOnEdge: Point, distance: number): Point | null {
     const { location, width, height, rotation } = rectangle

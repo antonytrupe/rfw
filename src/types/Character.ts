@@ -1,10 +1,11 @@
-import { Action, Actions } from "./Action"
+import { Action, Actions } from "./actions/Action"
 import Point from "./Point"
 import { ZONETYPE } from "./ZONETYPE"
 import { SHAPE } from "./SHAPE"
 import WorldObject from "./WorldObject"
 import { GameEvents } from "./GameEvent"
 import GameEngine from "@/GameEngine"
+import { clamp } from "@/utility"
 
 export default class Character extends WorldObject implements CharacterInterface {
     playerId: string
@@ -29,19 +30,36 @@ export default class Character extends WorldObject implements CharacterInterface
     age: number
     race: string
     xp: number
-    
-    doActions(engine: GameEngine): void {
+
+    doActions({ engine, dt, now }: { engine: GameEngine, dt: number, now: number }): void {
         //console.log('character doActions', this.name)
         this.actions.forEach((action) => {
-            !action.complete && !!action.do ? action.do(this, engine) : ''
+            if (!action.complete && !!action.do) {
+                action.do({ character: this, engine, dt, now })
+            }
         })
     }
+
     addAction(engine: GameEngine, action: Action) {
-        console.log('character addAction', this.name)
-        
-        
-        action.init(engine,this)
+        //console.log('character addAction', this.name, action.turn)
+        engine.addActiveCharacter(action.turn, this.id)
         engine.updateCharacter(this)
+    }
+
+    takeDamage({ engine, damage }: { engine: GameEngine, damage: number }) {
+        let character = engine.updateCharacter({ id: this.id, hp: clamp(this.hp - damage, -10, this.maxHp) }).getCharacter(this.id)!
+
+        //todo if its unconcious
+        if (this.hp <= 0) {
+            //clear accelerations and all actions
+            character = engine.updateCharacter({ id: this.id, actions: [], rotationAcceleration: 0, speedAcceleration: 0 }).getCharacter(this.id)!
+        }
+        //if its deaddead
+        if (this.hp <= -10) {
+            //turn it into a tombstone
+            //this.deleteCharacter(character.id)
+            //this.updateTombstone(character)
+        }
     }
 
     constructor({

@@ -23,6 +23,9 @@ import { quests } from "./types/Quest"
 import { ViewPort } from "./types/Viewport"
 
 export default class ServerEngine {
+    getActiveCharacters() {
+      return this.gameEngine.getActiveCharacters()
+    }
 
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     private gameEngine: GameEngine
@@ -290,7 +293,7 @@ export default class ServerEngine {
     }
 
     addMoveAction(characterId: string, location: Point) {
-        console.log('addMoveAction')
+        //console.log('addMoveAction')
         this.gameEngine.addMoveAction(characterId, location)
         this.sendAndSaveCharacterUpdates([characterId])
     }

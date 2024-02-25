@@ -20,12 +20,21 @@ nextApp.prepare().then(async () => {
     path: REALTIME_API_PATH
   })
   const engine: ServerEngine = new ServerEngine(io)
+
   app.route('/admin/reconnect')
     .get(async (req, res) => {
       engine.connect()
       //console.log('reconnected to datastore')
       res.json({ reconnected: true })
     })
+
+  app.route('/api/engine/activeCharacters')
+    .get(async (req, res) => {
+      const c = engine.getActiveCharacters()
+      const newLocal = Array.from(c.entries())
+      res.json(newLocal.map(([k, v]) => [k, Array.from(v)]))
+    })
+
   app.route('/api/characters')
     .get(async (req, res) => {
       if (req.query.reload == 'datastore') {
