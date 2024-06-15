@@ -23,6 +23,17 @@ export default function ClientUI() {
   }
 
   useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      const canvas = getCanvas()
+      canvas.width = canvas.clientWidth
+      canvas.height = canvas.clientHeight
+      console.log('resize')
+    })
+    observer.observe(canvasRef.current)
+
+  },[])
+
+  useEffect(() => {
     clientEngine?.stop()
     clientEngine?.start()
 
@@ -41,6 +52,7 @@ export default function ClientUI() {
   useEffect(() => {
     const ce = new ClientEngine(getCanvas, updateChat)
     setClientEngine(ce)
+    ce.start()
 
     return () => {
       ce.disconnect()

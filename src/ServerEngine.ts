@@ -24,7 +24,7 @@ import { ViewPort } from "./types/Viewport"
 
 export default class ServerEngine {
     getActiveCharacters() {
-      return this.gameEngine.getActiveCharacters()
+        return this.gameEngine.getActiveCharacters()
     }
 
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
@@ -70,7 +70,7 @@ export default class ServerEngine {
             //console.log('CONSTANTS.CONNECTION', socket.id) 
             let player: Player | undefined
             getSession({ req: socket.conn.request, }).then(async (session) => {
-                //console.log(session)
+                console.log(session)
                 if (!!session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     //console.log(player)
@@ -203,6 +203,10 @@ export default class ServerEngine {
                 this.addMoveAction(characterId, location)
             })
 
+            socket.on(CONSTANTS.FORAGE, async (characterId: string) => {
+                this.addForageAction(characterId)
+            })
+
             socket.on(CONSTANTS.CAST_SPELL, async ({ casterId: casterId, spellName: spellName, targets: targets }) => {
                 //console.log('spellName',spellName)
                 //console.log('casterId',casterId)
@@ -245,6 +249,10 @@ export default class ServerEngine {
                 console.log('CONSTANTS.DISCONNECT', reason)
             })
         })
+    }
+    addForageAction(characterId: string) {
+        this.gameEngine.addForageAction(characterId)
+        this.sendAndSaveCharacterUpdates([characterId])
     }
 
     updateZones(socket: Socket, viewPort: ViewPort, player: Player | undefined) {
@@ -294,7 +302,7 @@ export default class ServerEngine {
 
     addMoveAction(characterId: string, location: Point) {
         //console.log('addMoveAction')
-        this.gameEngine.addMoveAction(characterId, location)
+        this.gameEngine.addMoveToAction(characterId, location)
         this.sendAndSaveCharacterUpdates([characterId])
     }
 

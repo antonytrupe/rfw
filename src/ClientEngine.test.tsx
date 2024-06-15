@@ -1,30 +1,67 @@
 import EventEmitter from "events"
-import * as CONSTANTS from "./types/CONSTANTS";
 import ClientEngine from "./ClientEngine";
-import ClientUI from "./app/ClientUI";
-import { render, screen, } from '@testing-library/react'
+import { COMMUNITY_SIZE } from "./types/CommunitySize";
+import { Socket ,io} from "socket.io-client"
+
+const eventHandlers = {};
+jest.mock('socket.io-client', () => ({
+    __esModule: true,
+    io: () => ({
+      connect: jest.fn(),
+      disconnect: jest.fn(),
+      emit: jest.fn(),
+      on: (event, handler) => {
+        eventHandlers[event] = handler;
+      },
+    }),
+  }));
+
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+    disconnect: jest.fn(),
+}))
 
 describe('ClientEngine', () => {
     let clientEngine: ClientEngine
-    let eventEmitter: EventEmitter
+    //let eventEmitter: EventEmitter
+    //let socketEmitSpy
+    //let user
     beforeEach(() => {
-        eventEmitter = new EventEmitter()
+        //user = userEvent.setup()
+        //eventEmitter = new EventEmitter()
+
+        //const spy = jest.spyOn(EventEmitter, 'emit')
+        //@ts-ignore
+        //socketEmitSpy = jest.spyOn(Socket, 'emit').getMockImplementation(()=>{})
+
         const canvas = document.createElement('canvas');
-        const getCanvas = () => { return canvas; };
-        clientEngine = new ClientEngine( getCanvas,()=>{})
+        const getCanvas = () => canvas;
+        clientEngine = new ClientEngine(getCanvas, () => { })
+    })
+
+    test('start', () => {
+        clientEngine.start()
+        expect(clientEngine.connected).toBeFalsy();
+    })
+
+    test.skip('connect', async () => {
+        //clientEngine.start()
+        clientEngine.connect()
+        await new Promise((r) => setTimeout(r, 10000));
+
+        expect(clientEngine.connected).toBeTruthy();
+    })
+
+    test('spawn a thorp', () => {
+        clientEngine.start()
+        clientEngine.connect()
+        //clientEngine.createCommunity({ size: COMMUNITY_SIZE.HAMLET, race: "Human" })
+        //expect(socketEmitSpy).toHaveBeenCalledWith('ferret', 'tobi');
     })
 
     describe('Initial Conditions', () => {
-        test.skip('should have the right size canvas', async () => {
-            render(<ClientUI />)
-            const canvas: HTMLCanvasElement = screen.getByTestId('canvas')
-            //const rect = canvas.getBoundingClientRect()
-
-            // expect(rect.width).toBe(400) 
-            // expect(rect.height).toBe(400)
-            //  expect(canvas).toBeInTheDocument()
-        })
-        test.skip('should have the origin in the middle of the canvas', () => { })
+        test.skip('test', () => { })
     })
 
     describe('Scrolling', () => {

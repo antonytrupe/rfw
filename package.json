@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@google-cloud/datastore": "^8.5.0",
+    "@react-hook/resize-observer": "^2.0.1",
     "autoprefixer": "^10.4.17",
     "bootstrap": "^5.3.2",
     "cross-env": "^7.0.3",
@@ -53,6 +54,8 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/cookie-parser": "^1.4.7",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
     "@types/lodash.isequal": "^4.5.8",

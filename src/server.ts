@@ -15,6 +15,8 @@ const nextHandler: NextApiHandler = nextApp.getRequestHandler()
 nextApp.prepare().then(async () => {
   const app = express()
   app.use(express.json())
+  app.use(express.urlencoded({ extended: true }));
+
   const server = createServer(app)
   const io = new Server(server, {
     path: REALTIME_API_PATH

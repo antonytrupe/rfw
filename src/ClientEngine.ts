@@ -45,16 +45,8 @@ export default class ClientEngine {
         this.getCanvas = getCanvas
         let eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ fps: 30, doGameLogic: false }, eventEmitter)
-        //this.emit = eventEmitter.emit.bind(eventEmitter)
 
-        const observer = new ResizeObserver(() => {
-            const canvas = getCanvas()
-            canvas.width = canvas.clientWidth
-            canvas.height = canvas.clientHeight
-        })
-        observer.observe(getCanvas())
-
-        this.start()
+        //this.start()
     }
 
     start() {
@@ -97,7 +89,7 @@ export default class ClientEngine {
                         console.log('no controlled character')
                     }
                     else {
-                        console.log('forage')
+                        //console.log('forage')
                         this.addForageAction()
                     }
                     break
@@ -132,7 +124,7 @@ export default class ClientEngine {
 
     addForageAction() {
         this.gameEngine.addForageAction(this.player?.controlledCharacter)
-        this.socket.emit(CONSTANTS.FORAGE)
+        this.socket.emit(CONSTANTS.FORAGE, this.player?.controlledCharacter)
     }
 
     stop() {
@@ -1068,7 +1060,8 @@ export default class ClientEngine {
 
     addMoveAction(characterId: string, location: Point) {
         //console.log('addMoveAction')
-        this.gameEngine.addMoveAction(characterId, location)
+        //TODO move not moveto
+        this.gameEngine.addMoveToAction(characterId, location)
         this.socket?.emit(CONSTANTS.MOVE_TO, characterId, location)
     }
 
@@ -1284,24 +1277,28 @@ export default class ClientEngine {
     }
 
     connect() {
-        //console.log('Client Engine connect')
+        console.log('Client Engine connect')
 
         try {
             this.socket = io({
                 path: REALTIME_API_PATH
             })
+            console.log(1)
             this.socket.on(CONSTANTS.CONNECT, () => {
+                console.log(3)
+
                 this.onConnect()
+            })
+            console.log(2)
+
+            //disconnect handler
+            this.socket?.on(CONSTANTS.DISCONNECT, (reason: any) => {
+                this.onDisconnect(reason)
             })
 
             this.socket?.on(CONSTANTS.CURRENT_PLAYER, (player: Player) => {
                 this.player = player
                 //this.emit(CONSTANTS.CURRENT_PLAYER, player)
-            })
-
-            //disconnect handler
-            this.socket?.on(CONSTANTS.DISCONNECT, (reason: any) => {
-                this.onDisconnect(reason)
             })
 
             this.socket?.on(CONSTANTS.CHAT, (chat: GameEvent) => {
@@ -1337,7 +1334,7 @@ export default class ClientEngine {
         }
         catch (e) {
             //something went wrong
-            console.log(e)
+            console.log('something went wrong', e)
             return false
         }
 

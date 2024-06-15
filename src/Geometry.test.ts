@@ -1,10 +1,11 @@
 import {
-     
+
     polygonSlide, distanceSegmentPolygon,
     intersectionSegmentSegment, rectanglePoints,
     distancePointSegment, distanceSegmentSegment,
     getRotation, extendSegment,
-    intersectionLineLine, intersectingSegment, isPointBetweenRays
+    intersectionLineLine, intersectingSegment, isPointBetweenRays,
+    getRotationDelta
 } from "./Geometry"
 import { E, NE, N, NW, W, SW, S, SE } from "./types/CONSTANTS"
 import Character from "./types/Character"
@@ -20,12 +21,63 @@ describe("Geometry", () => {
 
         })
     })
+    describe("getRotationDelta", () => {
+        test('E to E', () => {
+            expect(getRotationDelta(E, E)).toBeCloseTo(0)
+        })
+        test('E to NE', () => {
+            expect(getRotationDelta(E, NE)).toBe(1 / 4 * Math.PI)
+        })
+        test('E to N', () => {
+            expect(getRotationDelta(E, N)).toBe(2 / 4 * Math.PI)
+        })
+        test('E to NW', () => {
+            expect(getRotationDelta(E, NW)).toBeCloseTo(3 / 4 * Math.PI)
+        })
+        test('E to W', () => {
+            expect(getRotationDelta(E, W)).toBe(4 / 4 * Math.PI)
+        })
+        test('E to SW', () => {
+            expect(getRotationDelta(E, SW)).toBeCloseTo(-3 / 4 * Math.PI)
+        })
+        test('E to S', () => {
+            expect(getRotationDelta(E, S)).toBe(-2 / 4 * Math.PI)
+        })
+        test('E to SE', () => {
+            expect(getRotationDelta(E, SE)).toBeCloseTo(-1 / 4 * Math.PI)
+        })
+
+        test('N to E', () => {
+            expect(getRotationDelta(N, E)).toBeCloseTo(-2 / 4 * Math.PI)
+        })
+        test('N to NE', () => {
+            expect(getRotationDelta(N, NE)).toBeCloseTo(-1 / 4 * Math.PI)
+        })
+        test('N to N', () => {
+            expect(getRotationDelta(N, N)).toBeCloseTo(0 / 4 * Math.PI)
+        })
+        test('N to NW', () => {
+            expect(getRotationDelta(N, NW)).toBeCloseTo(1 / 4 * Math.PI)
+        })
+        test('N to W', () => {
+            expect(getRotationDelta(N, W)).toBeCloseTo(2 / 4 * Math.PI)
+        })
+        test('N to SW', () => {
+            expect(getRotationDelta(N, SW)).toBeCloseTo(3 / 4 * Math.PI)
+        })
+        test('N to S', () => {
+            expect(getRotationDelta(N, S)).toBeCloseTo(4 / 4 * Math.PI)
+        })
+        test('N to SE', () => {
+            expect(getRotationDelta(N, SE)).toBeCloseTo(-3 / 4 * Math.PI)
+        })
+    })
 
     describe("isPointBetweenRays", () => {
         test('should be on right side of right side 1', () => {
             const p = { x: 6.5, y: -5 }
             const r1 = {
-                direction: { x:1, y: 0 },
+                direction: { x: 1, y: 0 },
                 origin: { x: 4, y: -8 }
             }
             const r2 = {
@@ -34,7 +86,7 @@ describe("Geometry", () => {
             }
             const b = isPointBetweenRays(p, r1, r2)
             expect(b).toBeTruthy()
-        }) 
+        })
 
         test('should be on right side of right side 2', () => {
             const p = { x: 5, y: 2 }

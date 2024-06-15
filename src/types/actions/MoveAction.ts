@@ -1,26 +1,38 @@
 import GameEngine from "@/GameEngine"
 import Character from "../Character"
-import BaseAction from "./Action"
+import BaseAction, { Action, CONTINUOUS } from "./Action"
 import { calculateRotationAcceleration, distanceBetweenPoints, getRotation } from "@/Geometry"
 import Point from "../Point"
 
-export default class MoveToAction extends BaseAction {
-    type: 'moveTo' = 'moveTo'
-    location?: Point
+export default class MoveAction extends BaseAction {
+    type: 'move' = 'move'
+    speedAcceleration: number = 0
+    /**
+     * 1 for walk, 2 for  run, .5 for stealth, .25 for crawl, 0 for imobilized or paralyzed
+     */
+    mode: number = 1
+    rotationSpeed: number = 0
+    speed: number=0
 
-    constructor({ engine, character, location }) {
-        super({ engine, character })
-        //console.log('MoveToAction constructor', character.actions)
-        this.location = location
-        this.turn = engine.currentTurn
-        //replace any existing moveTo actions
-        if (character.actions.find((action) => action.type == 'moveTo')) {
-            character.actions = [...character.actions.map((action: BaseAction) => { return action.type == 'moveTo' ? this : action })]
+    constructor({ engine, character, action }: {
+        engine: GameEngine, character: Character, action: Partial<MoveAction>
+    }) {
+        super({ engine, character, action })
+        const oldAction = character.actions.find((action: BaseAction) => action.type == 'move') as MoveAction
+
+        Object.assign(this, oldAction)
+        Object.assign(this, action)
+
+        this.turn = CONTINUOUS
+
+        //remove old moveaction
+        if (!!oldAction) {
+            character.actions = [...character.actions.filter((action: Action) => { return action.type !== 'move' })]
         }
-        //TODO add a new moveTo action if there isn't one already
-        else {
-            character.actions = [this, ...character.actions]
-        }
+
+        //add the action to the front of the array
+        character.actions.splice(0, 0, this)
+
     }
 
     /**
@@ -28,57 +40,33 @@ export default class MoveToAction extends BaseAction {
      * @param param0 
      */
     do({ engine, character, dt, now }: { engine: GameEngine, character: Character, dt: number, now: number }) {
-        //console.log('do moveToAction', character.name)
-        if (this.complete) {
-            return
+        //console.log('do moveAction', character.id)
+
+        //calculate the new angle
+        let newRotation = engine.calculateRotation(character, this, dt)
+
+        //TODO if they went over their walk speed or they went over their walk distance, then consume an action
+        //TODO if they don't have an action to use for running, don't let them run
+        let newSpeed = engine.calculateSpeed(character, this, dt / 2)
+        //console.log('newSpeed1', newSpeed)
+
+        let newPosition = engine.calculatePosition(character, { ...this, speed: newSpeed }, dt)
+        //console.log('newPosition1', newPosition)
+
+        newSpeed = engine.calculateSpeed(character, { ...this, speed: newSpeed }, dt / 2)
+        //console.log('newSpeed2', newSpeed)
+
+        //check for collisions
+        newPosition = engine.slide(character, newPosition)
+        //console.log('newPosition2', newPosition)
+
+        engine.updateCharacter({ id: character.id, location: newPosition, rotation: newRotation })
+
+        this.speed=newSpeed
+
+        //make sure the character is in next turn's list of active characters
+        if (this.rotationSpeed === 0 && this.speedAcceleration === 0 && this.speed === 0) {
+            engine.addActiveCharacter(CONTINUOUS, character.id)
         }
-
-        const dist = distanceBetweenPoints(this.location, character.location)
-        let targetRotation: number
-        let turnRotation = 0
-        let speedAcceleration = 0
-        let actions = character.actions
-        if (dist > character.radiusX) {
-            //console.log('turn/accelerate/stop')
-            targetRotation = getRotation(character.location, this.location)
-
-            //turn right or left
-            turnRotation = calculateRotationAcceleration(character.rotation, targetRotation)
-
-            //accelerate or stop accelerating
-            speedAcceleration = engine.calculateAcceleration(character, this.location)
-        }
-
-        //if the target is inside another character and we've collided, then stop trying to move any more
-        let charactersAtTarget = engine.gameWorld.getCharactersNearPoint({ location: this.location, distance: character.radiusX * 2 })
-            .filter((it) => {
-                return (
-                    //throw out the current character
-                    it.id != character.id &&
-                    //throw out dead characters
-                    it.hp > -10)
-            })
-        if (charactersAtTarget.length > 0) {
-            //console.log('characters at target')
-            const dist = distanceBetweenPoints(character.location, charactersAtTarget[0].location)
-            if (dist < (character.radiusX + charactersAtTarget[0].radiusX)) {
-                //console.log('colliding with characters at target')
-                turnRotation = 0
-                speedAcceleration = 0
-            }
-        }
-
-        if (turnRotation == 0 && speedAcceleration == 0) {
-            //we got there, so clear all move actions
-            actions = actions.filter((action) => { return action.type != 'moveTo' })
-            this.complete = true
-        }
-
-        character = engine.updateCharacter({
-            id: character.id,
-            rotationAcceleration: turnRotation,
-            speedAcceleration: speedAcceleration,
-            actions: actions
-        }).getCharacter(character.id)!
     }
 }

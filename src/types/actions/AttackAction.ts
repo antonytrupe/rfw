@@ -6,18 +6,23 @@ import * as LEVELS from "@/types/LEVELS.json"
 import BaseAction from "./Action"
 
 export default class AttackAction extends BaseAction {
-    constructor({ engine, character, targetId, triggerSocialAgro, triggerSocialAssist
+
+    constructor({ action }: { action: AttackAction })
+    constructor({ engine, character, targetId, triggerSocialAgro, triggerSocialAssist }: { engine: GameEngine, character: Character, targetId, triggerSocialAgro, triggerSocialAssist })
+    constructor({ engine, character, action, targetId, triggerSocialAgro, triggerSocialAssist
     }) {
-        super({ engine, character })
-        this.targetId = targetId
-        this.triggerSocialAgro = triggerSocialAgro
-        this.triggerSocialAssist = triggerSocialAssist
-        this.turn = engine.currentTurn + 1
-        //remove any existing attack actions and add this one to the front
-        character.target = this.targetId
-        //TODO add the attack action to the front or end?
-        const actions = [...character.actions.filter((action: BaseAction) => { return action.type != 'attack' }), this]
-        character.actions = actions
+        super({ engine, character, action })
+        if (!action) {
+            this.targetId = targetId
+            this.triggerSocialAgro = triggerSocialAgro
+            this.triggerSocialAssist = triggerSocialAssist
+            this.turn = engine.currentTurn + 1
+            //remove any existing attack actions and add this one to the front
+            character.target = this.targetId
+            //TODO add the attack action to the front or end?
+            const actions = [...character.actions.filter((action: BaseAction) => { return action.type != 'attack' }), this]
+            character.actions = actions
+        }
     }
     type: 'attack' = 'attack'
     triggerSocialAgro: boolean
@@ -25,6 +30,7 @@ export default class AttackAction extends BaseAction {
     targetId?: string
     do({ engine, character }: { engine: GameEngine, character: Character }) {
         console.log('attack action do')
+        //TODO only do on the server
         //get the target
         const target = engine.getCharacter(this.targetId)
         if (target && !!target.id) {
@@ -54,7 +60,7 @@ export default class AttackAction extends BaseAction {
                         //console.log('hit', attack)
                         //roll for damage
                         const damage = roll({ size: 6 })
-                        character.events.push({ target: character!.id, type: 'roll', amount: damage,time: new Date().getTime() })
+                        character.events.push({ target: character!.id, type: 'roll', amount: damage, time: new Date().getTime() })
 
                         //update the target's hp, clamped to -10 and maxHp
                         character.takeDamage({ engine, damage })
@@ -62,7 +68,7 @@ export default class AttackAction extends BaseAction {
                         //if the target was alive but now its dieing
                         if (target.hp > 0 && target.hp <= damage) {
                             //give xp
-                            //TODO add an event
+                            //TODO add an event for killing a character
                             character = engine.updateCharacter({ id: character.id, xp: character.xp + engine.calculateXp([], []) })
                                 .getCharacter(character.id)!
                             //updatedCharacters.add(character.id)
@@ -70,7 +76,7 @@ export default class AttackAction extends BaseAction {
                             if (character.xp >= LEVELS[(character.level + 1).toString() as keyof typeof LEVELS]) {
                                 character = engine.updateCharacter({ id: character.id, level: character.level + 1 })
                                     .getCharacter(character.id)!
-                                //TODO add an event
+                                //TODO add an event for leveling up
                                 //updatedCharacters.add(character.id)
                             }
                             //its(the target) (almost)dead, Jim
@@ -82,11 +88,11 @@ export default class AttackAction extends BaseAction {
                             engine.removeAttackAction(target.id)
                             //updatedCharacters.add(target.id)
                         }
-                        target.events.push({ target: target.id, type: 'attack', amount: damage, time: new Date().getTime()})
+                        target.events.push({ target: target.id, type: 'attack', amount: damage, time: new Date().getTime() })
                     }
                     else {
                         //console.log('miss', attack)
-                        target.events.push({ target: target!.id, type: 'miss', amount: 0,time: new Date().getTime() })
+                        target.events.push({ target: target!.id, type: 'miss', amount: 0, time: new Date().getTime() })
                     }
                 })
                 //done doing attacks

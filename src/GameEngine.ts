@@ -2,17 +2,18 @@ import EventEmitter from "events"
 import Character, { CharacterInterface } from "./types/Character"
 import * as CONSTANTS from "./types/CONSTANTS"
 import GameWorld from "./GameWorld"
-import { clamp, roll } from "./utility"
-import * as LEVELS from "./types/LEVELS.json"
+import { roll } from "./utility"
 import Point from "./types/Point"
 import WorldObject from "./types/WorldObject"
 import { SHAPE } from "./types/SHAPE"
 import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, calculateRotationAcceleration } from "./Geometry"
 import { LEFT, RIGHT } from "./types/CONSTANTS"
-import { Actions, ForageAction } from "./types/actions/Action"
+import { CONTINUOUS, ForageAction } from "./types/actions/Action"
 import { quests } from "./types/Quest"
 import AttackAction from "./types/actions/AttackAction"
-import MoveToAction from "./types/actions/MoveAction"
+import MoveToAction from "./types/actions/MoveToAction"
+import MoveAction from "./types/actions/MoveAction"
+import ExhaustionAction from "./types/actions/ExhaustionAction"
 
 //processes game logic
 //interacts with the gameworld object and updates it
@@ -28,7 +29,7 @@ export default class GameEngine {
     //data object
     gameWorld: GameWorld
 
-    private activeCharacters: Map<number, Set<string>> = new Map().set(0, new Set())
+    private activeCharacters: Map<number, Set<string>> = new Map()
 
     private fps: number
 
@@ -44,7 +45,8 @@ export default class GameEngine {
     private timeoutID: NodeJS.Timeout | undefined
     private doGameLogic: boolean
     private quests = quests
-    currentTurn: number
+    startTime = new Date().getTime()
+    currentTurn: number = 0
 
     /**
      * 60 frames per second is one frame every ~17 milliseconds
@@ -57,6 +59,141 @@ export default class GameEngine {
         //this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.fps = fps
         this.doGameLogic = doGameLogic
+    }
+
+    start() {
+        this.timeoutID = setTimeout(this.tick.bind(this))
+        return this
+    }
+
+    restart() {
+        this.stop()
+        this.gameWorld.restart()
+        this.start()
+    }
+
+    stop() {
+        clearTimeout(this.timeoutID)
+    }
+
+    //this is the wrapper and callback function that calls step
+    private tick() {
+        const now = new Date().getTime()
+        this.lastTimestamp = this.lastTimestamp || now
+        const dt = now - this.lastTimestamp
+        this.lastTimestamp = now
+        this.step(dt, now)
+        //console.log('this.ticksPerSecond', this.ticksPerSecond)
+        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.fps)
+
+        this.addFrame(dt)
+        //console.log('average FPS', this.getAverageFPS().toFixed(1))
+        //console.log('FPS', 1000/dt)
+        if (dt > (1000 / this.fps) * 1.6) {
+            //console.log('long tick dt', dt)
+        }
+    }
+
+    //leave it public for testing
+    step(dt: number, now: number): Set<string> {
+        //console.log(this.activeCharacters)
+        //console.log(this.getCharacter('one').actions)
+        //console.log('GameEngine.step')
+        const started = now
+
+        //figure out if this is the first step of a new turn
+        const lastTurn = Math.floor(((now - this.startTime) - dt) / 1000 / 6)
+        this.currentTurn = Math.floor((now - this.startTime) / 1000 / 6)
+        let newTurn = false
+        if (lastTurn != this.currentTurn) {
+            newTurn = true
+            console.log('turn number', this.currentTurn)
+            if (lastTurn + 1 != this.currentTurn) {
+                console.log(`missed turns between ${lastTurn} and ${this.currentTurn}`)
+            }
+        }
+
+        //clients only need acceleration changes, they can keep calculating new locations themselves accurately
+        const updatedCharacters: Set<string> = new Set()
+
+        //TODO get them in initiative order
+        //TODO put different initiatives at different ticks in the turn?
+        //console.log('active characters:', this.activeCharacters.size)
+
+        //, ...this.activeCharacters.get(0) || []
+
+
+        const turns = new Set(Array.from({ length: this.currentTurn - lastTurn + 1 }, (_, a) => a + lastTurn))
+        turns.add(CONTINUOUS)
+        //console.log(turns)
+
+        turns.forEach((turn) => {
+
+            this.activeCharacters.get(turn)?.forEach((id) => {
+
+                let character: Character = this.getCharacter(id)
+
+                if (newTurn) {
+                    character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)
+                    if (character.actionsRemaining != 1) {
+                        //client can do this reliably
+                        //updatedCharacters.add(character.id)
+                    }
+                }
+
+                //TODO make dieing in step an action
+                if (character.hp <= 0) {
+                    //we're dieing, stop trying to do things
+                    character = this.updateCharacter({
+                        id: character.id,
+                        //speedAcceleration: 0,
+                        //rotationAcceleration: 0,
+                        actions: [],
+                        target: ''
+                    }).getCharacter(character.id)
+                    //updatedCharacters.add(character.id)
+                }
+
+                //console.log('step for', character.name)
+
+                character.doActions({ engine: this, dt, now })
+
+                //TODO make movement in step an action
+                // {
+                //     //calculate the new angle
+                //     let newRotation = this.calculateRotation(character, dt)
+
+                //     //TODO if they went over their walk speed or they went over their walk distance, then consume an action
+                //     //TODO if they don't have an action to use for running, don't let them run
+                //     let newSpeed = this.calculateSpeed(character, dt / 2)
+
+                //     let newPosition = this.calculatePosition({ ...character, speed: newSpeed }, dt)
+
+                //     newSpeed = this.calculateSpeed({ ...character, speed: newSpeed }, dt / 2)
+
+                //     //check for collisions
+                //     newPosition = this.slide(character, newPosition)
+
+                //     this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, rotation: newRotation })
+                //     if (newPosition?.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
+                //         updatedCharacters.add(character.id)
+                //     }
+                // }
+            })
+
+        })
+
+        if (updatedCharacters.size > 0) {
+            //tell the server engine about the updated characters
+            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
+        }
+
+        const finished = (new Date()).getTime()
+        if (finished - started > 5) {
+            console.log('step duration', finished - started)
+        }
+        //return for testing convenience
+        return updatedCharacters
     }
 
     getCharactersIntoZones(zones: Set<string>): Character[] {
@@ -89,23 +226,7 @@ export default class GameEngine {
         characterIds.forEach((id) => this.deleteCharacter(id))
     }
 
-    //this is the wrapper and callback function that calls step
-    private tick() {
-        const now = new Date().getTime()
-        this.lastTimestamp = this.lastTimestamp || now
-        const dt = now - this.lastTimestamp
-        this.lastTimestamp = now
-        this.step(dt, now)
-        //console.log('this.ticksPerSecond', this.ticksPerSecond)
-        this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.fps)
 
-        this.addFrame(dt)
-        //console.log('average FPS', this.getAverageFPS().toFixed(1))
-        //console.log('FPS', 1000/dt)
-        if (dt > (1000 / this.fps) * 1.6) {
-            //console.log('long tick dt', dt)
-        }
-    }
 
     private frameTimes: number[] = []
 
@@ -124,95 +245,9 @@ export default class GameEngine {
         }
     }
 
-    //leave it public for testing
-    step(dt: number, now: number): Set<string> {
 
-        //console.log('GameEngine.step')
-        const started = (new Date()).getTime()
-        //Engine.update(this.engine, dt)
 
-        //figure out if this is the first step of a new turn
-        const lastTurn = Math.floor((now - dt) / 1000 / 6)
-        this.currentTurn = Math.floor(now / 1000 / 6)
-        let newTurn = false
-        if (lastTurn != this.currentTurn) {
-            newTurn = true
-            console.log('turn number', this.currentTurn)
-            if (lastTurn + 1 != this.currentTurn) {
-                console.log(`missed turns between ${lastTurn} and ${this.currentTurn}`)
-            }
-        }
-
-        //clients only need acceleration changes, they can keep calculating new locations themselves accurately
-        const updatedCharacters: Set<string> = new Set()
-
-        //TODO get them in initiative order
-        //TODO put different initiatives at different ticks in the turn?
-        //console.log('active characters:', this.activeCharacters.size)
-
-        //, ...this.activeCharacters.get(0) || []
-        this.activeCharacters.get(this.currentTurn)?.forEach((id) => {
-            let character: Character = this.getCharacter(id)
-
-            if (newTurn) {
-                character = this.updateCharacter({ id: character.id, actionsRemaining: 1 }).getCharacter(character.id)
-                if (character.actionsRemaining != 1) {
-                    //client can do this reliably
-                    //updatedCharacters.add(character.id)
-                }
-            }
-
-            //TODO make this an action
-            if (character.hp <= 0) {
-                //we're dieing, stop trying to do things
-                character = this.updateCharacter({
-                    id: character.id,
-                    speedAcceleration: 0,
-                    rotationAcceleration: 0,
-                    actions: [],
-                    target: ''
-                }).getCharacter(character.id)
-                //updatedCharacters.add(character.id)
-            }
-
-            //console.log('step for', character.name)
-
-            character.doActions({ engine: this, dt, now })
-
-            //calculate the new angle
-            let newRotation = this.calculateRotation(character, dt)
-
-            //TODO if they went over their walk speed or they went over their walk distance, then consume an action
-            //TODO if they don't have an action to use for running, don't let them run
-            let newSpeed = this.calculateSpeed(character, dt / 2)
-
-            let newPosition = this.calculatePosition({ ...character, speed: newSpeed }, dt)
-
-            newSpeed = this.calculateSpeed({ ...character, speed: newSpeed }, dt / 2)
-
-            //check for collisions
-            newPosition = this.slide(character, newPosition)
-
-            this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, rotation: newRotation })
-            if (newPosition?.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
-                updatedCharacters.add(character.id)
-            }
-        })
-
-        if (updatedCharacters.size > 0) {
-            //tell the server engine about the updated characters
-            this.emit(CONSTANTS.SERVER_CHARACTER_UPDATE, updatedCharacters)
-        }
-
-        const finished = (new Date()).getTime()
-        if (finished - started > 5) {
-            console.log('step duration', finished - started)
-        }
-        //return for testing convenience
-        return updatedCharacters
-    }
-
-    private slide(character: Character, newPosition: Point): Point {
+    slide(character: Character, newPosition: Point): Point {
         let collisionObjects: WorldObject[] =
             //get world objects
             this.gameWorld.getObjectsInWay(character, newPosition)
@@ -291,13 +326,13 @@ export default class GameEngine {
             //console.log('aggressor', aggressor)
             console.log('found someone to help')
             //move first, then attack. order matters    
-            this.addMoveAction(nearby[0].id, aggressor.location)
+            this.addMoveToAction(nearby[0].id, aggressor.location)
             this.addAttackAction(nearby[0].id, aggressor.id, triggerSocialAgro, false)
         }
         return helper
     }
 
-    calculateAcceleration(character: Character, target: Point): number {
+    calculateAcceleration(character: Character, action: MoveAction, target: Point): number {
         const currentRotation = character.rotation
         const targetRotation = getRotation(character.location, target)
         const delta = getRotationDelta(currentRotation, targetRotation)
@@ -311,15 +346,13 @@ export default class GameEngine {
             acceleration = 0
 
         //get our location in .6 seconds if we stopped accelerating now
-        const loc = this.calculatePosition({ ...character, speedAcceleration: 0 }, 600)
+        const loc = this.calculatePosition(character, action, 600)
         const dist = distanceBetweenPoints(target, loc)
         if (dist <= character.radiusX) {
             acceleration = 0
         }
         return acceleration
     }
-
-
 
     removeAttackAction(attackerId: string): GameEngine {
         //TODO attacker owner check
@@ -366,30 +399,43 @@ export default class GameEngine {
 
     addForageAction(id: string) {
         const character = this.getCharacter(id)
-        character.addAction(this, new ForageAction({
-            engine: this,
-            character: character
-        }))
+        character.addAction(this,
+            new ForageAction({
+                engine: this,
+                character: character
+            }))
     }
 
-    addMoveAction(characterId: string, location: Point) {
+    addMoveToAction(characterId: string, location: Point) {
         //unconscious check
         const character = this.getCharacter(characterId)
+        //TODO move this into the action logic
         if (!character || character?.hp! <= 0) {
-            console.log('oops')
+            console.log('dead characters cannot move')
             return
         }
-        //clear other move actions and add new move action
-        //add the new action to the end or beginning?
-        const action = new MoveToAction({
-            engine: this,
-            character: character, location: location
-        })
-        //console.log(action)
-        character.addAction(this, action)
-        // const actions: Actions = [action, ...character.actions.filter((action) => { return action.type != 'move' })]
+        character.addAction(this,
+            new MoveToAction({
+                engine: this,
+                character: character,
+                location: location
+            }))
+    }
 
-        //this.updateCharacter({ id: characterId, actions: actions })
+    addMoveAction(characterId: string, speedAcceleration, rotationSpeed, mode) {
+        //unconscious check
+        const character = this.getCharacter(characterId)
+        //TODO move unconscience check into the action logic
+        if (!character || character?.hp! <= 0) {
+            console.log('dead characters cannot move')
+            return
+        }
+        character.addAction(this,
+            new MoveAction({
+                engine: this,
+                character: character,
+                action: { speedAcceleration, rotationSpeed: rotationSpeed, mode }
+            }))
     }
 
     addActiveCharacter(turn: number, id: string) {
@@ -449,16 +495,17 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return false
         }
-        this.updateCharacter({ id: character.id, mode: 1 })
-        return true
-    }
 
-    accelerateStop(characterId: string, playerId: string | undefined): boolean {
-        const character = this.getCharacter(characterId)
-        if (!character?.id || character?.playerId != playerId) {
-            return false
-        }
-        this.updateCharacter({ id: character.id, speedAcceleration: 0 })
+        //clear any moveto actions
+        //const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
+        //this.updateCharacter({ id: character.id, actions: actions })
+
+        //update move action
+        //const action: MoveAction = character.actions.find((action) => action.type == 'move') as MoveAction
+        //action.mode = 1
+
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { mode: 1 } }))
+        //this.updateCharacter({ id: character.id })
         return true
     }
 
@@ -470,12 +517,33 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.mode == 2) {
+        // if (character.mode == 2) {
+        //     return false
+        // }
+        //clear any moveto actions
+        //const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
+        //this.updateCharacter({ id: character.id, actions: actions })
+
+        //TODO move action
+        //this.updateCharacter({ id: character.id, actions: actions })
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { mode: 2 } }))
+
+        return true
+    }
+
+    accelerateStop(characterId: string, playerId: string | undefined): boolean {
+        const character = this.getCharacter(characterId)
+        if (!character?.id || character?.playerId != playerId) {
             return false
         }
-        //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
-        this.updateCharacter({ id: character.id, mode: 2, actions: actions })
+        //TODO move action
+        //update move action
+        //const move = character.actions.findIndex((action) => action.type == 'move');
+        //(character.actions[move] as MoveAction).speedAcceleration = 0
+        //character.addAction(this, character.actions[move])
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { speedAcceleration: 0 } }))
+
+        //this.updateCharacter({ id: character.id })
         return true
     }
 
@@ -484,12 +552,13 @@ export default class GameEngine {
         if (!character?.id || character?.playerId != playerId) {
             return false
         }
-        if (character.rotationAcceleration == 0) {
-            return false
-        }
+        // if (character.rotationAcceleration == 0) {
+        //     return false
+        // }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
-        this.updateCharacter({ id: character.id, rotationAcceleration: 0, actions: actions })
+        //TODO move action
+        //const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { rotationSpeed: 0 } }))
         return true
     }
 
@@ -501,12 +570,13 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.speedAcceleration == -1) {
-            return false
-        }
+        // if (character.speedAcceleration == -1) {
+        //     return false
+        // }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
-        this.updateCharacter({ id: character.id, speedAcceleration: -1, actions: actions })
+        //TODO move action
+        //const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { speedAcceleration: -1 } }))
         return true
     }
 
@@ -518,12 +588,8 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.speedAcceleration == 1) {
-            return false
-        }
-        //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
-        this.updateCharacter({ id: character.id, speedAcceleration: 1, actions: actions })
+
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { speedAcceleration: 1 } }))
         return true
     }
 
@@ -535,12 +601,14 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.rotationAcceleration == LEFT) {
-            return false
-        }
+        // if (character.rotationAcceleration == LEFT) {
+        //     return false
+        // }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
-        this.updateCharacter({ id: character.id, rotationAcceleration: LEFT, actions: actions })
+        //TODO move action
+        //const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { rotationSpeed: LEFT } }))
+        //this.updateCharacter({ id: character.id, actions: actions })
         return true
     }
 
@@ -552,12 +620,13 @@ export default class GameEngine {
         if (character?.hp! <= 0) {
             return false
         }
-        if (character.rotationAcceleration == RIGHT) {
-            return false
-        }
+        // if (character.rotationAcceleration == RIGHT) {
+        //     return false
+        // }
         //clear any move actions
-        const actions = character.actions.filter((action) => { return action.type != 'moveTo' })
-        this.updateCharacter({ id: character.id, rotationAcceleration: RIGHT, actions: actions })
+        //TODO move action
+        character.addAction(this, new MoveAction({ engine: this, character: character, action: { rotationSpeed: RIGHT } }))
+        //this.updateCharacter({ id: character.id, actions: actions })
         return true
     }
 
@@ -587,11 +656,11 @@ export default class GameEngine {
         //check for things that make this an active character
         if (!!character && (
             //has any rotation acceleration
-            character.rotationAcceleration != 0 ||
+            //character.rotationAcceleration != 0 ||
             //has any speed acceleration
-            character.speedAcceleration != 0 ||
+            //character.speedAcceleration != 0 ||
             //has any speed
-            character.speed != 0 ||
+            //character.speed != 0 ||
             //has any actions
             character.actions?.length != 0 ||
             //dieing
@@ -600,7 +669,7 @@ export default class GameEngine {
             //console.log('activating', character.name)
             //console.log(character)
             //TODO change this to an action in the right turn
-            this.addActiveCharacter(this.currentTurn + 1, character.id)
+            //this.addActiveCharacter(this.currentTurn + 1, character.id)
             //this.activeCharacters.get(0).add(character.id)
         }
         else if (!!character) {
@@ -611,11 +680,16 @@ export default class GameEngine {
         return this
     }
 
-    createCharacter(character: Partial<Character>): GameEngine {
-        if (!character || !character.id) {
+    //
+    createCharacter(partial: Partial<Character>): GameEngine {
+        //gameengine doesn't generate id's
+        if (!partial || !partial.id) {
             return this
         }
-        this.updateCharacter(character)
+        const character = this.updateCharacter(partial).getCharacter(partial.id)
+        //TODO generate default actions
+        //character.addAction(this, new ExhaustionAction({ engine: this, character }))
+
         return this
     }
 
@@ -653,28 +727,28 @@ export default class GameEngine {
         return 500
     }
 
-    private calculateSpeed(character: CharacterInterface, dt: number) {
+    calculateSpeed(character: CharacterInterface, action: MoveAction, dt: number) {
         let newSpeed = 0
         //soft caps might be the same as hard caps
         //if mode or acceleration are 0 then the soft caps get pushed to 0
-        const currentModeMaxSpeed = character.maxSpeed * character.mode * Math.abs(character.speedAcceleration)
-        const currentModeMinSpeed = -character.maxSpeed * character.mode * Math.abs(character.speedAcceleration)
-        let mode = character.mode
+        const currentModeMaxSpeed = character.maxSpeed * action.mode * Math.abs(action.speedAcceleration)
+        const currentModeMinSpeed = -character.maxSpeed * action.mode * Math.abs(action.speedAcceleration)
+        let mode = action.mode
 
-        let outsideSoftCaps = currentModeMinSpeed > character.speed || character.speed > currentModeMaxSpeed
+        let outsideSoftCaps = currentModeMinSpeed > action.speed || action.speed > currentModeMaxSpeed
         //console.log('outsideSoftCaps', outsideSoftCaps)
-        let accel = character.speedAcceleration
+        let accel = action.speedAcceleration
         //if we're outside soft caps or acceleration is 0 and we're moving
-        if (outsideSoftCaps || (character.speedAcceleration == 0 && character.speed != 0)) {
+        if (outsideSoftCaps || (action.speedAcceleration == 0 && action.speed != 0)) {
             //console.log('forcing sprinting')
             //force sprinting
             mode = 2
             //force a direction if acceleration is 0 but we need to slow down
             //force acceleration in the opposite direction of movement
-            if (character.speed > 0) {
+            if (action.speed > 0) {
                 accel = -1
             }
-            else if (character.speed < 0) {
+            else if (action.speed < 0) {
                 accel = 1
             }
         }
@@ -683,63 +757,63 @@ export default class GameEngine {
         //console.log('speedDelta', speedDelta)
 
         //if the character is trying to stop
-        if (character.speedAcceleration == 0) {
+        if (action.speedAcceleration == 0) {
             //
-            if (character.speed > 0) {
+            if (action.speed > 0) {
                 //character is not accellerating while moving forward
                 //don't let the character go slower the 0
-                newSpeed = Math.max(0, character.speed + speedDelta)
+                newSpeed = Math.max(0, action.speed + speedDelta)
                 //console.log(newSpeed)
             }
-            else if (character.speed < 0) {
+            else if (action.speed < 0) {
                 //ceiling the new speed at 0
                 //character is not accellerating while moving backward
                 //don't let the character go faster the 0
-                newSpeed = Math.min(0, character.speed + speedDelta)
+                newSpeed = Math.min(0, action.speed + speedDelta)
             }
         }
         //character is accelerating forward
-        else if (character.speedAcceleration > 0) {
+        else if (action.speedAcceleration > 0) {
             //character is already moving forward
-            if (character.speed >= 0) {
+            if (action.speed >= 0) {
                 //accelerating forward while moving forward 
                 //if we started out going faster then currentModeMaxSpeed
-                if (character.speed > currentModeMaxSpeed) {
+                if (action.speed > currentModeMaxSpeed) {
                     //then don't slow down to less then the softmax
-                    newSpeed = Math.max(currentModeMaxSpeed, character.speed + speedDelta)
+                    newSpeed = Math.max(currentModeMaxSpeed, action.speed + speedDelta)
                 }
                 //we started out going slower then currentModeMaxSpeed 
                 else {
                     //then don't go faster then currentModeMaxSpeed
-                    newSpeed = Math.min(currentModeMaxSpeed, character.speed + speedDelta)
+                    newSpeed = Math.min(currentModeMaxSpeed, action.speed + speedDelta)
 
                 }
             }
-            else if (character.speed < 0) {
+            else if (action.speed < 0) {
                 //accelerating forward while going backwards
                 //don't let the character go faster then currentModeMaxSpeed
-                newSpeed = Math.min(currentModeMaxSpeed, character.speed + speedDelta)
+                newSpeed = Math.min(currentModeMaxSpeed, action.speed + speedDelta)
             }
         }
         //character is accelerating backward
         else {
             //character is already moving forward
-            if (character.speed >= 0) {
+            if (action.speed >= 0) {
                 //accelerating backwards while moving forwards
                 //don't let the character go slower then currentModeMinSpeed
-                newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta)
+                newSpeed = Math.max(currentModeMinSpeed, action.speed + speedDelta)
             }
-            else if (character.speed < 0) {
+            else if (action.speed < 0) {
                 //accelerating backwards while moving backwards
                 //character started out going backwards faster then currentModeMinSpeed
-                if (character.speed < currentModeMinSpeed) {
+                if (action.speed < currentModeMinSpeed) {
                     //then don't slow down to less then currentModeMinSpeed
-                    newSpeed = Math.min(currentModeMinSpeed, character.speed + speedDelta)
+                    newSpeed = Math.min(currentModeMinSpeed, action.speed + speedDelta)
                 }
                 //accelerating backward while moving backward slower then currentModeMaxSpeed 
                 else {
                     //then don't go faster then currentModeMinSpeed
-                    newSpeed = Math.max(currentModeMinSpeed, character.speed + speedDelta)
+                    newSpeed = Math.max(currentModeMinSpeed, action.speed + speedDelta)
                 }
             }
         }
@@ -760,10 +834,10 @@ export default class GameEngine {
         return newSpeed
     }
 
-    private calculateRotation(character: Character, dt: number) {
+    calculateRotation(character: Character, action: MoveAction, dt: number) {
         let newAngle = character.rotation
-        if (character.rotationAcceleration != 0) {
-            newAngle = character.rotation + character.rotationAcceleration * dt / this.rotationMultiplier
+        if (action.rotationSpeed != 0) {
+            newAngle = character.rotation + action.rotationSpeed * dt / this.rotationMultiplier
         }
         //normalize it to between -2pi and 2pi
         newAngle %= (Math.PI * 2)
@@ -774,31 +848,17 @@ export default class GameEngine {
         return newAngle
     }
 
-    private calculatePosition(character: CharacterInterface, dt: number) {
-
-        const w = character.rotationAcceleration / this.rotationMultiplier
+    calculatePosition(character: CharacterInterface, action: MoveAction, dt: number) {
+        const w = action.rotationSpeed / this.rotationMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
-        if (character.speed != 0) {
+        if (action.speed != 0) {
             //calculate new position
-            x = character.location.x + character.speed * (Math.cos(character.rotation + w * dt)) * dt / this.speedMultiplier
-            y = character.location.y - character.speed * (Math.sin(character.rotation + w * dt)) * dt / this.speedMultiplier
+            x = character.location.x + action.speed * (Math.cos(character.rotation + w * dt)) * dt / this.speedMultiplier
+            y = character.location.y - action.speed * (Math.sin(character.rotation + w * dt)) * dt / this.speedMultiplier
         }
         return { x, y }
     }
 
-    start() {
-        this.timeoutID = setTimeout(this.tick.bind(this))
-        return this
-    }
 
-    restart() {
-        this.stop()
-        this.gameWorld.restart()
-        this.start()
-    }
-
-    stop() {
-        clearTimeout(this.timeoutID)
-    }
 }

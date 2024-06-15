@@ -272,7 +272,14 @@ export default class GameWorld {
 
         const old: Character | undefined = this.characters.get(updates.id)
         //console.log('old',old)
-        const merged: Character = new Character({ ...old, ...updates })
+
+        let merged: Character
+        if (!!old) {
+            merged = Object.assign(old, updates)
+        }
+        else {
+            merged = new Character({ ...old, ...updates })
+        }
         //console.log('merged', merged)
 
         if ((!merged.location.x && merged.location.x != 0) || (!merged.location.y && merged.location.y != 0)) {

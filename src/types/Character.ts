@@ -1,19 +1,23 @@
-import { Action, Actions } from "./actions/Action"
-import Point from "./Point"
-import { ZONETYPE } from "./ZONETYPE"
-import { SHAPE } from "./SHAPE"
-import WorldObject from "./WorldObject"
-import { GameEvents } from "./GameEvent"
+import { Action, Actions, DyingAction, EatAction, FollowAction, ForageAction } from "@/types/actions/Action"
+import Point from "@/types/Point"
+import { ZONETYPE } from "@/types/ZONETYPE"
+import { SHAPE } from "@/types/SHAPE"
+import WorldObject from "@/types/WorldObject"
+import { GameEvents } from "@/types/GameEvent"
 import GameEngine from "@/GameEngine"
 import { clamp } from "@/utility"
+import MoveToAction from "@/types/actions/MoveToAction"
+import AttackAction from "@/types/actions/AttackAction"
+import MoveAction from "./actions/MoveAction"
+import ExhaustionAction from "./actions/ExhaustionAction"
 
 export default class Character extends WorldObject implements CharacterInterface {
     playerId: string
     maxSpeed: number
-    speed: number
-    speedAcceleration: number
-    mode: number //1 for walk, 2 for  run, .5 for stealth, .25 for crawl
-    rotationAcceleration: number
+    //speed: number
+    //speedAcceleration: number
+    //mode: number //1 for walk, 2 for  run, .5 for stealth, .25 for crawl
+    //rotationAcceleration: number
     rotation: number
     hp: number
     tmpHp: number
@@ -23,7 +27,7 @@ export default class Character extends WorldObject implements CharacterInterface
     bab: number[]
     target: string
     targeters: string[]
-    actions: Actions
+    actions: Actions = []
     actionsRemaining: number
     events: GameEvents = []
     birthdate: Date
@@ -32,18 +36,50 @@ export default class Character extends WorldObject implements CharacterInterface
     xp: number
 
     doActions({ engine, dt, now }: { engine: GameEngine, dt: number, now: number }): void {
-        //console.log('character doActions', this.name)
-        this.actions.forEach((action) => {
-            if (!action.complete && !!action.do) {
-                action.do({ character: this, engine, dt, now })
+        //console.log('character doActions', this.actions)
+        this.actions.forEach((action, i) => {
+            //check if we have the do method or not
+            if (!action.do) {
+                //console.log('need to bind do')
+                switch (action.type) {
+                    case 'moveTo':
+                        action = new MoveToAction({ action })
+                        break
+                    case 'attack':
+                        action = new AttackAction({ action })
+                        break
+                    case 'follow':
+                        action = new FollowAction({ action })
+                        break
+                    case 'forage':
+                        action = new ForageAction({ action })
+                        break
+                    case 'eat':
+                        action = new EatAction({ action })
+                        break
+                    case 'dying':
+                        action = new DyingAction({ action })
+                        break
+                    case 'move':
+                        action.do = MoveAction.prototype.do.bind(action)
+                        break
+                    case 'exhaustion':
+                        action = new ExhaustionAction({ action })
+                        break
+                    default: const _exhaustiveCheck: never = action;
+                }
+                //this.actions.splice(i, 1, action)
+
             }
+            action.do({ character: this, engine, dt, now })
         })
     }
 
     addAction(engine: GameEngine, action: Action) {
-        //console.log('character addAction', this.name, action.turn)
+        //console.log('character addAction', action)
         engine.addActiveCharacter(action.turn, this.id)
         engine.updateCharacter(this)
+        //console.log(this.actions)
     }
 
     takeDamage({ engine, damage }: { engine: GameEngine, damage: number }) {
@@ -52,7 +88,7 @@ export default class Character extends WorldObject implements CharacterInterface
         //todo if its unconcious
         if (this.hp <= 0) {
             //clear accelerations and all actions
-            character = engine.updateCharacter({ id: this.id, actions: [], rotationAcceleration: 0, speedAcceleration: 0 }).getCharacter(this.id)!
+            character = engine.updateCharacter({ id: this.id, actions: [] }).getCharacter(this.id)!
         }
         //if its deaddead
         if (this.hp <= -10) {
@@ -69,10 +105,10 @@ export default class Character extends WorldObject implements CharacterInterface
         rotation = 0,
         location = { x: 0, y: 0 },
         maxSpeed = 30,
-        mode = 1,
-        speed = 0,
-        rotationAcceleration = 0,
-        speedAcceleration = 0,
+        //mode = 1,
+        //speed = 0,
+        //rotationAcceleration = 0,
+        //speedAcceleration = 0,
         hp = 1,
         tmpHp = 0,
         maxHp = 1,
@@ -94,11 +130,11 @@ export default class Character extends WorldObject implements CharacterInterface
         this.playerId = playerId
         this.maxSpeed = maxSpeed
         this.location = location
-        this.mode = mode
-        this.speed = speed
-        this.rotationAcceleration = rotationAcceleration
+        //this.mode = mode
+        //this.speed = speed
+        //this.rotationAcceleration = rotationAcceleration
         this.rotation = rotation
-        this.speedAcceleration = speedAcceleration
+        //this.speedAcceleration = speedAcceleration
         this.hp = hp
         this.tmpHp = tmpHp
         this.maxHp = maxHp
@@ -124,10 +160,10 @@ export interface CharacterInterface {
     rotation?: number
     location?: Point
     maxSpeed?: number
-    mode?: number
-    speed?: number
-    rotationAcceleration?: number
-    speedAcceleration?: number
+    //mode?: number
+    //speed?: number
+    //rotationAcceleration?: number
+    //speedAcceleration?: number
     hp?: number
     tmpHp?: number
     maxHp?: number
