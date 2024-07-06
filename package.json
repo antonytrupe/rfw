@@ -10,7 +10,7 @@
     "dev_ds": "gcloud beta emulators datastore start --no-store-on-disk",
     "dev": "nodemon",
     "build": "next build && tsc --project tsconfig.server.json && tsc-alias --project tsconfig.server.json",
-    "start": "cross-env NODE_ENV=production node dist/src/server.js",
+    "start": "cross-env NODE_ENV=production ts-node src/server.js",
     "nodemon": "nodemon",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "lint": "next lint",
