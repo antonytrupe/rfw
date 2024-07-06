@@ -1308,13 +1308,13 @@ export default class ClientEngine {
             this.socket = io({
                 path: REALTIME_API_PATH
             })
-            console.log(1)
+            // console.log(1)
             this.socket.on(CONSTANTS.CONNECT, () => {
-                console.log(3)
+                // console.log(3)
 
                 this.onConnect()
             })
-            console.log(2)
+            // console.log(2)
 
             //disconnect handler
             this.socket?.on(CONSTANTS.DISCONNECT, (reason: any) => {
