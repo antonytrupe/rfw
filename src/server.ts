@@ -7,6 +7,8 @@ import { Server } from 'socket.io'
 import Character from './types/Character'
 import Player from './types/Player'
 
+console.log('starting server')
+
 const port: number = parseInt(process.env.PORT || '3000', 10)
 const dev: boolean = process.env.NODE_ENV !== 'production'
 const nextApp = next({ dev })
