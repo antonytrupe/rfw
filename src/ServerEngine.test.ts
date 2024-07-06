@@ -94,15 +94,7 @@ describe.skip('ServerEngine', () => {
         expect(player?.id).toBe("one")
     })
 
-    test('saveCharacter', async () => {
-        let c: Character | undefined = await serverEngine.saveCharacter(new Character({ id: '0' }))
-        expect(c?.id).toBe("0")
-
-        c = await serverEngine.loadCharacter('0')
-        console.log('c', c)
-        expect(c?.id).toBe("0")
-
-    })
+    
 
     describe('claim/control', () => {
         let character1: Character

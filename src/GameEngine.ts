@@ -15,6 +15,13 @@ import MoveToAction from "./types/actions/MoveToAction"
 import MoveAction from "./types/actions/MoveAction"
 import ExhaustionAction from "./types/actions/ExhaustionAction"
 
+interface ZoneInfo {
+    name: string
+    x: number
+    y: number
+    width: number
+}
+
 //processes game logic
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
@@ -453,23 +460,35 @@ export default class GameEngine {
         return this.gameWorld.getCharacter(characterId)
     }
 
-    getZonesIn({ top, bottom, left, right, scale }: { top: number, bottom: number, left: number, right: number, scale: number }): string[] {
-        //TODO scale determines what kind of zones to use, not viewport, I think
+    getZonesIn({ top, bottom, left, right, scale }: { top: number, bottom: number, left: number, right: number, scale: number }): ZoneInfo[] {
+        //TODO scale determines what *kind* of zones to use, not viewport, I think
         const area = (right - left) * (bottom - top)
-        let zones: string[] = []
+        let zones: ZoneInfo[] = []
         if (area < 1000000) {
             //tactical zones
-            for (let x = left; x < right; x += 30) {
-                for (let y = top; y < bottom; y += 30) {
-                    zones.push(this.gameWorld.getTacticalZoneName({ x: x, y: y }))
+            const width = 120
+            for (let x = left; x < right + width; x += width) {
+                for (let y = top; y < bottom + width; y += width) {
+                    zones.push({
+                        name: this.gameWorld.getTacticalZoneName({ x: x, y: y }),
+                        x: Math.floor(x / width) * width,
+                        y: Math.floor(y / width) * width,
+                        width
+                    })
                 }
             }
         }
         else {
+            const width = 600
             //TODO do local zone names
-            for (let x = left; x < right; x += 300) {
-                for (let y = top; y < bottom; y += 300) {
-                    zones.push(this.gameWorld.getLocalZoneName({ x: x, y: y }))
+            for (let x = left; x < right + width; x += width) {
+                for (let y = top; y < bottom + width; y += width) {
+                    zones.push({
+                        name: this.gameWorld.getLocalZoneName({ x: x, y: y }),
+                        x: Math.floor(x / width) * width,
+                        y: Math.floor(y / width) * width,
+                        width
+                    })
                 }
             }
         }

@@ -280,7 +280,7 @@ export default class ClientEngine {
 
         this.drawCrossHair(ctx)
 
-
+        //this.drawZoneBoundaries(ctx)
 
         if (this.scale < 30) {
 
@@ -338,6 +338,31 @@ export default class ClientEngine {
 
         //this.pencilCircle(ctx, { x: 200, y: 200 }, 2.5 * this.PIXELS_PER_FOOT, 40)
         this.drawChatHistory(ctx)
+    }
+
+    drawZoneBoundaries(ctx: CanvasRenderingContext2D) {
+        const zones = this.getZonesInViewPort()
+        //          {
+        //     "name": "T:-3:-3",
+        //     "x": -90,
+        //     "y": -90,
+        //     "width": 30
+        // }
+        zones.forEach((z) => {
+            ctx.rect(z.x * this.PIXELS_PER_FOOT, z.y * this.PIXELS_PER_FOOT, z.width * this.PIXELS_PER_FOOT, z.width * this.PIXELS_PER_FOOT)
+            ctx.stroke()
+        })
+        const z = {
+            "name": "T:-3:-3",
+            "x": 30,
+            "y": 30,
+            "width": 30
+        }
+        //console.log(z)
+        // ctx.rect(z.x * this.PIXELS_PER_FOOT, z.y * this.PIXELS_PER_FOOT, z.width * this.PIXELS_PER_FOOT, z.width * this.PIXELS_PER_FOOT)
+        // ctx.stroke()
+        //console.log(zones)
+        //throw new Error("Method not implemented.")
     }
 
     pencilCircle(ctx: CanvasRenderingContext2D, origin: Point, radius: number, thickness: number) {

@@ -247,14 +247,14 @@ export default class GameWorld {
         //H overland/one hour
         //D overland/one day
         //name them by top left point
-        const fx = Math.floor(x / 30)
-        const fy = Math.floor(y / 30)
+        const fx = Math.floor(x / 120)
+        const fy = Math.floor(y / 120)
         return 'T:' + fx + ':' + fy
     }
 
     getLocalZoneName({ x, y }: Point): string {
-        const fx = Math.floor(x / 300)
-        const fy = Math.floor(y / 300)
+        const fx = Math.floor(x / 600)
+        const fy = Math.floor(y / 600)
         return 'M:' + fx + ':' + fy
     }
 

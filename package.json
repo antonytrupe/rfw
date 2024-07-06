@@ -16,7 +16,8 @@
     "lint": "next lint",
     "startelectron": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "foo":"dev_ds && dev"
   },
   "dependencies": {
     "@google-cloud/datastore": "^8.5.0",

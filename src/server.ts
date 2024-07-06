@@ -52,7 +52,7 @@ nextApp.prepare().then(async () => {
     })
     .patch(async (req, res) => {
       const update = engine.updateCharacter(new Character(req.body))
-      await engine.saveCharacter(update)
+      await engine.persistCharacter(update)
       const characters = engine.getAllCharacters()
       res.json(Array.from(characters.values()))
     })

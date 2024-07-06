@@ -34,7 +34,7 @@ export default class MoveToAction extends BaseAction {
      * @param param0 
      */
     do({ engine, character, dt, now }: { engine: GameEngine, character: Character, dt: number, now: number }) {
-        console.log('do moveToAction', character.name)
+        //console.log('do moveToAction', character.name)
 
         const dist = distanceBetweenPoints(this.location, character.location)
         let targetRotation: number
