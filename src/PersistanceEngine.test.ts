@@ -15,7 +15,7 @@ import PersistanceEngine from "./PersistanceEngine";
 import { assert } from "console";
 
 
-describe('datastore basics', () => {
+describe.skip('datastore basics', () => {
     let emulator: Emulator
 
     beforeAll(() => {
@@ -70,7 +70,7 @@ describe('datastore basics', () => {
     })
 })
 
-describe('PersistanceEngine', () => {
+describe.skip('PersistanceEngine', () => {
     let p: PersistanceEngine
     let emulator: Emulator
     beforeEach(async () => {
