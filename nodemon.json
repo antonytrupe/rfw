@@ -13,6 +13,6 @@
         "src/types/*"
     ],
     "ext": "js json ts tsx jsx",
-    "exec": "ts-node --project tsconfig.server.json src/server.ts",
+    "exec": "ts-node --pretty --transpile-only --project tsconfig.server.json src/server.ts",
     "delay": "6000"
 }
