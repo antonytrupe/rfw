@@ -65,4 +65,4 @@ ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 #CMD ["npm", "start"]
-CMD ["node", "dist/server.js"]
+CMD ["node", "server.js"]
