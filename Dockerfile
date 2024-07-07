@@ -64,5 +64,7 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
+run echo 
+
 #CMD ["npm", "start"]
-CMD ["node", "server.js"]
+CMD ["node", "dist/src/server.js"]
