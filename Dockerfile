@@ -67,4 +67,5 @@ ENV HOSTNAME "0.0.0.0"
 run echo 
 
 #CMD ["npm", "start"]
-CMD ["node", "dist/src/server.js"]
+ENTRYPOINT ["node"]
+CMD ["dist/src/server.js"]
