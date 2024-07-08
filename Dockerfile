@@ -16,7 +16,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=ci /app/node_modules/ ./node_modules/
 #COPY . .
-COPY package*.json .
+COPY package*.json ./
 COPY tsconfig.json .
 COPY tsconfig.server.json .
 COPY next.config.js .
