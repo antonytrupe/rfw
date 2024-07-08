@@ -85,6 +85,6 @@ nextApp.prepare().then(async () => {
       `> Server listening at http://localhost:${port} as ${dev ? "development" : process.env.NODE_ENV}`
     )
   })
-}).catch(() => {
-  console.log('oops')
+}).catch((e) => {
+  console.log('oops',e)
 })
