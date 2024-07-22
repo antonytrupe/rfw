@@ -69,6 +69,12 @@ export default class ClientEngine {
             const parts = message.split(' ')
 
             switch (parts[0].substring(1).toLowerCase()) {
+                case "unclaim":
+                    if (this.player.claimedCharacters.length > 0) {
+                        this.unClaim(this.player.claimedCharacters[0])
+                    }
+
+                    break
                 case "spawn":
                     switch (parts[1].toUpperCase()) {
                         case COMMUNITY_SIZE.THORP:
@@ -150,7 +156,7 @@ export default class ClientEngine {
         //console.log('claim')
         if (this.player) {
             this.player.claimedCharacters.splice(this.player.claimedCharacters.findIndex(c => c == characterId), 1)
-            this.player.controlledCharacter = ""
+            //this.player.controlledCharacter = ""
             this.socket?.emit(CONSTANTS.UNCLAIM_CHARACTER, characterId)
         }
     }

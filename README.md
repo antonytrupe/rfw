@@ -3,6 +3,8 @@ how to run
 npm install  
 npm run dev, or npm run nodemon to pick up changes to the server 
 
+npm run dev_ds
+
 gcloud beta emulators datastore env-init > set_vars.cmd && set_vars.cmd  
 gcloud beta emulators datastore start --project=rfw2-403802 --no-store-on-disk 
 

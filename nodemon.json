@@ -5,6 +5,7 @@
         ".next"
     ],
     "watch": [
+        "src/Persistance.ts",
         "src/GameEngine.ts",
         "src/ServerEngine.ts",
         "src/GameWorld.ts",

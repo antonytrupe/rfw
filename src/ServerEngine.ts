@@ -614,7 +614,7 @@ export default class ServerEngine {
             })
     }
 
-    async loadAllCharacters() { 
+    async loadAllCharacters() {
         this.persitance.loadAllCharacters()
             .then(([characters]) => {
                 //console.log(characters)
@@ -634,7 +634,7 @@ export default class ServerEngine {
 
     //only persists, doesn't add to engine
     async persistCharacter(character: Character) {
-        return this.persitance.persistCharacter(character) 
+        return this.persitance.persistCharacter(character)
     }
 
     //loads from persistance
@@ -999,8 +999,11 @@ export default class ServerEngine {
     }
 
     stop() {
-        //this.stopped = true
+        console.log('stopping server engine')
         this.gameEngine.stop()
+        //TODO persist everything
+        this.persitance.persistCharacters(this.getAllCharacters())
+        // this.persitance.persistWorld(this.gameEngine.gameWorld.id)
     }
 
     start() {

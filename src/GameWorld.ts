@@ -12,11 +12,6 @@ import { ZONETYPE } from "./types/ZONETYPE"
 //doesn't know anything about client/server
 export default class GameWorld {
 
-    //
-    //the entries are just a list of character ids
-    getObject(id: string): any {
-        return this.worldObjects.get(id)
-    }
 
     //needs to be private to force going through a setter to keep the zones up to date
     private characters: Map<string, Character> = new Map<string, Character>()
@@ -28,6 +23,14 @@ export default class GameWorld {
     //
     //the entries are just a list of character ids
     private zones: Zones = new Map<string, Zone>()
+
+    private id: string
+
+    //
+    //the entries are just a list of character ids
+    getObject(id: string): any {
+        return this.worldObjects.get(id)
+    }
 
     restart() {
         this.characters = new Map<string, Character>()
@@ -102,9 +105,12 @@ export default class GameWorld {
 
         })
 
-
         this.worldObjects.set(merged.id, merged)
         return this
+    }
+
+    getZones(o: WorldObject) {
+        return this.getZoneNames(o.location, o.zoneType)
     }
 
     getZoneNames(location: Point, zoneTypes: ZONETYPE[]) {

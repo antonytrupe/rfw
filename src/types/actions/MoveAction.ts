@@ -12,7 +12,7 @@ export default class MoveAction extends BaseAction {
      */
     mode: number = 1
     rotationSpeed: number = 0
-    speed: number=0
+    speed: number = 0
 
     constructor({ engine, character, action }: {
         engine: GameEngine, character: Character, action: Partial<MoveAction>
@@ -37,8 +37,7 @@ export default class MoveAction extends BaseAction {
 
     /**
      * this action updates the characters rotation and speed acceleration values
-     * @param param0 
-     */
+      */
     do({ engine, character, dt, now }: { engine: GameEngine, character: Character, dt: number, now: number }) {
         //console.log('do moveAction', character.id)
 
@@ -62,11 +61,14 @@ export default class MoveAction extends BaseAction {
 
         engine.updateCharacter({ id: character.id, location: newPosition, rotation: newRotation })
 
-        this.speed=newSpeed
+        this.speed = newSpeed
 
         //make sure the character is in next turn's list of active characters
-        if (this.rotationSpeed === 0 && this.speedAcceleration === 0 && this.speed === 0) {
+        if (this.rotationSpeed !== 0 || this.speedAcceleration !== 0 || this.speed !== 0) {
             engine.addActiveCharacter(CONTINUOUS, character.id)
+        }
+        else if (this.rotationSpeed === 0 && this.speedAcceleration === 0 && this.speed === 0) {
+            engine.removeActiveCharacter(CONTINUOUS, character.id)
         }
     }
 }

@@ -7,12 +7,35 @@ import Character from './types/Character'
 
 
 export default class PersistanceEngine {
+
+    // async persistWorld() {
+    //     const kind = WORLD_KIND
+    //     // The Cloud Datastore key for the new entity
+    //     const key = this.datastore.key([kind, character.id])
+    //     // Prepares the new entity
+
+    //     // Saves the entity
+    //     await this.datastore.save({
+    //         key: key,
+    //         data: character
+    //     })
+    // }
+
+    async persistCharacters(characters: Map<string, Character>) {
+        const saves = []
+        characters.forEach((character) => {
+            saves.push(this.persistCharacter(character))
+        })
+        await Promise.all(saves)
+    }
+
     async loadCharacter(id: string): Promise<Character> {
         const key = this.datastore.key([CHARACTER_KIND, id])
         this.datastore.get(key)
         const [character] = await this.datastore.get(key)
         return character
     }
+
     async persistCharacter(character: Character) {
         const kind = CHARACTER_KIND
         // The Cloud Datastore key for the new entity
@@ -22,7 +45,7 @@ export default class PersistanceEngine {
         // Saves the entity
         await this.datastore.save({
             key: key,
-            data: character
+            data: {...character}
         })
         return character
     }

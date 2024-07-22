@@ -26,6 +26,10 @@ interface ZoneInfo {
 //interacts with the gameworld object and updates it
 //doesn't know anything about client/server
 export default class GameEngine {
+    removeActiveCharacter(turn: number, id: string) {
+        this.activeCharacters.get(turn).delete(id)
+    }
+
     getActiveCharacters() {
         return this.activeCharacters
     }
@@ -80,6 +84,7 @@ export default class GameEngine {
     }
 
     stop() {
+        console.log('stopping game engine')
         clearTimeout(this.timeoutID)
     }
 
@@ -165,27 +170,7 @@ export default class GameEngine {
 
                 character.doActions({ engine: this, dt, now })
 
-                //TODO make movement in step an action
-                // {
-                //     //calculate the new angle
-                //     let newRotation = this.calculateRotation(character, dt)
 
-                //     //TODO if they went over their walk speed or they went over their walk distance, then consume an action
-                //     //TODO if they don't have an action to use for running, don't let them run
-                //     let newSpeed = this.calculateSpeed(character, dt / 2)
-
-                //     let newPosition = this.calculatePosition({ ...character, speed: newSpeed }, dt)
-
-                //     newSpeed = this.calculateSpeed({ ...character, speed: newSpeed }, dt / 2)
-
-                //     //check for collisions
-                //     newPosition = this.slide(character, newPosition)
-
-                //     this.updateCharacter({ id: character.id, location: newPosition, speed: newSpeed, rotation: newRotation })
-                //     if (newPosition?.x != character.location.x || newPosition.y != character.location.y || newSpeed != character.speed || newRotation != character.rotation) {
-                //         updatedCharacters.add(character.id)
-                //     }
-                // }
             })
 
         })
@@ -233,8 +218,6 @@ export default class GameEngine {
         characterIds.forEach((id) => this.deleteCharacter(id))
     }
 
-
-
     private frameTimes: number[] = []
 
     getAverageFPS(): number {
@@ -251,8 +234,6 @@ export default class GameEngine {
             this.frameTimes.splice(0, 1)
         }
     }
-
-
 
     slide(character: Character, newPosition: Point): Point {
         let collisionObjects: WorldObject[] =
@@ -868,7 +849,7 @@ export default class GameEngine {
     }
 
     calculatePosition(character: CharacterInterface, action: MoveAction, dt: number) {
-        const w = action.rotationSpeed / this.rotationMultiplier
+        const w = (action.rotationSpeed|0) / this.rotationMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
         if (action.speed != 0) {
@@ -878,6 +859,4 @@ export default class GameEngine {
         }
         return { x, y }
     }
-
-
 }

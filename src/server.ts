@@ -25,6 +25,13 @@ nextApp.prepare().then(async () => {
   })
   const engine: ServerEngine = new ServerEngine(io)
 
+
+  process.on('SIGINT', function () {
+    console.log("SIGINT");
+    engine.stop()
+    process.exit()
+  })
+
   app.route('/admin/reconnect')
     .get(async (req, res) => {
       engine.connect()
@@ -86,5 +93,5 @@ nextApp.prepare().then(async () => {
     )
   })
 }).catch((e) => {
-  console.log('oops',e)
+  console.log('oops', e)
 })
