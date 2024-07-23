@@ -18,6 +18,7 @@ export default class WorldObject implements WorldObjectInterface {
     physics: boolean
 
     constructor({ id = '__test__',
+        name="__test__",
         location = { x: 0, y: 0 },
         rotation = 0,
         shape = SHAPE.CIRCLE,
@@ -30,6 +31,7 @@ export default class WorldObject implements WorldObjectInterface {
         zoneType = [ZONETYPE.TACTICAL],
         physics = true }: WorldObjectInterface) {
         this.id = id
+        this.name=name
         this.location = location
         this.rotation = rotation
         this.shape = shape

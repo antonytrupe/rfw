@@ -83,7 +83,7 @@ describe('single player game', () => {
 
 
     test('engine starts correct timestamp', () => {
-        expect(gameEngine.startTime).toBeCloseTo(new Date().getTime(), -1)
+        expect(gameEngine.createTime).toBeCloseTo(new Date().getTime(), -1)
     })
 
     test('engine starts at turn 0', () => {
@@ -128,7 +128,7 @@ describe('single player game', () => {
         expect(a.type).toBe('exhaustion')
         expect(a.exhaustionLevel).toBe(0)
 
-        gameEngine.step(day + minute, gameEngine.startTime + day + minute)
+        gameEngine.step(day + minute, gameEngine.createTime + day + minute)
         expect(gameEngine.currentTurn).toBe(14410)
         a = one.actions.find((action): action is ExhaustionAction => action.type == 'exhaustion')
         expect(a.exhaustionLevel).toBe(1)
@@ -172,7 +172,7 @@ describe('single player game', () => {
         expect(a.steps).toBe(0)
         expect(a.sum).toBe(0)
 
-        gameEngine.step(day + minute, gameEngine.startTime + day + minute)
+        gameEngine.step(day + minute, gameEngine.createTime + day + minute)
         expect(gameEngine.currentTurn).toBe(14410)
         expect(a.steps).toBe(1)
         expect(a.sum).toBe(day + minute)
@@ -239,7 +239,7 @@ describe('single player game', () => {
         expect(a.lastRestTurn).toBe(0)
         expect(a.turn).toBe(14400)
 
-        const start = gameEngine.startTime
+        const start = gameEngine.createTime
 
         expect(gameEngine.currentTurn).toBe(0)
 

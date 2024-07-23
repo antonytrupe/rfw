@@ -12,7 +12,6 @@ import { ZONETYPE } from "./types/ZONETYPE"
 //doesn't know anything about client/server
 export default class GameWorld {
 
-
     //needs to be private to force going through a setter to keep the zones up to date
     private characters: Map<string, Character> = new Map<string, Character>()
     private worldObjects: Map<string, WorldObject> = new Map<string, WorldObject>()
@@ -23,8 +22,9 @@ export default class GameWorld {
     //
     //the entries are just a list of character ids
     private zones: Zones = new Map<string, Zone>()
+    createTime = new Date().getTime()
 
-    private id: string
+    //private id: string
 
     //
     //the entries are just a list of character ids

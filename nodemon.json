@@ -5,12 +5,13 @@
         ".next"
     ],
     "watch": [
-        "src/Persistance.ts",
+        "src/PersistanceEngine.ts",
         "src/GameEngine.ts",
         "src/ServerEngine.ts",
         "src/GameWorld.ts",
         "src/Geometry.ts",
         "src/server.ts",
+        "nodemon.json",
         "src/types/*"
     ],
     "ext": "js json ts tsx jsx",

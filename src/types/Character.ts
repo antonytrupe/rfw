@@ -35,6 +35,10 @@ export default class Character extends WorldObject implements CharacterInterface
     race: string
     xp: number
 
+    dehyrate() {
+        return JSON.parse(JSON.stringify(this)) as Character
+    }
+
     doActions({ engine, dt, now }: { engine: GameEngine, dt: number, now: number }): void {
         //console.log('character doActions', this.actions)
         this.actions.forEach((action, i) => {

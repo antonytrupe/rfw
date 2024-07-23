@@ -27,7 +27,7 @@ interface ZoneInfo {
 //doesn't know anything about client/server
 export default class GameEngine {
     removeActiveCharacter(turn: number, id: string) {
-        this.activeCharacters.get(turn).delete(id)
+        this.activeCharacters.get(turn)?.delete(id)
     }
 
     getActiveCharacters() {
@@ -44,7 +44,7 @@ export default class GameEngine {
 
     private fps: number
 
-    private lastTimestamp: DOMHighResTimeStamp | undefined
+    private lastTime: number | undefined
     //lower number means faster, higher means slower
     private accelerationMultiplier: number = 20
     //private rotationMultiplier: number = 1000 / Math.PI
@@ -54,9 +54,9 @@ export default class GameEngine {
     //30ft/6seconds
     private speedMultiplier: number = 6000
     private timeoutID: NodeJS.Timeout | undefined
-    private doGameLogic: boolean
-    private quests = quests
-    startTime = new Date().getTime()
+    //private doGameLogic: boolean
+    //private quests = quests
+    createTime = new Date().getTime()
     currentTurn: number = 0
 
     /**
@@ -65,11 +65,8 @@ export default class GameEngine {
      */
     constructor({ fps, doGameLogic = true }: { fps: number, doGameLogic?: boolean }, eventEmitter: EventEmitter) {
         this.gameWorld = new GameWorld()
-        //this.on = eventEmitter.on.bind(eventEmitter)
         this.emit = eventEmitter.emit.bind(eventEmitter)
-        //this.eventNames = eventEmitter.eventNames.bind(eventEmitter)
         this.fps = fps
-        this.doGameLogic = doGameLogic
     }
 
     start() {
@@ -91,9 +88,9 @@ export default class GameEngine {
     //this is the wrapper and callback function that calls step
     private tick() {
         const now = new Date().getTime()
-        this.lastTimestamp = this.lastTimestamp || now
-        const dt = now - this.lastTimestamp
-        this.lastTimestamp = now
+        this.lastTime = this.lastTime || now
+        const dt = now - this.lastTime
+        this.lastTime = now
         this.step(dt, now)
         //console.log('this.ticksPerSecond', this.ticksPerSecond)
         this.timeoutID = setTimeout(this.tick.bind(this), 1000 / this.fps)
@@ -113,9 +110,15 @@ export default class GameEngine {
         //console.log('GameEngine.step')
         const started = now
 
+
+        //createTime 9000ms
+        //now        11000ms
+        //now-create time 11000-9000=2000
+        // 2000/1000
+
         //figure out if this is the first step of a new turn
-        const lastTurn = Math.floor(((now - this.startTime) - dt) / 1000 / 6)
-        this.currentTurn = Math.floor((now - this.startTime) / 1000 / 6)
+        const lastTurn = Math.floor(((now - this.createTime) - dt) / 1000 / 6)
+        this.currentTurn = Math.floor((now - this.createTime) / 1000 / 6)
         let newTurn = false
         if (lastTurn != this.currentTurn) {
             newTurn = true
@@ -849,7 +852,8 @@ export default class GameEngine {
     }
 
     calculatePosition(character: CharacterInterface, action: MoveAction, dt: number) {
-        const w = (action.rotationSpeed|0) / this.rotationMultiplier
+        console.log(action)
+        const w = (action?.rotationSpeed | 0) / this.rotationMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
         if (action.speed != 0) {

@@ -18,6 +18,9 @@ import { ViewPort } from "./types/Viewport"
 var seedrandom = require('seedrandom')
 
 export default class ClientEngine {
+    getCreateTime(): number {
+        return this.gameEngine.createTime
+    }
 
     private socket: Socket | undefined
 
@@ -1089,7 +1092,7 @@ export default class ClientEngine {
         this.socket?.emit(CONSTANTS.SPAWN_COMMUNITY, { ...options, location: origin })
     }
 
-    addMoveAction(characterId: string, location: Point) {
+    addMoveToAction(characterId: string, location: Point) {
         //console.log('addMoveAction')
         //TODO move not moveto
         this.gameEngine.addMoveToAction(characterId, location)
@@ -1142,7 +1145,7 @@ export default class ClientEngine {
 
         if (!!this.player?.controlledCharacter) {
             const location = this.getGamePosition(e.nativeEvent)
-            this.addMoveAction(this.player.controlledCharacter, location)
+            this.addMoveToAction(this.player.controlledCharacter, location)
         }
     }
 
@@ -1300,8 +1303,6 @@ export default class ClientEngine {
         }
     }
 
-
-
     disconnect() {
         this.socket?.disconnect()
         return true
@@ -1339,6 +1340,11 @@ export default class ClientEngine {
                 if (chat.message) {
                     this.updateChat(chat?.message)
                 }
+            })
+
+            //world info
+            this.socket?.on(CONSTANTS.WORLD_INFO, ({ createTime }: { createTime: number }) => {
+                this.gameEngine.createTime = createTime
             })
 
             //character location data
@@ -1390,7 +1396,10 @@ export default class ClientEngine {
         //restart/reset the gameengine and gameworld
         this.gameEngine.restart()
 
-        //ask the server for characters
+        //ask the server for meta info about the world
+        this.socket?.emit(CONSTANTS.WORLD_INFO)
+
+        //ask the server for characters in our viewport
         this.socket?.emit(CONSTANTS.CLIENT_VIEWPORT, this.getViewPort())
     }
 

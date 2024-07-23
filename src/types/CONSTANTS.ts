@@ -5,6 +5,7 @@ export const TEMPLATE_DB_PATH = "data/templates"
 export const OBJECT_DB_PATH = "data/objects"
 export const CHARACTER_KIND = 'CHARACTER'
 export const OBJECT_KIND = 'OBJECT'
+export const WORLD_KIND = 'WORLD'
 export const PLAYER_KIND = 'PLAYER'
 export const TEMPLATE_KIND = 'TEMPLATE'
 
@@ -75,3 +76,5 @@ export const TARGET_CHARACTER = 'world.character.targeted'
 export const MOVE_TO = 'world.character.move_to'
 
 export const REALTIME_API_PATH = '/api/realtime/'
+
+export const WORLD_INFO ='world.info'

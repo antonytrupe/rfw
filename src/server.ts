@@ -6,8 +6,13 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import Character from './types/Character'
 import Player from './types/Player'
+import dotenv from 'dotenv'
 
-console.log('starting server')
+dotenv.config({ path: '.env.local' })
+dotenv.config()
+const world: string = process.env.WORLD || 'prod'
+
+console.log('starting server for world', world)
 
 const port: number = parseInt(process.env.PORT || '3000', 10)
 const dev: boolean = process.env.NODE_ENV !== 'production'
@@ -23,19 +28,18 @@ nextApp.prepare().then(async () => {
   const io = new Server(server, {
     path: REALTIME_API_PATH
   })
-  const engine: ServerEngine = new ServerEngine(io)
+  const engine: ServerEngine = new ServerEngine(io, world)
+  engine.start()
 
-
-  process.on('SIGINT', function () {
-    console.log("SIGINT");
-    engine.stop()
+  process.on('SIGINT', async function () {
+    await engine.stop()
     process.exit()
   })
 
   app.route('/admin/reconnect')
     .get(async (req, res) => {
-      engine.connect()
-      //console.log('reconnected to datastore')
+      engine.connectPersistance()
+      console.log('reconnected to datastore')
       res.json({ reconnected: true })
     })
 

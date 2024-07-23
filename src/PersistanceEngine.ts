@@ -1,25 +1,42 @@
 import { Datastore, PropertyFilter } from '@google-cloud/datastore'
 import WorldObject from './types/WorldObject'
-import { CHARACTER_KIND, OBJECT_KIND, PLAYER_KIND, TEMPLATE_KIND } from './types/CONSTANTS'
+import { CHARACTER_KIND, OBJECT_KIND, PLAYER_KIND, TEMPLATE_KIND, WORLD_KIND } from './types/CONSTANTS'
 import { v4 as uuidv4 } from 'uuid'
 import Player from './types/Player'
 import Character from './types/Character'
+import GameEngine from './GameEngine'
 
 
 export default class PersistanceEngine {
 
-    // async persistWorld() {
-    //     const kind = WORLD_KIND
-    //     // The Cloud Datastore key for the new entity
-    //     const key = this.datastore.key([kind, character.id])
-    //     // Prepares the new entity
 
-    //     // Saves the entity
-    //     await this.datastore.save({
-    //         key: key,
-    //         data: character
-    //     })
-    // }
+    private datastore: Datastore
+    world: string
+
+    constructor(world: string) {
+        this.world = world
+    }
+
+    public async persistGameWorld(engine: GameEngine) {
+        // The Cloud Datastore key for the new entity
+        const key = this.datastore.key([WORLD_KIND, this.world])
+        console.log(key)
+        // Prepares the new entity
+
+        // Saves the entity
+        await this.datastore.save({
+            key: key,
+            data: { createTime: engine.createTime }
+        })
+    }
+
+    async loadGameWorld(): Promise<any> {
+        const key = this.datastore.key([WORLD_KIND, this.world])
+        this.datastore.get(key)
+        const [world] = await this.datastore.get(key)
+        //console.log(world)
+        return world
+    }
 
     async persistCharacters(characters: Map<string, Character>) {
         const saves = []
@@ -30,7 +47,7 @@ export default class PersistanceEngine {
     }
 
     async loadCharacter(id: string): Promise<Character> {
-        const key = this.datastore.key([CHARACTER_KIND, id])
+        const key = this.datastore.key([WORLD_KIND, this.world, CHARACTER_KIND, id])
         this.datastore.get(key)
         const [character] = await this.datastore.get(key)
         return character
@@ -39,30 +56,37 @@ export default class PersistanceEngine {
     async persistCharacter(character: Character) {
         const kind = CHARACTER_KIND
         // The Cloud Datastore key for the new entity
-        const key = this.datastore.key([kind, character.id])
+        const key = this.datastore.key([WORLD_KIND, this.world, kind, character.id])
         // Prepares the new entity
+
+        //console.log(character.dehyrate() )
 
         // Saves the entity
         await this.datastore.save({
             key: key,
-            data: {...character}
+            data: character.dehyrate()
         })
         return character
     }
     loadAllCharacters() {
+        console.log('loading characters...')
         const characterQuery = this.datastore.createQuery(CHARACTER_KIND)
+        //[WORLD_KIND, this.world,
+        characterQuery.hasAncestor(this.datastore.key([WORLD_KIND, this.world]))
+        console.log('...finished loading characters')
+
         return this.datastore.runQuery(characterQuery)
     }
     loadTemplates() {
-        const templateQuery = this.datastore.createQuery(TEMPLATE_KIND)
+        const templateQuery = this.datastore.createQuery([WORLD_KIND, this.world, TEMPLATE_KIND])
         return this.datastore.runQuery(templateQuery)
     }
     async loadObjects() {
-        const objectQuery = this.datastore.createQuery(OBJECT_KIND)
+        const objectQuery = this.datastore.createQuery([WORLD_KIND, this.world, OBJECT_KIND])
         return this.datastore.runQuery(objectQuery)
     }
     async deleteCharacter(characterId: string) {
-        await this.datastore.delete(this.datastore.key([CHARACTER_KIND, characterId]))
+        await this.datastore.delete(this.datastore.key([WORLD_KIND, this.world, CHARACTER_KIND, characterId]))
     }
 
     async getPlayerByEmail(email: string) {
@@ -113,7 +137,7 @@ export default class PersistanceEngine {
         // The name/ID for the new entity
         const name = newObject.id
         // The Cloud Datastore key for the new entity
-        const taskKey = this.datastore.key([kind, name])
+        const taskKey = this.datastore.key([WORLD_KIND, this.world, kind, name])
         // Prepares the new entity
         const task = {
             key: taskKey,
@@ -122,8 +146,6 @@ export default class PersistanceEngine {
         // Saves the entity
         this.datastore.save(task)
     }
-    private datastore: Datastore
-
 
     connect() {
         this.datastore = new Datastore({ projectId: 'rfw2-403802' })

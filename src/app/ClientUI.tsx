@@ -163,7 +163,7 @@ export default function ClientUI() {
       onKeyUp={onKeyUp}
       style={{ height: '100%' }}>
 
-      <Draggable nodeRef={clockRef}><div ref={clockRef}><Clock /></div></Draggable>
+      <Draggable nodeRef={clockRef}><div ref={clockRef}><Clock initialTime={clientEngine?.getCreateTime()}/></div></Draggable>
 
       {!session?.user && <Link href={'/api/auth/signin'} className='session action signin'>Sign In</Link>}
       {!!session?.user && <Link href={'/api/auth/signout'} className='signOut session action' >

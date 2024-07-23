@@ -20,40 +20,39 @@ import { adjectives, colors, names, uniqueNamesGenerator } from "unique-names-ge
 import { quests } from "./types/Quest"
 import { ViewPort } from "./types/Viewport"
 import PersistanceEngine from "./PersistanceEngine"
-import { ACCELERATE, ACCELERATE_DOUBLE, ATTACK, CAST_SPELL, CHARACTER_KIND, CHAT, CLAIM_CHARACTER, CLIENT_CHARACTER_UPDATE, CLIENT_VIEWPORT, CONNECTION, CONTROL_CHARACTER, CREATE_CHARACTER, CREATE_OBJECT, CURRENT_PLAYER, DECELERATE, DISCONNECT, FORAGE, MOVE_TO, QUESTS, SERVER_CHARACTER_UPDATE, SPAWN_COMMUNITY, STOP_ACCELERATE, STOP_DOUBLE_ACCELERATE, TEMPLATE_KIND, TEMPLATE_OBJECTS, TURN_LEFT, TURN_RIGHT, TURN_STOP, UNCLAIM_CHARACTER, WORLD_OBJECTS } from "./types/CONSTANTS"
+import { ACCELERATE, ACCELERATE_DOUBLE, ATTACK, CAST_SPELL, CHARACTER_KIND, CHAT, CLAIM_CHARACTER, CLIENT_CHARACTER_UPDATE, CLIENT_VIEWPORT, CONNECTION, CONTROL_CHARACTER, CREATE_CHARACTER, CREATE_OBJECT, CURRENT_PLAYER, DECELERATE, DISCONNECT, FORAGE, MOVE_TO, QUESTS, SERVER_CHARACTER_UPDATE, SPAWN_COMMUNITY, STOP_ACCELERATE, STOP_DOUBLE_ACCELERATE, TEMPLATE_KIND, TEMPLATE_OBJECTS, TURN_LEFT, TURN_RIGHT, TURN_STOP, UNCLAIM_CHARACTER, WORLD_INFO, WORLD_OBJECTS } from "./types/CONSTANTS"
 
 export default class ServerEngine {
-    getActiveCharacters() {
-        return this.gameEngine.getActiveCharacters()
-    }
-
     private on: (eventName: string | symbol, listener: (...args: any[]) => void) => EventEmitter
     private gameEngine: GameEngine
     private io: Server
     private templates: Map<string, WorldObject> = new Map()
     private playersByEmail: Map<string, Player> = new Map()
     private playersById: Map<string, Player> = new Map()
-    private persitance = new PersistanceEngine()
+    private persistance: PersistanceEngine
 
-    constructor(io: Server) {
+    constructor(io: Server, world: string) {
         this.io = io
         const eventEmitter: EventEmitter = new EventEmitter()
         this.gameEngine = new GameEngine({ fps: 32 }, eventEmitter)
+        this.persistance = new PersistanceEngine(world)
         this.on = eventEmitter.on.bind(eventEmitter)
 
-        this.connect()
-        this.loadWorld()
-
-        this.setUpListeners()
-
-        this.setUpSocket()
-
-        //start the gameengine
-        this.start()
     }
 
-    connect() {
-        this.persitance.connect()
+    async start() {
+        console.log('starting ServerEngine...')
+        this.connectPersistance()
+
+        await this.loadWorld()
+        this.setUpListeners()
+        this.setUpSocket()
+        this.gameEngine.start()
+        console.log('...ServerEngine started')
+    }
+
+    connectPersistance() {
+        this.persistance.connect()
     }
 
     setUpListeners() {
@@ -70,7 +69,7 @@ export default class ServerEngine {
             //console.log('CONSTANTS.CONNECTION', socket.id) 
             let player: Player | undefined
             getSession({ req: socket.conn.request, }).then(async (session) => {
-                console.log(session)
+                //console.log(session)
                 if (!!session?.user?.email) {
                     player = await this.getPlayerByEmail(session?.user?.email)
                     //console.log(player)
@@ -92,6 +91,11 @@ export default class ServerEngine {
                     //send the quest list
                     socket.emit(QUESTS, quests)
                 }
+            })
+
+            //world info
+            socket?.on(WORLD_INFO, () => {
+                socket.emit(WORLD_INFO, { createTime: this.gameEngine.createTime })
             })
 
             //CONSTANTS.CHAT
@@ -200,6 +204,7 @@ export default class ServerEngine {
             })
 
             socket.on(MOVE_TO, async (characterId: string, location: Point) => {
+                console.log('move_to')
                 this.addMoveAction(characterId, location)
             })
 
@@ -286,7 +291,7 @@ export default class ServerEngine {
     }
 
     async saveObject(newObject: WorldObject) {
-        this.persitance.persistObject(newObject)
+        this.persistance.persistObject(newObject)
     }
 
     addMoveAction(characterId: string, location: Point) {
@@ -300,7 +305,7 @@ export default class ServerEngine {
     }
 
     async savePlayer(player: Partial<Player>): Promise<Player> {
-        const d = await this.persitance.persistPlayer(player)
+        const d = await this.persistance.persistPlayer(player)
 
         this.playersByEmail.set(d.email, d)
         this.playersById.set(d.id, d)
@@ -319,7 +324,7 @@ export default class ServerEngine {
         if (!!p) {
             this.playersByEmail.delete(p.email)
             this.playersById.delete(p.id)
-            this.persitance.deletePlayer(p.email)
+            this.persistance.deletePlayer(p.email)
         }
     }
 
@@ -336,7 +341,7 @@ export default class ServerEngine {
         //didn' find it it memory
         if (!player) {
             //look for it in datastore
-            player = await this.persitance.getPlayerByEmail(email)
+            player = await this.persistance.getPlayerByEmail(email)
 
             //if we found it in the datastore
             if (!!player) {
@@ -387,6 +392,10 @@ export default class ServerEngine {
 
     getCharacter(id: string) {
         return this.gameEngine.getCharacter(id)
+    }
+
+    getActiveCharacters() {
+        return this.gameEngine.getActiveCharacters()
     }
 
     getAllCharacters() {
@@ -582,16 +591,19 @@ export default class ServerEngine {
 
     private async loadWorld() {
         console.log('loading world')
-
-        this.loadAllCharacters()
-
-        await this.loadTemplates()
-
-        await this.loadObjects()
+        let w: any
+        await Promise.all([
+            this.persistance.loadGameWorld().then((r) => {
+                this.gameEngine.createTime = r.createTime
+            }),
+            this.loadAllCharacters(),
+            //this.loadTemplates(),
+            //this.loadObjects()
+        ])
     }
 
     private async loadObjects() {
-        this.persitance.loadObjects()
+        this.persistance.loadObjects()
             .then(([objects]) => {
                 this.gameEngine.updateObjects(objects)
                 //console.log('finished loading objects')
@@ -602,7 +614,7 @@ export default class ServerEngine {
     }
 
     private async loadTemplates() {
-        this.persitance.loadTemplates()
+        this.persistance.loadTemplates()
             .then(([templates]) => {
                 templates.forEach((t: WorldObject) => {
                     this.templates.set(t.id, t)
@@ -615,7 +627,7 @@ export default class ServerEngine {
     }
 
     async loadAllCharacters() {
-        this.persitance.loadAllCharacters()
+        this.persistance.loadAllCharacters()
             .then(([characters]) => {
                 //console.log(characters)
                 this.gameEngine.updateCharacters(characters)
@@ -634,12 +646,12 @@ export default class ServerEngine {
 
     //only persists, doesn't add to engine
     async persistCharacter(character: Character) {
-        return this.persitance.persistCharacter(character)
+        return this.persistance.persistCharacter(character)
     }
 
     //loads from persistance
     async loadCharacter(id: string): Promise<Character> {
-        return this.persitance.loadCharacter(id)
+        return this.persistance.loadCharacter(id)
     }
 
     private sendAndSaveCharacterUpdates(characterIds: string[]) {
@@ -652,7 +664,7 @@ export default class ServerEngine {
                 //persist the character
                 if (!!character) {
                     //character still exists
-                    this.persitance.persistCharacter(character)
+                    this.persistance.persistCharacter(character)
                 }
                 else {
                     //character doesn't exist
@@ -987,7 +999,7 @@ export default class ServerEngine {
 
     async deleteCharacter(characterId: string) {
         console.log("deleteCharacter", characterId)
-        await this.persitance.deleteCharacter(characterId)
+        await this.persistance.deleteCharacter(characterId)
         this.gameEngine.deleteCharacter(characterId)
         //TODO tell the client this was deleted
     }
@@ -998,15 +1010,11 @@ export default class ServerEngine {
         //TODO tell the client these were deleted
     }
 
-    stop() {
+    async stop() {
         console.log('stopping server engine')
         this.gameEngine.stop()
         //TODO persist everything
-        this.persitance.persistCharacters(this.getAllCharacters())
-        // this.persitance.persistWorld(this.gameEngine.gameWorld.id)
-    }
-
-    start() {
-        this.gameEngine.start()
+        await this.persistance.persistCharacters(this.getAllCharacters())
+        await this.persistance.persistGameWorld(this.gameEngine)
     }
 }

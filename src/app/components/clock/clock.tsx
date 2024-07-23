@@ -1,25 +1,28 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./style.css";
 
-const Clock = ({ initialTime }: { initialTime?: Date }) => {
-    const [time, setTime] = useState(initialTime);
+const Clock = ({ initialTime }: { initialTime?: number }) => {
+    const [time, setTime] = useState<Date>();
+    //const [createTime, setCreateTime] = useState(initialTime);
+
+    //console.log(initialTime)
 
     useEffect(() => {
-        let isMounted = true; // Flag to track component mount status
 
         const updateClock = () => {
-            if (isMounted) {
-                setTime(new Date());
-            }
+            //console.log(Date.now())
+            //console.log(initialTime)
+            //console.log(createTime)
+            setTime(new Date(Date.now() - initialTime))
+  
         };
 
-        const timerId = setInterval(updateClock, 1000);
+        const timerId = setInterval(updateClock.bind(this), 1000);
 
         return () => {
-            isMounted = false; // Mark the component as unmounted
             clearInterval(timerId);
         };
-    }, []);
+    }, [ initialTime]);
 
     return (
         <div className="clock">
@@ -31,7 +34,7 @@ const Clock = ({ initialTime }: { initialTime?: Date }) => {
                     }}
                 />
             }
-            <span className="six">6</span>
+            <span className="six">0</span>
             <span className="one">1</span>
             <span className="two">2</span>
             <span className="three">3</span>
