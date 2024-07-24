@@ -32,6 +32,13 @@ nextApp.prepare().then(async () => {
   engine.start()
 
   process.on('SIGINT', async function () {
+    console.log('SIGINT')
+    await engine.stop()
+    process.exit()
+  })
+
+  process.on('SIGTERM', async function () {
+    console.log('SIGTERM')
     await engine.stop()
     process.exit()
   })
