@@ -81,7 +81,7 @@ describe.skip('PersistanceEngine', () => {
         emulator = new Emulator(options)
         await emulator.start()
 
-        p = new PersistanceEngine()
+        p = new PersistanceEngine("test")
         p.connect()
     })
 

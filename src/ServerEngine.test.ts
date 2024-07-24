@@ -76,7 +76,7 @@ describe.skip('ServerEngine', () => {
         await emulator.start()
 
         const io = new Server()
-        serverEngine = new ServerEngine(io)
+        serverEngine = new ServerEngine(io,"test")
     })
 
     afterEach(async () => {

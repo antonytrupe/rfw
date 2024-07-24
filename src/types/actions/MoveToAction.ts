@@ -48,7 +48,7 @@ export default class MoveToAction extends BaseAction {
             //turn right or left
             turnRotation = calculateRotationAcceleration(character.rotation, targetRotation)
 
-            const move: MoveAction | undefined = character.actions.find((action) => action.type == "move")
+            const move: MoveAction | undefined = character.actions.find((action) => action.type == "move") as MoveAction
 
             //accelerate or stop accelerating
             speedAcceleration = engine.calculateAcceleration(character, move, this.location)

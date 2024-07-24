@@ -70,11 +70,13 @@ export default class GameEngine {
     }
 
     start() {
+        console.log('starting game engine')
         this.timeoutID = setTimeout(this.tick.bind(this))
         return this
     }
 
     restart() {
+        console.log('restarting game engine')
         this.stop()
         this.gameWorld.restart()
         this.start()

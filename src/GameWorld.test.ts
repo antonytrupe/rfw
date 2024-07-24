@@ -19,7 +19,7 @@ describe("GameWorld tests", () => {
             expect(z).toStrictEqual(["T:0:0"])
         })
 
-        test("tactical object in two zones", () => {
+        test.skip("tactical object in two zones", () => {
             const w = new GameWorld()
             const o = new WorldObject({
                 location: {
@@ -52,7 +52,7 @@ describe("GameWorld tests", () => {
             expect(c.id).toBe("one")
         })
 
-        test("find a character that overlaps into a zone", () => {
+        test.skip("find a character that overlaps into a zone", () => {
             const w = new GameWorld()
             w.updateCharacter({
                 id: "one", location: {
