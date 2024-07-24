@@ -15,14 +15,14 @@ RUN  npm ci
 FROM base AS builder
 WORKDIR /app
 COPY --from=ci /app/node_modules/ ./node_modules/
-#COPY . .
-COPY package*.json ./
-COPY tsconfig.json .
-COPY tsconfig.server.json .
-COPY next.config.js .
-COPY src/ src/
-COPY public/ public/
-COPY auth.ts .
+COPY . .
+# COPY package*.json ./
+# COPY tsconfig.json .
+# COPY tsconfig.server.json .
+# COPY next.config.js .
+# COPY src/ src/
+# COPY public/ public/
+# COPY auth.ts .
 ENV NODE_ENV production
 RUN npm run build
 
@@ -40,9 +40,6 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
-
-#RUN mkdir data
-#RUN chown nextjs:nodejs data
 
 # Set the correct permission for prerender cache
 #RUN mkdir .next
