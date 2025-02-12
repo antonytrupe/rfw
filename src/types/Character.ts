@@ -80,7 +80,7 @@ export default class Character extends WorldObject implements CharacterInterface
     }
 
     addAction(engine: GameEngine, action: Action) {
-        //console.log('character addAction', action)
+        console.log('character addAction', action.type, action.turn)
         engine.addActiveCharacter(action.turn, this.id)
         engine.updateCharacter(this)
         //console.log(this.actions)

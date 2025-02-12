@@ -1,6 +1,6 @@
 import GameEngine from "@/GameEngine"
 import Character from "../Character"
-import BaseAction, { Action } from "./Action"
+import BaseAction, { Action, CONTINUOUS } from "./Action"
 import { calculateRotationAcceleration, distanceBetweenPoints, getRotation } from "@/Geometry"
 import Point from "../Point"
 import MoveAction from "./MoveAction"
@@ -26,7 +26,7 @@ export default class MoveToAction extends BaseAction {
                 character.actions.splice(0, 0, this)
             }
         }
-
+        this.turn = CONTINUOUS
     }
 
     /**
@@ -38,17 +38,16 @@ export default class MoveToAction extends BaseAction {
 
         const dist = distanceBetweenPoints(this.location, character.location)
         let targetRotation: number
-        let turnRotation = 0
+        let rotationSpeed = 0
         let speedAcceleration = 0
         let actions = character.actions
+        let move: MoveAction | undefined = character.actions.find((action) => action.type == "move") as MoveAction
         if (dist > character.radiusX) {
             //console.log('turn/accelerate/stop')
             targetRotation = getRotation(character.location, this.location)
 
             //turn right or left
-            turnRotation = calculateRotationAcceleration(character.rotation, targetRotation)
-
-            const move: MoveAction | undefined = character.actions.find((action) => action.type == "move") as MoveAction
+            rotationSpeed = calculateRotationAcceleration(character.rotation, targetRotation)
 
             //accelerate or stop accelerating
             speedAcceleration = engine.calculateAcceleration(character, move, this.location)
@@ -68,23 +67,32 @@ export default class MoveToAction extends BaseAction {
             const dist = distanceBetweenPoints(character.location, charactersAtTarget[0].location)
             if (dist < (character.radiusX + charactersAtTarget[0].radiusX)) {
                 //console.log('colliding with characters at target')
-                turnRotation = 0
+                rotationSpeed = 0
                 speedAcceleration = 0
             }
         }
 
-        if (turnRotation == 0 && speedAcceleration == 0) {
+        if (rotationSpeed == 0 && speedAcceleration == 0) {
+            console.log('remove moveaction')
             //we got there, so clear all move actions
-            actions = actions.filter((action) => { return action.type != 'moveTo' })
+            actions = actions.filter((action) => { return action.type != 'moveTo' && action.type != 'move' })
+            //engine.removeActiveCharacter(CONTINUOUS, character.id)
+        }
+        else {
+            //update/add the move action 
+            if (!move) {
+                character.addAction(engine, new MoveAction({ engine, character, action: { rotationSpeed, speedAcceleration } }))
+                //console.log(character.actions)
+                //make sure moveto is first
+                actions = character.actions.sort((a, b) => { return a.type == 'moveTo' ? -1 : 0 })
+            }
+            // move.rotationSpeed = turnRotation
+            // move.speedAcceleration = speedAcceleration
         }
 
-        //TODO update/add the move action
-
-        character = engine.updateCharacter({
+        engine.updateCharacter({
             id: character.id,
-            // rotationAcceleration: turnRotation,
-            // speedAcceleration: speedAcceleration,
             actions: actions
-        }).getCharacter(character.id)!
+        })
     }
 }

@@ -205,7 +205,7 @@ export default class ServerEngine {
 
             socket.on(MOVE_TO, async (characterId: string, location: Point) => {
                 console.log('move_to')
-                this.addMoveAction(characterId, location)
+                this.addMoveToAction(characterId, location)
             })
 
             socket.on(FORAGE, async (characterId: string) => {
@@ -294,7 +294,7 @@ export default class ServerEngine {
         this.persistance.persistObject(newObject)
     }
 
-    addMoveAction(characterId: string, location: Point) {
+    addMoveToAction(characterId: string, location: Point) {
         //console.log('addMoveAction')
         this.gameEngine.addMoveToAction(characterId, location)
         this.sendAndSaveCharacterUpdates([characterId])

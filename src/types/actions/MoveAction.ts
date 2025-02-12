@@ -18,6 +18,7 @@ export default class MoveAction extends BaseAction {
         engine: GameEngine, character: Character, action: Partial<MoveAction>
     }) {
         super({ engine, character, action })
+
         const oldAction = character.actions.find((action: BaseAction) => action.type == 'move') as MoveAction
 
         Object.assign(this, oldAction)
@@ -31,7 +32,7 @@ export default class MoveAction extends BaseAction {
         }
 
         //add the action to the front of the array
-        character.actions.splice(0, 0, this)
+        character.actions.unshift(this)
 
     }
 
@@ -63,7 +64,7 @@ export default class MoveAction extends BaseAction {
 
         this.speed = newSpeed
 
-        //make sure the character is in next turn's list of active characters
+        //make sure the character is in the list of active characters
         if (this.rotationSpeed !== 0 || this.speedAcceleration !== 0 || this.speed !== 0) {
             engine.addActiveCharacter(CONTINUOUS, character.id)
         }

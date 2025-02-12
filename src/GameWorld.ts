@@ -284,7 +284,7 @@ export default class GameWorld {
             merged = Object.assign(old, updates)
         }
         else {
-            merged = new Character({ ...old, ...updates })
+            merged = new Character(updates)
         }
         //console.log('merged', merged)
 

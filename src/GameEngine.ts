@@ -9,11 +9,9 @@ import { SHAPE } from "./types/SHAPE"
 import { polygonSlide, distanceBetweenPoints, getRotation, getRotationDelta, calculateRotationAcceleration } from "./Geometry"
 import { LEFT, RIGHT } from "./types/CONSTANTS"
 import { CONTINUOUS, ForageAction } from "./types/actions/Action"
-import { quests } from "./types/Quest"
 import AttackAction from "./types/actions/AttackAction"
 import MoveToAction from "./types/actions/MoveToAction"
 import MoveAction from "./types/actions/MoveAction"
-import ExhaustionAction from "./types/actions/ExhaustionAction"
 
 interface ZoneInfo {
     name: string
@@ -854,11 +852,11 @@ export default class GameEngine {
     }
 
     calculatePosition(character: CharacterInterface, action: MoveAction, dt: number) {
-        console.log(action)
+        //console.log(action)
         const w = (action?.rotationSpeed | 0) / this.rotationMultiplier
         let x: number = character.location.x
         let y: number = character.location.y
-        if (action.speed != 0) {
+        if (action && action.speed != 0) {
             //calculate new position
             x = character.location.x + action.speed * (Math.cos(character.rotation + w * dt)) * dt / this.speedMultiplier
             y = character.location.y - action.speed * (Math.sin(character.rotation + w * dt)) * dt / this.speedMultiplier
